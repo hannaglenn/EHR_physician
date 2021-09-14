@@ -58,7 +58,10 @@ num_hosp <- Final_Pairs %>%
 AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
 
 Final_Pairs <- Final_Pairs %>%
-  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never")
+  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never") %>%
+  rename(SystemID="SYSID","days_hosp_operating"=DCOV, beds=BDTOT) %>%
+  select(-REG)
+
   
 # Find out how many hospitals have NA for this question (conditional on having an AHA ID)
 num_missing_EHR <- Final_Pairs %>%
