@@ -2,6 +2,7 @@ library(tidyverse)
 library(reshape)
 library(knitr)
 library(kableExtra)
+library(ggplot2)
 
 options(knitr.kable.NA=" ")
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -143,6 +144,7 @@ ggsave("objects/TYP_plot_hospmeanuse_year.pdf", width=8, height=5, units="in")
 
 # Createa graph that shows variation in the dependent variable
 
+ggplot(ThirdYearPaper, aes(x=year,y=perc_sharedpatients)) + geom_point()
 
 # Show a graph that represents the spirit of DD
 
