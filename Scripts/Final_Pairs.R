@@ -14,7 +14,7 @@ library(plm)
 
 # Read in physician hospital pairs master file
 Final_Pairs <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
-  # This data does onto have any repeats of year, HospNPI, DocNPI
+  # This data does not have any repeats of year, HospNPI, DocNPI
 
 # Create Experience and Gender Variables ------------------------------------------------------------
 # Read in Physician Compare
@@ -27,7 +27,6 @@ PhysCompare <- PhysCompare %>%
 # Merge
 Final_Pairs <- Final_Pairs %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI"))
-
 
 Final_Pairs <- Final_Pairs %>%
   distinct()
@@ -56,7 +55,7 @@ num_hosp <- Final_Pairs %>%
 
 # Read in main AHA survey data
 # I need to think about adding more hospital characteristics to this dataset
-AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHAmainsurvey.csv"))
+AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
 
 Final_Pairs <- Final_Pairs %>%
   left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never")
