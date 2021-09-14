@@ -7,6 +7,8 @@ library(ggplot2)
 options(knitr.kable.NA=" ")
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
+
+
 # ------------------  Summary Stats and Figures for Third Year Paper -----------------------
 #                     Hanna Glenn, Emory University
 #                     8/27/2021
@@ -139,23 +141,56 @@ hospmeanuse_year_plot <- ggplot(TYP_plot_hospmeanuse_year,aes(x=year,y=value,sha
                                    title="\nFigure 1: Percentage Hospitals With Meaningful Use\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(0,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
-ggsave("objects/TYP_plot_hospmeanuse_year.pdf", width=8, height=5, units="in")
+ggsave("objects/TYP_plot_meanuse_year.pdf", width=8, height=5, units="in")
 
 
-# Createa graph that shows variation in the dependent variable
+# Show a graph that represents the spirit of DD (this one uses average HHI)
+hhi_control_data <- ThirdYearPaper %>%
+  filter(never_expand==1) %>%
+  group_by(year) %>%
+  mutate(avg_hhi=mean(hhi)) %>%
+  distinct(year,avg_hhi) %>%
+  mutate(Category="Control")
 
-ggplot(ThirdYearPaper, aes(x=year,y=perc_sharedpatients)) + geom_point()
+hhi_treatment_data <- ThirdYearPaper %>%
+  filter(expand_2012==1)   %>%
+  group_by(year) %>%
+  mutate(avg_hhi=mean(hhi)) %>%
+  distinct(year,avg_hhi) %>%
+  mutate(category="Treatment (2012)")
 
-# Show a graph that represents the spirit of DD
+avg_hhi_data <- rbind(hhi_control_data, hhi_treatment_data)
+
+ggplot(avg_hhi_data,aes(x=year,y=avg_hhi,color=category, shape=category)) + geom_point() +geom_line() + labs(x="\nYear", y="Average Concentration Index\n", 
+                                                                                                            title="\nFigure 2: Change in Concentration Over Time: Treatment and Control\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
+
+ggsave("objects/TYP_Figure2.pdf", width=8, height=5, units="in")
+
+# Show a graph that represents the spirit of DD (this one uses main hospital share)
+main_noEHR_data <- ThirdYearPaper %>%
+  filter(main_usesEHR_ever==0) %>%
+  group_by(year) %>%
+  mutate(avg_main_share=mean(main_percshare)) %>%
+  distinct(year,avg_main_share) %>%
+  mutate(category="No EHR")
+
+main_yesEHR_data <- ThirdYearPaper %>%
+  filter(main_usesEHR_ever==1)   %>%
+  group_by(year) %>%
+  mutate(avg_main_share=mean(main_percshare)) %>%
+  distinct(year,avg_main_share) %>%
+  mutate(category="Has EHR")
+
+main_avg_share_data <- rbind(main_noEHR_data, main_yesEHR_data)
+
+ggplot(main_avg_share_data,aes(x=year,y=avg_main_share,color=category)) + geom_point() + geom_line() + labs(x="\nYear", y="Average Share at Main Hospital\n", 
+                                                                                                            title="\nFigure 3: Change in Main Hospital Share Over Time: Treatment and Control\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
+
+ggsave("objects/Figure3.pdf", width=8, height=5, units="in")
 
 
-
-
-
-
-
-
-save(TYP_sumstats_overall,TYP_plot_hospEHR_year,TYP_plot_hospmeanuse_year,file="~/important.TYP.RData")
 
 
 
