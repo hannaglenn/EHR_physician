@@ -42,6 +42,12 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
   mutate(share_samedaycount=ifelse(is.na(share_samedaycount),0,share_samedaycount)) %>%
   ungroup()
 
+# Concentration
+Final_Pairs_Variables <- Final_Pairs_Variables %>% ungroup() %>%
+  mutate(share_squared=(share_samedaycount*100)^2) %>%
+  group_by(DocNPI, year) %>%
+  mutate(hhi=sum(share_squared))
+
 
 
 
@@ -172,6 +178,20 @@ count_sys <- Final_Pairs_Variables %>%
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   left_join(count_sys,by=c("year","DocNPI"))
 
+# Gender indicator
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(female=ifelse(gender=="F",1,ifelse(gender=="M",0,NA)))
+
+
+# More Labor Variables --------------------------------------------------------------------------------------------
+
+# Main hospital's percent share
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(mainhosp_share=ifelse(mainhosp==1,share_samedaycount,NA)) %>%
+  group_by(DocNPI,year) %>%
+  fill(mainhosp_share,.direction="down") %>%
+  fill(mainhosp_share, .direction="up") %>%
+  ungroup()
 
 
 # Save the Data ---------------------------------------------------------------------------------------------------

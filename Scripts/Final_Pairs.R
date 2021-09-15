@@ -289,27 +289,6 @@ is.pbalanced(observe)
 
 
 
-# Create concentration variable
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
-  mutate(perc_squared=(perc_sharedpatients*100)^2) %>%
-  group_by(DocNPI, year) %>%
-  mutate(hhi=sum(perc_squared))
-
-observe <- Final_Pairs %>%
-  filter(is.na(perc_sharedpatients))
-
-
-
-# Create a variable "percent share at main hospital"
-Final_Pairs <- Final_Pairs %>%
-  mutate(main_percshare=ifelse(mainhosp==1,perc_sharedpatients,NA)) %>%
-  group_by(DocNPI,year) %>%
-  fill(main_percshare,.direction="down") %>%
-  fill(main_percshare, .direction="up") %>%
-  ungroup()
-
-
-
 # Create "expandyear" variables
 firstexpandyear_data <- Final_Pairs %>%
   filter(mainhosp_EHR>0) %>%
