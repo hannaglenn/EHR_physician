@@ -131,20 +131,7 @@ Final_Pairs <- Final_Pairs %>%
 Final_Pairs <- Final_Pairs %>%
   select(-firstyear_0, -lastyear_0, -firstyear_1, -lastyear_1, -firstyear_2, -lastyear_2)
 
-# Create indicators out of existing variables
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
-  mutate(usesanyEHR=ifelse(EHLTH==0,0,ifelse(is.na(EHLTH),NA,1)),
-         usesfullEHR=ifelse(EHLTH==2,1,ifelse(is.na(EHLTH),NA,0)))
-
-Final_Pairs <- Final_Pairs %>%
-  mutate(usesanyEHRdec=if_else(usesanyEHR==0,0,if_else(usesanyEHR==1 & (decision_index>21 | is.na(decision_index)),0,1)),
-         usesanyEHRdoc=if_else(usesanyEHR==0,0,if_else(usesanyEHR==1 & (documentation_index>21 | is.na(documentation_index)),0,1)),
-         usesfullEHRdec=if_else(usesfullEHR==0,0,if_else(usesfullEHR==1 & (decision_index>21 | is.na(decision_index)),0,1)),
-         usesfullEHRdoc=if_else(usesfullEHR==0,0,if_else(usesfullEHR==1 & (documentation_index>21 | is.na(documentation_index)),0,1))
-         )
-
 # Read in Meaningful Use Data 
-
 mean_use <- read_csv(paste0(raw_data_path,"HOSP_ProvidersPaidByEHR_06_2018.csv"))
 
 # Clean up and create indicators for each stage
