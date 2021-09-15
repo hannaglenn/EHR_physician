@@ -15,22 +15,27 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 
 # This script creates preliminary summary stats and figures to explore relationships
 # between EHR and physician decisions. Some of these will be used in my third year paper.
-# The data used is created in "ThirdYearPaper.R"
+# The data used is created in "Final_Pairs_Variables.R"
 
-# Read in ThirdYearPaper.rds
-ThirdYearPaper <- read_rds(paste0(created_data_path,"ThirdYearPaper.rds"))
+# Read in Final_Pairs_Variables.rds
+Final_Pairs_Variables <- read_rds(paste0(created_data_path,"Final_Pairs_Variables.rds"))
 
 # General Summary Stats Tables: Separate for Physician, Hospital, Pair level ----------------------------------------------------------------
 
 # Physician Level
-TYP_sumstats_physician <- ThirdYearPaper %>% ungroup() %>%
-  summarise_at(c("Total Services (Part B)"="total_services","Number of Hospitals Worked With"="num_hospitals"), 
+TYP_sumstats_physician <- Final_Pairs_Variables %>% ungroup() %>%
+  distinct(DocNPI,year,.keep_all = T) %>%
+  summarise_at(c("Total Services (Part B)"="total_services","Number of Hospitals Worked With"="num_hospitals",
+                 "Main Hospital Uses an EHR"="mainhosp_EHR", "Number of Systems Worked With"="num_systems",
+                 "First Year of Main Hospital Using EHR"="firstyear_mainhosp_usesEHR"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) 
+  relocate(variable,n,m,sd,min,max) %>%
+  mutate(m=ifelse(variable=="First Year of Main Hospital Using EHR",NA,m),
+         sd=ifelse(variable=="First Year of Main Hospital Using EHR",NA,sd))
 
 knitr::kable(TYP_sumstats_physician, "latex",
              col.names=c("Variable", "N", "Mean", "Std. Dev.", "Min", "Max"),
@@ -45,7 +50,7 @@ knitr::kable(TYP_sumstats_physician, "latex",
   save_kable("objects/sumstats_physician_table.pdf", density=300)
 
 # Hospital Level
-TYP_sumstats_hospital <- ThirdYearPaper %>% ungroup() %>%
+TYP_sumstats_hospital <- Final_Pairs_Variables %>% ungroup() %>%
   summarise_at(c("Beds"="BDTOT","Documentation Index"= "documentation_index","Decision Index"="decision_index",
                  "Uses any EHR for Documentation"="usesanyEHRdoc", "Uses any EHR for Decision Making"="usesanyEHRdec", 
                  "Uses any EHR"="usesanyEHR", "Uses full EHR for Documentation"="usesfullEHRdoc", 
@@ -71,7 +76,7 @@ knitr::kable(TYP_sumstats_hospital, "latex",
   save_kable("objects/sumstats_hospital_table.pdf",density=300)
 
 # Pair Level
-TYP_sumstats_pair <- ThirdYearPaper %>% ungroup() %>%
+TYP_sumstats_pair <- Final_Pairs_Variables %>% ungroup() %>%
   summarise_at(c("Year"="year",
                  "Shared Patients Same Day"="samedaycount"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
@@ -95,7 +100,7 @@ knitr::kable(TYP_sumstats_hospital, "latex",
 
 
 # AHA EHR Info at the Hospital Level (by year) ----------------------------------------
-TYP_sumstats_hospEHR_year <- ThirdYearPaper %>% ungroup() %>% group_by(year) %>%
+TYP_sumstats_hospEHR_year <- Final_Pairs_Variables %>% ungroup() %>% group_by(year) %>%
   distinct(HospNPI,.keep_all=T) %>%
   summarise_at(c("Uses any EHR for Documentation"="usesanyEHRdoc", "Uses any EHR for Decision Making"="usesanyEHRdec", 
                  "Uses any EHR"="usesanyEHR", "Uses full EHR for Documentation"="usesfullEHRdoc", 
@@ -124,7 +129,7 @@ ggsave("objects/TYP_plot_hospEHR_year.pdf", width=8, height=5, units="in")
 # Meaningful Use at the Hospital Level (by year) ----------------------------------------------------------------------
 
 # Create summary stats for these for distinct hospitals by year
-TYP_sumstats_hospmeanuse_year <- ThirdYearPaper %>% ungroup() %>% group_by(year) %>%
+TYP_sumstats_hospmeanuse_year <- Final_Pairs_Variables %>% ungroup() %>% group_by(year) %>%
   distinct(HospNPI,.keep_all=T) %>%
   summarise_at(c("getsubsidy","stage1","stage2"), list(m=mean,sd=sd,min=min,max=max), na.rm=T)  %>%
   dplyr::rename("Receives any Subsidy"="getsubsidy_m", "Is in Stage 1"="stage1_m", "Is in Stage 2"="stage2_m")
@@ -145,14 +150,14 @@ ggsave("objects/TYP_plot_meanuse_year.pdf", width=8, height=5, units="in")
 
 
 # Show a graph that represents the spirit of DD (this one uses average HHI)
-hhi_control_data <- ThirdYearPaper %>%
+hhi_control_data <- Final_Pairs_Variables %>%
   filter(never_expand==1) %>%
   group_by(year) %>%
   mutate(avg_hhi=mean(hhi)) %>%
   distinct(year,avg_hhi) %>%
   mutate(Category="Control")
 
-hhi_treatment_data <- ThirdYearPaper %>%
+hhi_treatment_data <- Final_Pairs_Variables %>%
   filter(expand_2012==1)   %>%
   group_by(year) %>%
   mutate(avg_hhi=mean(hhi)) %>%
@@ -168,14 +173,14 @@ ggplot(avg_hhi_data,aes(x=year,y=avg_hhi,color=category, shape=category)) + geom
 ggsave("objects/TYP_Figure2.pdf", width=8, height=5, units="in")
 
 # Show a graph that represents the spirit of DD (this one uses main hospital share)
-main_noEHR_data <- ThirdYearPaper %>%
+main_noEHR_data <- Final_Pairs_Variables %>%
   filter(main_usesEHR_ever==0) %>%
   group_by(year) %>%
   mutate(avg_main_share=mean(main_percshare)) %>%
   distinct(year,avg_main_share) %>%
   mutate(category="No EHR")
 
-main_yesEHR_data <- ThirdYearPaper %>%
+main_yesEHR_data <- Final_Pairs_Variables %>%
   filter(main_usesEHR_ever==1)   %>%
   group_by(year) %>%
   mutate(avg_main_share=mean(main_percshare)) %>%
