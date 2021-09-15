@@ -91,6 +91,7 @@ Final_Pairs <- Final_Pairs %>% group_by(AHAID) %>%
   ungroup()
   # Fill in 346
 
+
 saveRDS(Final_Pairs,file=paste0(created_data_path,"Final_Pairs.rds"))
 
 # Read in AHA IT Survey 
@@ -206,15 +207,6 @@ main_usesEHR_ever <- Final_Pairs %>% ungroup() %>%
 
 Final_Pairs <- Final_Pairs %>%
   left_join(main_usesEHR_ever, by="DocNPI")
-
-
-
-# Number of hospitals worked with (physician level)
-count <- Final_Pairs %>%
-  count(year,DocNPI,name="num_hospitals")
-
-Final_Pairs <- Final_Pairs %>%
-  left_join(count,by=c("year","DocNPI"))
 
 
 
