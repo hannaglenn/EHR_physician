@@ -171,3 +171,8 @@ count_sys <- Final_Pairs_Variables %>%
 
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   left_join(count_sys,by=c("year","DocNPI"))
+
+
+
+# Save the Data ---------------------------------------------------------------------------------------------------
+saveRDS(Final_Pairs_Variables,file=paste0(created_data_path,"Final_Pairs_Variables.rds"))
