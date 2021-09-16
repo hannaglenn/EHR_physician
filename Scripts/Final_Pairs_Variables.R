@@ -21,7 +21,12 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
   filter(grad_year<2009)
 
 # Filter out any hospital-physician pairs that have less than 30 shared patients for all years
-
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  group_by(DocNPI,HospNPI) %>%
+  mutate(sum=sum(samedaycount,na.rm=T)) %>%
+  filter(sum>30) %>%
+  select(-sum) %>%
+  ungroup()
 
 # Labor Variables ---------------------------------------------------------------------------------------------
 
