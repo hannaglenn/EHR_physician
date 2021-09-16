@@ -167,6 +167,7 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 # Number of Hospitals Worked With
 count <- Final_Pairs_Variables %>%
+  ungroup() %>%
   count(year,DocNPI,name="num_hospitals")
 
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
@@ -175,6 +176,7 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 # Number of systems worked with
 count_sys <- Final_Pairs_Variables %>%
+  ungroup() %>%
   distinct(DocNPI,year,SystemID) %>%
   count(DocNPI,year,name="num_systems")
 

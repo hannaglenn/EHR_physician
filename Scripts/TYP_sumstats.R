@@ -26,8 +26,8 @@ Final_Pairs_Variables <- read_rds(paste0(created_data_path,"Final_Pairs_Variable
 TYP_sumstats_physician <- Final_Pairs_Variables %>% ungroup() %>%
   distinct(DocNPI,year,.keep_all = T) %>%
   summarise_at(c("Total Services (Part B)"="total_services","Number of Hospitals Worked With"="num_hospitals",
-                 "Main Hospital Uses an EHR"="mainhosp_EHR", "Number of Systems Worked With"="num_systems",
-                 "First Year of Main Hospital Using EHR"="firstyear_mainhosp_usesEHR"), 
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Concentration Index"="hhi","Years since Graduating"="yrssince_grad"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
