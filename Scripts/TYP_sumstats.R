@@ -149,35 +149,102 @@ ggsave("objects/TYP_plot_meanuse_year.pdf", width=8, height=5, units="in")
 
 
 # Show a graph that represents the spirit of DD (4 lines on graph: mainhosp & smallhosp x mainhospshare & smallhospshare) -----------------------
-main_control_data_rel <- Final_Pairs_Variables %>%
-  filter(firstyear_mainhosp_usesEHR==0) %>%
-  group_by(rel_expandyear) %>%
-  mutate(avg_mainhosp_share=mean(mainhosp_share)) %>%
-  distinct(rel_expandyear,avg_mainhosp_share) %>%
-  mutate(Category="Control")
+main_main_data <- Final_Pairs_Variables %>%
+  filter(firstyear_mainhosp_usesEHR>0) %>%
+  group_by(rel_expandyear_main) %>%
+  mutate(avg_share=mean(mainhosp_share)) %>%
+  distinct(rel_expandyear_main,avg_share) %>%
+  mutate(Category="\nShare at Main Hospital\n when Main Hospital Adopts EHR\n") %>%
+  rename(rel_expandyear=rel_expandyear_main)
 
-main_treatment_data_rel <- Final_Pairs_Variables %>%
+main_small_data <- Final_Pairs_Variables %>%
   filter(firstyear_mainhosp_usesEHR>0)   %>%
-  group_by(rel_expandyear) %>%
-  mutate(avg_mainhosp_share=mean(mainhosp_share)) %>%
-  distinct(rel_expandyear,avg_mainhosp_share) %>%
-  mutate(Category="Treatment")
+  group_by(rel_expandyear_main) %>%
+  mutate(avg_share=mean(smallhosp_share)) %>%
+  distinct(rel_expandyear_main,avg_share) %>%
+  mutate(Category="Share at Small Hospital\n when Main Hospital Adopts EHR\n") %>%
+  rename(rel_expandyear=rel_expandyear_main)
 
-mainhosp_avg_share_data_rel <- rbind(main_control_data_rel, main_treatment_data_rel)
+small_small_data <- Final_Pairs_Variables %>%
+  filter(firstyear_smallhosp_usesEHR>0) %>%
+  group_by(rel_expandyear_small) %>%
+  mutate(avg_share=mean(smallhosp_share)) %>%
+  distinct(rel_expandyear_small,avg_share) %>%
+  mutate(Category="Share at Small Hospital\n when Small Hospital Adopts EHR\n") %>%
+  rename(rel_expandyear=rel_expandyear_small)
 
-ggplot(mainhosp_avg_share_data_rel,aes(x=rel_expandyear,y=avg_mainhosp_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nRelative Year", y="Average Share at Main Hospital\n", 
-                                                                                                                    title="\nChange in Main Hospital Share Over Time: Treatment and Control\n") + 
-  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
+small_main_data <- Final_Pairs_Variables %>%
+  filter(firstyear_smallhosp_usesEHR>0)   %>%
+  group_by(rel_expandyear_small) %>%
+  mutate(avg_share=mean(mainhosp_share)) %>%
+  distinct(rel_expandyear_small,avg_share) %>%
+  mutate(Category="Share at Main Hospital\n when Small Hospital Adopts EHR\n") %>%
+  rename(rel_expandyear=rel_expandyear_small)
 
-ggsave("objects/rel_mainhosp_share_treatvscontrol.pdf", width=8, height=5, units="in")
+relyear_mainvssmall_data <- rbind(main_main_data, main_small_data, small_main_data, small_small_data)
+
+ggplot(relyear_mainvssmall_data,aes(x=rel_expandyear,y=avg_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nYear Relative to EHR Adoption", y="Average Share\n", 
+                                                                                                                    title="\nHow Share of Patients Changes with EHR Adoption\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
+  guides(linetype=guide_legend(nrow=8))
+
+ggsave("objects/4linegraph.pdf", width=8, height=5, units="in")
+
+# Create graphs that show averages when main or small hospital never adopts EHR
+main_control_data <- Final_Pairs_Variables %>%
+  filter(main_neveruses_EHR==1) %>%
+  group_by(year) %>%
+  mutate(avg_share=mean(mainhosp_share)) %>%
+  distinct(year,avg_share) %>%
+  mutate(Category="Main Never Adopts EHR\n")
+
+small_control_data <- Final_Pairs_Variables %>%
+  filter(small_neveruses_EHR==1) %>%
+  group_by(year) %>%
+  mutate(avg_share=mean(smallhosp_share)) %>%
+  distinct(year,avg_share) %>%
+  mutate(Category="Small Never Adopts EHR\n")
+
+share_mainvssmall_control <- rbind(main_control_data,small_control_data)
+
+ggplot(share_mainvssmall_control,aes(x=year,y=avg_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nYear", y="Average Share\n", 
+                                                                                                                                      title="\nAverage Share in Hospitals that Never Adopt EHRs\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
+  guides(linetype=guide_legend(nrow=8))
+
+ggsave("objects/mainsmall_control.pdf", width=8, height=5, units="in")
 
 
+# Graph of treatment vs control physician (ever exposed vs. never exposed)
+EHR_control <- Final_Pairs_Variables %>%
+  filter(doc_usesEHR_ever==0) %>%
+  group_by(year) %>%
+  mutate(avg_share=mean(share_samedaycount)) %>%
+  distinct(year,avg_share) %>%
+  mutate(Category="Never Exposed to EHR\n")
+
+EHR_treatment_relyear <- Final_Pairs_Variables %>%
+  filter(firstyear_usesEHR>0) %>%
+  group_by(rel_expandyear_any) %>%
+  mutate(avg_share=mean(share_samedaycount)) %>%
+  distinct(rel_expandyear_any,avg_share) %>%
+  mutate(Category="Exposed to EHR")
 
 
+# Relative Year Treatment Plot
+ggplot(EHR_treatment_relyear,aes(x=rel_expandyear_any,y=avg_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nYear Relative to EHR Exposure", y="Average Share\n", 
+                                                                                                                             title="\nAverage Share in Hospitals that Adopt EHRs\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
+  guides(linetype=guide_legend(nrow=8)) + ylim(0,1)
 
+ggsave("objects/relyear_treatment.pdf", width=8, height=5, units="in")
 
+# Never Exposed to EHR Plot
+ggplot(EHR_control,aes(x=year,y=avg_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nYear", y="Average Share\n", 
+                                                                                                                                       title="\nAverage Share in Hospitals that Never Adopt EHRs\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
+  guides(linetype=guide_legend(nrow=8)) + ylim(0,1)
 
-
-
+ggsave("objects/physician_control.pdf", width=8, height=5, units="in")
 
 

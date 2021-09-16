@@ -107,7 +107,11 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
                                                    (decision_index>21 | is.na(decision_index)),0,1)))
 
 
-# Create variable for when a physician was first exposed to an EHR at their main hospital
+# Create indicator for whether the physician is ever exposed to an EHR
+
+
+
+# Create variable for when a physician was first exposed to an EHR at their largest share hospital
   # Find out the first year doctors have positive working variables
 firstyear_data <- Final_Pairs_Variables %>%
   ungroup() %>%
@@ -174,7 +178,109 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 # Create relative year variable
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
-  mutate(rel_expandyear=ifelse(firstyear_mainhosp_usesEHR==0,-1,ifelse(firstyear_mainhosp_usesEHR>0,year-firstyear_mainhosp_usesEHR,NA)))
+  mutate(rel_expandyear_main=ifelse(firstyear_mainhosp_usesEHR==0,-1,ifelse(firstyear_mainhosp_usesEHR>0,year-firstyear_mainhosp_usesEHR,NA)))
+
+
+
+
+
+# Create variable for when a physician was first exposed to an EHR at their smallest share hospital
+# Record NPI of small hospital in minimum year and create indicator for main hospital
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  group_by(DocNPI,year) %>%
+  mutate(smallhosp_NPI=ifelse(year==firstyear_working & share_samedaycount==min(share_samedaycount),HospNPI,NA)) %>%
+  ungroup() %>%
+  group_by(DocNPI) %>%
+  fill(smallhosp_NPI,.direction="up") %>%
+  fill(smallhosp_NPI,.direction="down") %>%
+  ungroup() %>%
+  mutate(smallhosp=ifelse(HospNPI==smallhosp_NPI,1,0)) 
+
+# I need an indicator for if small hospital in that year uses an EHR (by AHA measure)
+smallhosp_EHR <- Final_Pairs_Variables %>%
+  filter(smallhosp==1) %>%
+  mutate(smallhosp_EHR=ifelse(usesEHR==1,1,ifelse(is.na(usesEHR),NA,0))) %>%
+  select(HospNPI,DocNPI,year,smallhosp_NPI,smallhosp,smallhosp_EHR)
+
+# Merge it back to main data
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  left_join(smallhosp_EHR,by=c("DocNPI","HospNPI","year","smallhosp_NPI","smallhosp"))
+
+# Fill in for the hospitals that are not main
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  group_by(DocNPI,year) %>%
+  fill(smallhosp_EHR,.direction="up") %>%
+  fill(smallhosp_EHR,.direction="down") %>%
+  ungroup()
+
+# Now I need to create a variable that shows the first year a physician was exposed at their small hospital
+firstyear_smallhosp_usesEHR <- Final_Pairs_Variables %>%
+  filter(smallhosp_EHR==1) %>%
+  group_by(DocNPI) %>%
+  mutate(firstyear_smallhosp_usesEHR=min(year)) %>%
+  ungroup() %>%
+  distinct(DocNPI,firstyear_smallhosp_usesEHR)
+
+# Merge the minimum years back to original dataset
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  left_join(firstyear_smallhosp_usesEHR,by="DocNPI")
+
+#Fix NAs that represent a physician not being exposed to EHRs ever in their small hospital
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  group_by(DocNPI,HospNPI) %>%
+  mutate(sum_smallhosp_EHR=sum(smallhosp_EHR)) %>%
+  mutate(small_neveruses_EHR=ifelse(sum(smallhosp_EHR)==0,1,NA)) 
+
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(firstyear_smallhosp_usesEHR=
+           ifelse(is.na(firstyear_smallhosp_usesEHR) & small_neveruses_EHR==1,0,firstyear_smallhosp_usesEHR))
+
+# Create relative year variable
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(rel_expandyear_small=ifelse(firstyear_smallhosp_usesEHR==0,-1,ifelse(firstyear_smallhosp_usesEHR>0,year-firstyear_smallhosp_usesEHR,NA)))
+
+
+
+# Create variable for "usesEHRever"
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  group_by(DocNPI,year) %>%
+  mutate(sumEHR=sum(usesEHR,na.rm=T)) %>%
+  mutate(doc_usesEHR=ifelse(sumEHR>0,1,ifelse(is.na(EHLTH),NA,0))) %>%
+  select(-sumEHR) %>%
+  ungroup()
+
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  group_by(DocNPI) %>%
+  mutate(sumEHR=sum(doc_usesEHR,na.rm=T)) %>%
+  mutate(doc_usesEHR_ever=ifelse(sumEHR>0,1,ifelse(is.na(doc_usesEHR),NA,0))) %>%
+  select(-sumEHR) %>%
+  ungroup()
+
+
+# Create variable for when a physician was first exposed to an EHR period
+# Now I need to create a variable that shows the first year a physician was exposed
+firstyear_usesEHR <- Final_Pairs_Variables %>%
+  filter(doc_usesEHR==1) %>%
+  group_by(DocNPI) %>%
+  mutate(firstyear_usesEHR=min(year)) %>%
+  ungroup() %>%
+  distinct(DocNPI,firstyear_usesEHR)
+
+# Merge the minimum years back to original dataset
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  left_join(firstyear_usesEHR,by="DocNPI")
+
+#Fix NAs that represent a physician not being exposed to EHRs ever in their small hospital
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(firstyear_usesEHR=
+           ifelse(is.na(firstyear_usesEHR) & doc_usesEHR_ever==0,0,firstyear_usesEHR))
+
+# Create relative year variable
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(rel_expandyear_any=ifelse(firstyear_usesEHR==0,-1,ifelse(firstyear_usesEHR>0,year-firstyear_usesEHR,NA)))
+
+
+
 
 # Descriptive Variables --------------------------------------------------------------------------------------------
 
@@ -207,12 +313,15 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 # More Labor Variables --------------------------------------------------------------------------------------------
 
-# Main hospital's percent share
+# Main & small hospital's percent share
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   mutate(mainhosp_share=ifelse(mainhosp==1,share_samedaycount,NA)) %>%
+  mutate(smallhosp_share=ifelse(smallhosp==1,share_samedaycount,NA)) %>%
   group_by(DocNPI,year) %>%
   fill(mainhosp_share,.direction="down") %>%
   fill(mainhosp_share, .direction="up") %>%
+  fill(smallhosp_share,.direction="down") %>%
+  fill(smallhosp_share, .direction="up") %>%
   ungroup()
 
 
