@@ -81,6 +81,8 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   distinct() %>%
   rename(samedaycount=samedaycount_combine)
 
+
+
 # Expand so that each doctor, hospital pair appears in each year
 phys_hosp_pairs <- phys_hosp_pairs %>%
   mutate(HospNPI=as.numeric(HospNPI),
