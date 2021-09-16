@@ -95,7 +95,6 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 
 # Create variable for when a physician was first exposed to an EHR at their main hospital
-
   # Find out the first year doctors have positive working variables
 firstyear_data <- Final_Pairs_Variables %>%
   ungroup() %>%
@@ -159,7 +158,25 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
     mutate(firstyear_mainhosp_usesEHR=
              ifelse(is.na(firstyear_mainhosp_usesEHR) & main_neveruses_EHR==1,0,firstyear_mainhosp_usesEHR))
+
+# Create relative year variable
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(rel_expandyear=ifelse(firstyear_mainhosp_usesEHR==0,-1,ifelse(firstyear_mainhosp_usesEHR>0,year-firstyear_mainhosp_usesEHR,NA)))
   
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(rel_m6=1*(rel_expandyear<=-6),
+         rel_m5=1*(rel_expandyear==-5),
+         rel_m4=1*(rel_expandyear==-4),
+         rel_m3=1*(rel_expandyear==-3),
+         rel_m2=1*(rel_expandyear==-2),
+         rel_m1=1*(rel_expandyear==-1),
+         rel_0=1*(rel_expandyear==0),
+         rel_p1=1*(rel_expandyear==1),
+         rel_p2=1*(rel_expandyear==2),
+         rel_p3=1*(rel_expandyear==3),
+         rel_p4=1*(rel_expandyear==4),
+         rel_p5=1*(rel_expandyear==5),
+         rel_p6=1*(rel_expandyear==6))
 
 # Descriptive Variables --------------------------------------------------------------------------------------------
 
