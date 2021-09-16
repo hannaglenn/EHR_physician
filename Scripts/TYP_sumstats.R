@@ -43,6 +43,7 @@ knitr::kable(TYP_sumstats_physician, "latex",
              caption="Physician Level Variables",
              booktabs=T,
              escape=F,
+             label=NA,
              align=c("l", "c","c","c","c","c"),
              position="h",
              format.args = list(big.mark = ",")) %>%
@@ -68,6 +69,7 @@ knitr::kable(TYP_sumstats_hospital, "latex",
              digits=2,
              caption="Summary Statistics",
              booktabs=T,
+             label=NA,
              escape=F,
              align=c("l", "c","c","c","c","c"),
              position="h",
@@ -89,9 +91,10 @@ TYP_sumstats_pair <- Final_Pairs_Variables %>% ungroup() %>%
 knitr::kable(TYP_sumstats_hospital, "latex",
              col.names=c("Variable", "N", "Mean", "Std. Dev.", "Min", "Max"),
              digits=2,
-             caption="Summary Statistics",
+             caption="Physician-Hospital Level Data",
              booktabs=T,
              escape=F,
+             label=NA,
              align=c("l", "c","c","c","c","c"),
              position="h",
              format.args = list(big.mark = ",")) %>%
@@ -118,9 +121,9 @@ TYP_plot_hospEHR_year <- melt(TYP_plot_hospEHR_year, id.vars = "year", measure.v
 TYP_plot_hospEHR_year <- TYP_plot_hospEHR_year %>%
   dplyr::rename("Variable"="variable")
 
-hospEHR_year_plot <- ggplot(TYP_plot_hospEHR_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
+ggplot(TYP_plot_hospEHR_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
   geom_line() +geom_point() + labs(x="\nYear", y="Percent\n", 
-                                   title="\nFigure 1: Percentage Hospitals that Use EHRs (AHA Data)\n") + 
+                                   title="\nPercentage Hospitals that Use EHRs (AHA Data)\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(0,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
 ggsave("objects/TYP_plot_hospEHR_year.pdf", width=8, height=5, units="in")
@@ -141,9 +144,9 @@ TYP_plot_hospmeanuse_year <- melt(TYP_plot_hospmeanuse_year, id.vars = "year", m
 TYP_plot_hospmeanuse_year <- TYP_plot_hospmeanuse_year %>%
   dplyr::rename("Variable"="variable")
 
-hospmeanuse_year_plot <- ggplot(TYP_plot_hospmeanuse_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
+ggplot(TYP_plot_hospmeanuse_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
   geom_line() +geom_point() + labs(x="\nYear", y="Percent\n", 
-                                   title="\nFigure 1: Percentage Hospitals With Meaningful Use\n") + 
+                                   title="\nPercentage Hospitals With Meaningful Use\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(0,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
 ggsave("objects/TYP_plot_meanuse_year.pdf", width=8, height=5, units="in")
@@ -166,8 +169,13 @@ hhi_treatment_data <- Final_Pairs_Variables %>%
 
 avg_hhi_data <- rbind(hhi_control_data, hhi_treatment_data)
 
+<<<<<<< HEAD
 ggplot(avg_hhi_data,aes(x=year,y=avg_hhi,color=category, shape=category)) + geom_point() +geom_line() + labs(x="\nYear", y="Average Concentration Index\n", 
                                                                                                             title="\nFigure 2: Change in Concentration Over Time: Treatment and Control\n") + 
+=======
+ggplot(avg_hhi_data,aes(x=year,y=avg_hhi,color=Category, shape=Category)) + geom_point() +geom_line() + labs(x="\nYear", y="Average Concentration Index\n", 
+                                                                                                            title="\nChange in Concentration Over Time: Treatment and Control\n") + 
+>>>>>>> a3df6e555719fc30b0b11708656a1648cd804318
   scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
 ggsave("objects/TYP_Figure2.pdf", width=8, height=5, units="in")
@@ -176,25 +184,72 @@ ggsave("objects/TYP_Figure2.pdf", width=8, height=5, units="in")
 main_noEHR_data <- Final_Pairs_Variables %>%
   filter(main_usesEHR_ever==0) %>%
   group_by(year) %>%
+<<<<<<< HEAD
   mutate(avg_main_share=mean(main_percshare)) %>%
   distinct(year,avg_main_share) %>%
   mutate(category="No EHR")
+=======
+  mutate(avg_mainhosp_share=mean(mainhosp_share)) %>%
+  distinct(year,avg_mainhosp_share) %>%
+  mutate(Category="Control")
+>>>>>>> a3df6e555719fc30b0b11708656a1648cd804318
 
 main_yesEHR_data <- Final_Pairs_Variables %>%
   filter(main_usesEHR_ever==1)   %>%
   group_by(year) %>%
+<<<<<<< HEAD
   mutate(avg_main_share=mean(main_percshare)) %>%
   distinct(year,avg_main_share) %>%
   mutate(category="Has EHR")
+=======
+  mutate(avg_mainhosp_share=mean(mainhosp_share)) %>%
+  distinct(year,avg_mainhosp_share) %>%
+  mutate(Category="Treatment")
+>>>>>>> a3df6e555719fc30b0b11708656a1648cd804318
 
 main_avg_share_data <- rbind(main_noEHR_data, main_yesEHR_data)
 
+<<<<<<< HEAD
 ggplot(main_avg_share_data,aes(x=year,y=avg_main_share,color=category)) + geom_point() + geom_line() + labs(x="\nYear", y="Average Share at Main Hospital\n", 
                                                                                                             title="\nFigure 3: Change in Main Hospital Share Over Time: Treatment and Control\n") + 
+=======
+ggplot(mainhosp_avg_share_data,aes(x=year,y=avg_mainhosp_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nYear", y="Average Share at Main Hospital\n", 
+                                                                                                            title="\nChange in Main Hospital Share Over Time: Treatment and Control\n") + 
+>>>>>>> a3df6e555719fc30b0b11708656a1648cd804318
   scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
 ggsave("objects/Figure3.pdf", width=8, height=5, units="in")
 
+<<<<<<< HEAD
+=======
+# Show a graph that represents the spirit of DD (this one uses main hospital share & relative year) -----------------------
+main_control_data_rel <- Final_Pairs_Variables %>%
+  filter(firstyear_mainhosp_usesEHR==0) %>%
+  group_by(rel_expandyear) %>%
+  mutate(avg_mainhosp_share=mean(mainhosp_share)) %>%
+  distinct(rel_expandyear,avg_mainhosp_share) %>%
+  mutate(Category="Control")
+
+main_treatment_data_rel <- Final_Pairs_Variables %>%
+  filter(firstyear_mainhosp_usesEHR>0)   %>%
+  group_by(rel_expandyear) %>%
+  mutate(avg_mainhosp_share=mean(mainhosp_share)) %>%
+  distinct(rel_expandyear,avg_mainhosp_share) %>%
+  mutate(Category="Treatment")
+
+mainhosp_avg_share_data_rel <- rbind(main_control_data_rel, main_treatment_data_rel)
+
+ggplot(mainhosp_avg_share_data_rel,aes(x=rel_expandyear,y=avg_mainhosp_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nRelative Year", y="Average Share at Main Hospital\n", 
+                                                                                                                    title="\nChange in Main Hospital Share Over Time: Treatment and Control\n") + 
+  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
+
+ggsave("objects/rel_mainhosp_share_treatvscontrol.pdf", width=8, height=5, units="in")
+
+ # Create a spirit of DD graph that uses total_services --------------------------------------------------------------
+year_limited_data <- Final_Pairs_Variables %>%
+  filter(year>2011) %>%
+  filter(firstyear_mainhosp_usesEHR>2012 | firstyear_mainhosp_usesEHR==0)
+>>>>>>> a3df6e555719fc30b0b11708656a1648cd804318
 
 
 

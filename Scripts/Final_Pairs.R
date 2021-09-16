@@ -163,6 +163,8 @@ Final_Pairs <- Final_Pairs %>%
 Final_Pairs <- Final_Pairs %>%
   mutate(getsubsidy=ifelse(is.na(EHRstage),0,1), stage1=ifelse(is.na(stage1),0,stage1), 
          stage2=ifelse(is.na(stage2),0,stage2), stage3=ifelse(is.na(stage3),0,stage3))
+
+#
   
 
 # Create Extra Variables (Data is complete) --------------------------------------------
@@ -289,33 +291,6 @@ is.pbalanced(observe)
 
 
 
-# Create "expandyear" variables
-firstexpandyear_data <- Final_Pairs %>%
-  filter(mainhosp_EHR>0) %>%
-  group_by(DocNPI) %>%
-  mutate(expandyear=min(year)) %>%
-  distinct(DocNPI,.keep_all=T) %>%
-  select(DocNPI,expandyear) %>%
-  ungroup()
-
-Final_Pairs <- Final_Pairs %>%
-  left_join(firstexpandyear_data, by="DocNPI")
-
-Final_Pairs <- Final_Pairs %>%
-  mutate(expandyear=ifelse(is.na(expandyear),0,expandyear)) %>%
-  mutate(expandyear=ifelse(is.na(AHAID),NA,expandyear))
-
-
-# Create indicators for expanding in each year
-Final_Pairs <- Final_Pairs %>%
-  mutate(expand_2009=ifelse(expandyear==2009,1,ifelse(is.na(expandyear),NA,0)),
-         expand_2010=ifelse(expandyear==2010,1,ifelse(is.na(expandyear),NA,0)),
-         expand_2011=ifelse(expandyear==2011,1,ifelse(is.na(expandyear),NA,0)),
-         expand_2012=ifelse(expandyear==2012,1,ifelse(is.na(expandyear),NA,0)),
-         expand_2013=ifelse(expandyear==2013,1,ifelse(is.na(expandyear),NA,0)),
-         expand_2014=ifelse(expandyear==2014,1,ifelse(is.na(expandyear),NA,0)),
-         expand_2015=ifelse(expandyear==2015,1,ifelse(is.na(expandyear),NA,0)),
-         never_expand=ifelse(expandyear==0,1,ifelse(is.na(expandyear),NA,0)))
 
 
 # Save the Data -----------------------------------------------------------------
