@@ -90,7 +90,7 @@
 
 \begin{frame}{This Paper}
 
-Does EHR implementation in hospitals affect labor market decisions of physicians, specifically where, and how much they work??
+Does EHR implementation in hospitals affect labor market decisions of physicians, specifically where, and how much they work?
     
 \end{frame}
 
@@ -121,19 +121,79 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 \begin{itemize}
     \item Physician decides to work, possibly at a handful of hospitals
     \item Some proportion of these implement a new technology (an EHR)
-    \item Two ways to think about the effect:
+    \item Three ways to think about the effect:
     \begin{enumerate}
         \item The EHR could impose a burden (cost) on the physician, leading them to shift work to other hospitals or lessen their own workload
         \item The EHR could increase the physician's attachment to the implementing hospital (through the learning of a complicated new skill), leading them to lessen work at other hospitals and increase work at EHR hospital
+        \item Other factors impact physicians more than the hospital's technology, so they do not change their behavior when EHRs are implemented
     \end{enumerate}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Physician's Incentives: Reduced Form}
-\begin{equation*}
-    p_{iht}=\textbf{p}()
+\begin{frame}{Relevant Data}
+    \begin{equation*}
+    p_{iht}=\textbf{p}(EHR_{ht},EHR_{-h,t},X_i,H_j,...)
 \end{equation*}
-    
+\end{frame}
+
+\begin{frame}[noframenumbering]{Relevant Data}
+\begin{equation*}
+    \textcolor{blue}{p_{iht}}=\textbf{p}(EHR_{ht},EHR_{-h,t},X_i,H_j,...)
+\end{equation*}
+
+$\textcolor{blue}{p_{iht}}:$
+\begin{itemize}
+    \item measures of physician's labor
+    \item number of shared patients with a hospital: CMS PSPD (2009-2015)
+    \item total services: Medicare Provider Utilization and Payment Data (starts in 2012)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Relevant Data}
+\begin{equation*}
+    p_{iht}=\textbf{p}(\textcolor{red}{EHR_{ht},EHR_{-h,t}},X_i,H_j,...)
+\end{equation*}
+
+$\textcolor{red}{EHR}:$
+\begin{itemize}
+    \item Main variable (binary for whether a hospital uses an EHR) comes from AHA survey
+    \item AHA IT Supplement also has information on EHRs that can help with documentation or decision making
+    \item Meaningful use data gives information on which hospitals received a subsidy for achieving "meaningful use"
+\end{itemize}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Relevant Data}
+\begin{equation*}
+    p_{iht}=\textbf{p}(EHR_{ht},EHR_{-h,t},\textcolor{purple}{X_i},H_j,...)
+\end{equation*}
+
+$\textcolor{purple}{X_i}:$
+\begin{itemize}
+    \item Physician level characteristics
+    \item Medical school graduation date, gender: Physician Compare
+\end{itemize}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Relevant Data}
+\begin{equation*}
+    p_{iht}=\textbf{p}(EHR_{ht},EHR_{-h,t},X_i,\textcolor{orange}{H_{jt}},...)
+\end{equation*}
+
+$\textcolor{orange}{H_{jt}}:$
+\begin{itemize}
+    \item Hospital Level Characteristics
+    \item Number of beds: AHA Survey
+    \item Number of days out of the year operating: AHA Survey
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Summary Statistics}
+\centering
+\includegraphics[scale=.45]{Objects/sumstats_physician_table.pdf}\\
+\vspace{3mm}
+\includegraphics[scale=.45]{Objects/sumstats_pair_table.pdf}\\
+\vspace{3mm}
+\includegraphics[scale=.45]{Objects/sumstats_hospital_table.pdf}
 \end{frame}
 
 \begin{frame}{Variation in EHR Adoption}
@@ -141,18 +201,54 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 \includegraphics[scale=.55]{Objects/TYP_plot_hospEHR_year.pdf}
 \end{frame}
 
-\begin{frame}{Frame Title}
-    
+\begin{frame}{Variation in Working Variables}
+    \centering
+    \includegraphics[scale=.5]{Objects/mainhosp_share_treatvscontrol.pdf}
+\end{frame}
+
+\begin{frame}{Variation in Meaningful Use}
+    \centering
+    \includegraphics[scale=.5]{Objects/TYP_plot_hospmeanuse_year.pdf}
 \end{frame}
 
 
+\begin{frame}{Variation in Working Variables}
+\centering
+\includegraphics[scale=.5]{Objects/hhi_treatvscontrol.pdf}
+\end{frame}
+
+\begin{frame}{Variation in Working Variables}
+    \centering
+    \includegraphics[scale=.4]{Objects/rel_mainhosp_share_treatvscontrol.pdf}
+\end{frame}
 
 
 
 
 \section{Plans}
 
+\begin{frame}{Estimation}
+First, DD
+\begin{itemize}
+    \item Parallel trends assumption
+    \item EHR implementation exogenous to physician?
+    \item Implement all the current DD techniques
+\end{itemize}
 
+Later, IV
+\begin{itemize}
+    \item State level HIPPA privacy laws
+    \item Bandwidth capacity of a given area
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Other Plans}
+\begin{itemize}
+    \item Dig deeper into meaningful use measures
+    \item Try to get location measurements
+\end{itemize}
+    
+\end{frame}
 
 
 
