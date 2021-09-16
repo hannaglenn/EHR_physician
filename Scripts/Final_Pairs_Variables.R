@@ -20,6 +20,7 @@ Final_Pairs_Variables <- read_rds(paste0(created_data_path,"Final_Pairs.rds"))
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   filter(grad_year<2009)
 
+# Filter out any hospital-physician pairs that have less than 30 shared patients for all years
 
 
 # Labor Variables ---------------------------------------------------------------------------------------------
@@ -34,6 +35,13 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
   mutate(totalsharedpatients_allyears=sum(totalsharedpatients)) %>%
   filter(totalsharedpatients_allyears>30)
 
+# Filter out any hospital-physician pairs that have sum less than 30 shared patients in all years
+Final_Pairs_Variables <- Final_Pairs_Variables %>% ungroup() %>%
+  group_by(DocNPI,HospNPI) %>%
+  mutate(sum=sum(samedaycount,na.rm=T)) %>%
+  filter(sum>30) %>%
+  select(-sum) %>%
+  ungroup()
 
 # Create share of samedaycount variable
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
