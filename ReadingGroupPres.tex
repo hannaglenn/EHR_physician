@@ -63,7 +63,7 @@
 
 \begin{frame}[fragile]{What does this mean for physicians?}
 \begin{itemize}
-    \item Day-to-day, this means physicians spend more time entering information into a computer 
+    \item Day-to-day, this means physicians spend more time entering information into a computer and learning a new software
     \item Loss of autonomy as EHRs have progressed
     \item Physicians have experienced significant burn-out from EHRs
 \end{itemize}
@@ -121,40 +121,36 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 \begin{itemize}
     \item Physician decides to work, possibly at a handful of hospitals
     \item Some proportion of these implement a new technology (an EHR)
-    \item Three ways to think about the effect:
+    \item Two ways to think about the effect:
     \begin{enumerate}
-        \item The EHR could impose a burden (cost) on the physician, leading them to shift work to other hospitals or lessen their own workload
-        \item The EHR could increase the physician's attachment to the implementing hospital (through the learning of a complicated new skill), leading them to lessen work at other hospitals and increase work at EHR hospital
-        \item Other factors impact physicians more than the hospital's technology, so they do not change their behavior when EHRs are implemented
+        \item The cost of switching hospitals is higher (attachment to EHR hospital)
+        \item The cost of switching hospitals is lower (increased burden at EHR hospital)
     \end{enumerate}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Relevant Data}
-    \begin{equation*}
-    p_{iht}=\textbf{p}(EHR_{ht},EHR_{-h,t},X_i,H_j,...)
-\end{equation*}
-\end{frame}
 
-\begin{frame}[noframenumbering]{Relevant Data}
+\begin{frame}{Data}
 \begin{equation*}
-    \textcolor{blue}{p_{iht}}=\textbf{p}(EHR_{ht},EHR_{-h,t},X_i,H_j,...)
+    \textcolor{blue}{p_{iht}}=f(EHR_{ht},EHR_{-h,t},X_i,H_{jt},...)
 \end{equation*}
 
-$\textcolor{blue}{p_{iht}}:$
+\vspace{3mm}
+
+Measures of physician labor market behavior
 \begin{itemize}
-    \item measures of physician's labor
-    \item number of shared patients with a hospital: CMS PSPD (2009-2015)
-    \item total services: Medicare Provider Utilization and Payment Data (starts in 2012)
+    \item Number of shared patients with a hospital: CMS PSPD (2009-2015)
+    \item Total services: Medicare Provider Utilization and Payment Data (starts in 2012)
 \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Relevant Data}
+\begin{frame}[noframenumbering]{Data}
 \begin{equation*}
-    p_{iht}=\textbf{p}(\textcolor{red}{EHR_{ht},EHR_{-h,t}},X_i,H_j,...)
+    p_{iht}=f(\textcolor{blue}{EHR_{ht},EHR_{-h,t}},X_i,H_{jt},...)
 \end{equation*}
 
-$\textcolor{red}{EHR}:$
+\vspace{5mm}
+
 \begin{itemize}
     \item Main variable (binary for whether a hospital uses an EHR) comes from AHA survey
     \item AHA IT Supplement also has information on EHRs that can help with documentation or decision making
@@ -162,26 +158,28 @@ $\textcolor{red}{EHR}:$
 \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Relevant Data}
+\begin{frame}[noframenumbering]{Data}
 \begin{equation*}
-    p_{iht}=\textbf{p}(EHR_{ht},EHR_{-h,t},\textcolor{purple}{X_i},H_j,...)
+    p_{iht}=f(EHR_{ht},EHR_{-h,t},\textcolor{blue}{X_i},H_{jt},...)
 \end{equation*}
 
-$\textcolor{purple}{X_i}:$
+\vspace{5mm}
+
+Physician level characteristics
 \begin{itemize}
-    \item Physician level characteristics
     \item Medical school graduation date, gender: Physician Compare
 \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Relevant Data}
+\begin{frame}[noframenumbering]{Data}
 \begin{equation*}
-    p_{iht}=\textbf{p}(EHR_{ht},EHR_{-h,t},X_i,\textcolor{orange}{H_{jt}},...)
+    p_{iht}=f(EHR_{ht},EHR_{-h,t},X_i,\textcolor{blue}{H_{jt}},...)
 \end{equation*}
 
-$\textcolor{orange}{H_{jt}}:$
+\vspace{5mm}
+
+Hospital Level Characteristics
 \begin{itemize}
-    \item Hospital Level Characteristics
     \item Number of beds: AHA Survey
     \item Number of days out of the year operating: AHA Survey
 \end{itemize}
@@ -190,7 +188,7 @@ $\textcolor{orange}{H_{jt}}:$
 \begin{frame}{Summary Statistics}
 \centering
 \includegraphics[scale=.45]{Objects/sumstats_physician_table.pdf}\\
-\vspace{3mm}
+\vspace{5mm}
 \includegraphics[scale=.45]{Objects/sumstats_pair_table.pdf}\\
 \vspace{3mm}
 \includegraphics[scale=.45]{Objects/sumstats_hospital_table.pdf}
@@ -201,55 +199,46 @@ $\textcolor{orange}{H_{jt}}:$
 \includegraphics[scale=.55]{Objects/TYP_plot_hospEHR_year.pdf}
 \end{frame}
 
-\begin{frame}{Variation in Meaningful Use}
-    \centering
-    \includegraphics[scale=.5]{Objects/TYP_plot_hospmeanuse_year.pdf}
-\end{frame}
-
-
-\begin{frame}{Variation in Working Variables}
-    \centering
-    \includegraphics[scale=.5]{Objects/mainhosp_share_treatvscontrol.pdf}
-\end{frame}
-
-
-\begin{frame}{Variation in Working Variables}
-\centering
-\includegraphics[scale=.5]{Objects/hhi_treatvscontrol.pdf}
-\end{frame}
-
-\begin{frame}{Variation in Working Variables}
-    \centering
-    \includegraphics[scale=.5]{Objects/rel_mainhosp_share_treatvscontrol.pdf}
-\end{frame}
 
 
 
 
 \section{Plans}
 
-\begin{frame}{Estimation}
-First, DD
+\begin{frame}{Original Plan: Difference in Difference}
 \begin{itemize}
-    \item Parallel trends assumption
-    \item EHR implementation exogenous to physician?
-    \item Implement all the current DD techniques
-\end{itemize}
-
-Later, IV
-\begin{itemize}
-    \item State level HIPPA privacy laws
-    \item Bandwidth capacity of a given area
+    \item Treatment: physicians who are exposed to an EHR at one of their hospitals in some year
+    \item Control: physicians who are not exposed to a hospital at \textbf{any} hospital in any year
+    \begin{itemize}
+        \item  Issues with control group because of spillovers
+    \end{itemize}
+    \item Could still try to attempt this by imposing a control group where the physician has not \textbf{yet} been exposed to an EHR at any hospital
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Other Plans}
+\begin{frame}{Other Ideas}
 \begin{itemize}
-    \item Dig deeper into meaningful use measures
-    \item Try to get location measurements
+    \item Aggregate to physician level dataset and do analysis more along the lines of the graph I showed you earlier
+    \item Have a continuous measure of EHR use that captures share of exposure to EHRs
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Miscellaneous Points}
+\begin{itemize}
+    \item Want to dig deeper into meaningful use measures
+    \item Try to get location measurements to think about where physicians are working
+    \item Bring in other measures of work from shared patient data
 \end{itemize}
     
 \end{frame}
+
+
+
+\begin{frame}{Variation in Meaningful Use}
+    \centering
+    \includegraphics[scale=.5]{Objects/TYP_plot_hospmeanuse_year.pdf}
+\end{frame}
+
 
 
 
