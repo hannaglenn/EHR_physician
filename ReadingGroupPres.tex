@@ -38,12 +38,12 @@
 
 \section[Motivation]{Motivation}
 
-\begin{frame}{The Beginning of HIT}
+\begin{frame}{The Potential of HIT}
 \centering
     \includegraphics[scale=.6]{graphics/News Clip4.PNG}
 \end{frame}
 
-\begin{frame}[fragile]{HIT has had Great (Expected) Potential in Healthcare}
+\begin{frame}[fragile]{HIT had Great (Expected) Potential in Healthcare}
 \begin{alertblock}{Cost Saving}
 \begin{itemize}
     \item A 2005 estimate finds possible cost reduction of hundreds of billions of dollars (\cite{hillestad2005})
@@ -63,7 +63,7 @@
 
 \begin{frame}[fragile]{What does this mean for physicians?}
 \begin{itemize}
-    \item Day-to-day, this means physicians spend more time entering information into a computer and learning a new software
+    \item Initially, this means physicians spend more time entering information into a computer and learning a new software
     \item Loss of autonomy as EHRs have progressed
     \item Physicians have experienced significant burn-out from EHRs
 \end{itemize}
@@ -84,7 +84,7 @@
 
 \begin{frame}[noframenumbering]{Physician Burnout}
 \begin{center}
-    \includegraphics[scale=.3]{graphics/News Clip3.PNG}
+    \includegraphics[scale=.45]{graphics/News Clip3.PNG}
 \end{center}
 \end{frame}
 
@@ -99,7 +99,7 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 
 \begin{frame}{Branches of Literature}
 \centering
-\includegraphics[scale=.45]{graphics/Contribution_litgraphic.PNG}
+\includegraphics[scale=.5]{graphics/Contribution_litgraphic.PNG}
 
 \end{frame}
 
@@ -139,8 +139,8 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 
 Measures of physician labor market behavior
 \begin{itemize}
-    \item Number of shared patients with a hospital: CMS PSPD (2009-2015)
-    \item Total services: Medicare Provider Utilization and Payment Data (starts in 2012)
+    \item Number/percent of shared patients physician $i$ has with hospital $h$: \underline{CMS Shared Patient Data} (2009-2015)
+    \item Total Part B claims for physician $i$: \underline{Medicare Provider Utilization and Payment Data} (starts in 2012)
 \end{itemize}
 \end{frame}
 
@@ -154,7 +154,7 @@ Measures of physician labor market behavior
 \begin{itemize}
     \item Main variable (binary for whether a hospital uses an EHR) comes from AHA survey
     \item AHA IT Supplement also has information on EHRs that can help with documentation or decision making
-    \item Meaningful use data gives information on which hospitals received a subsidy for achieving "meaningful use"
+    \item (\textit{Considering Later}) Meaningful use data gives information on which hospitals received a subsidy for achieving "meaningful use"
 \end{itemize}
 \end{frame}
 
@@ -167,7 +167,7 @@ Measures of physician labor market behavior
 
 Physician level characteristics
 \begin{itemize}
-    \item Medical school graduation date, gender: Physician Compare
+    \item Medical school graduation date, gender: \underline{Physician Compare}
 \end{itemize}
 \end{frame}
 
@@ -186,17 +186,30 @@ Hospital Level Characteristics
 \end{frame}
 
 \begin{frame}{Summary Statistics}
+\centering
 
+\includegraphics[scale=.8]{Objects/sumstats_pair_table.pdf}
+
+\vspace{3mm}
+
+\includegraphics[scale=.8]{Objects/sumstats_physician_table.pdf}
+
+\end{frame}
+
+\begin{frame}{Summary Statistics}
+\centering
+\includegraphics[scale=.8]{Objects/sumstats_hospital_table.pdf}
+    
 \end{frame}
 
 \begin{frame}{Variation in EHR Adoption}
 \centering
-\includegraphics[scale=.55]{Objects/TYP_plot_hospEHR_year.pdf}
+\includegraphics[scale=.53]{Objects/TYP_plot_hospEHR_year.pdf}
 \end{frame}
 
 \begin{frame}{Looking at Shares when EHRs are Adopted}
     \centering
-    \includegraphics[scale=.4]{}
+    \includegraphics[scale=.5]{Objects/relyear_treatment.pdf}
 \end{frame}
 
 
@@ -205,39 +218,41 @@ Hospital Level Characteristics
 
 \section{Plans}
 
-\begin{frame}{Original Plan: Difference in Difference}
+\begin{frame}{Initial Plan: Difference in Difference}
 \begin{itemize}
-    \item Treatment: physicians who are exposed to an EHR at one of their hospitals in some year
-    \item Control: physicians who are not exposed to a hospital at \textbf{any} hospital in any year
-    \begin{itemize}
-        \item  Issues with control group because of spillovers
-    \end{itemize}
-    \item Could still try to attempt this by imposing a control group where the physician has not \textbf{yet} been exposed to an EHR at any hospital
+    \item Interested in two treatment effects
+    \begin{enumerate}
+        \item The effect of EHR at hospital $h$ on share at hospital $h$
+        \item The effect of EHR at hospital $h$ on share at hospital $-h$
+    \end{enumerate}
+    
+    \vspace{2mm}
+    
+    \item My idea is to estimate these two separately, but there are issues because of spillover effects (if hospital $-h$ implements an EHR)
+    
+    \vspace{2mm}
+    
+    \item Control group will be physicians who have not yet been exposed to an EHR at \textbf{any} hospital at time $t$
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Other Ideas}
 \begin{itemize}
-    \item Aggregate to physician level dataset and do analysis more along the lines of the graph I showed you earlier
+    \item Aggregate to physician level dataset if there is insufficient data for the control group
     \item Have a continuous measure of EHR use that captures share of exposure to EHRs
+    \item IV: bandwidth, state privacy laws
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Miscellaneous Points}
+\begin{frame}{Other Points}
 \begin{itemize}
-    \item Want to dig deeper into meaningful use measures
-    \item Try to get location measurements to think about where physicians are working
+    \item Want to dig deeper into how a hospital qualified for meaningful use subsidies
+    \item Physician location
     \item Bring in other measures of work from shared patient data
 \end{itemize}
     
 \end{frame}
 
-
-
-\begin{frame}{Variation in Meaningful Use}
-    \centering
-    \includegraphics[scale=.5]{Objects/TYP_plot_hospmeanuse_year.pdf}
-\end{frame}
 
 
 
