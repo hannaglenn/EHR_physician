@@ -88,7 +88,7 @@ TYP_sumstats_pair <- Final_Pairs_Variables %>% ungroup() %>%
 knitr::kable(TYP_sumstats_pair, "latex",
              col.names=c("Variable", "N", "Mean", "Std. Dev.", "Min", "Max"),
              digits=2,
-             caption="Physician-Hospital Level Data",
+             caption="Physician-Hospital Level Variables",
              booktabs=T,
              escape=F,
              label=NA,
@@ -99,7 +99,7 @@ knitr::kable(TYP_sumstats_pair, "latex",
   save_kable("objects/sumstats_pair_table.pdf",density=300)
 
 
-# AHA EHR Info at the Hospital Level (by year) ----------------------------------------
+# AHA EHR Info at the Hospital Level (by year) -----------------------------------------------------------------
 TYP_sumstats_hospEHR_year <- Final_Pairs_Variables %>% ungroup() %>% group_by(year) %>%
   distinct(HospNPI,.keep_all=T) %>%
   summarise_at(c("Uses EHR for Documentation"="usesEHRdoc", "Uses EHR for Decision Making"="usesEHRdec", 
@@ -215,7 +215,7 @@ ggplot(share_mainvssmall_control,aes(x=year,y=avg_share,color=Category, shape=Ca
 ggsave("objects/mainsmall_control.pdf", width=8, height=5, units="in")
 
 
-# Graph of treatment vs control physician (ever exposed vs. never exposed)
+# Graph of treatment vs control physician (ever exposed vs. never exposed)-------------------------------------------
 EHR_control <- Final_Pairs_Variables %>%
   filter(doc_usesEHR_ever==0) %>%
   group_by(year) %>%
@@ -227,15 +227,14 @@ EHR_treatment_relyear <- Final_Pairs_Variables %>%
   filter(firstyear_usesEHR>0) %>%
   group_by(rel_expandyear_any) %>%
   mutate(avg_share=mean(share_samedaycount)) %>%
-  distinct(rel_expandyear_any,avg_share) %>%
-  mutate(Category="Exposed to EHR")
+  distinct(rel_expandyear_any,avg_share) 
 
 
 # Relative Year Treatment Plot
-ggplot(EHR_treatment_relyear,aes(x=rel_expandyear_any,y=avg_share,color=Category, shape=Category)) + geom_point() + geom_line() + labs(x="\nYear Relative to EHR Exposure", y="Average Share\n", 
+ggplot(EHR_treatment_relyear,aes(x=rel_expandyear_any,y=avg_share)) + geom_point() + geom_line() + labs(x="\nYear Relative to EHR Exposure", y="Average Share\n", 
                                                                                                                              title="\nAverage Share in Hospitals that Adopt EHRs\n") + 
   scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
-  guides(linetype=guide_legend(nrow=8)) + ylim(0,1)
+  guides(linetype=guide_legend(nrow=8)) + ylim(0,.75)
 
 ggsave("objects/relyear_treatment.pdf", width=8, height=5, units="in")
 
@@ -246,5 +245,28 @@ ggplot(EHR_control,aes(x=year,y=avg_share,color=Category, shape=Category)) + geo
   guides(linetype=guide_legend(nrow=8)) + ylim(0,1)
 
 ggsave("objects/physician_control.pdf", width=8, height=5, units="in")
+
+
+
+# Create graph showing the distributions of important variables---------------------------------------------------------
+# Number of hospitals with positive same day count
+ggplot(Final_Pairs_Variables, aes(x=num_hospitals_positive)) + geom_histogram(binwidth=1, colour="black", fill="white") +
+  xlim(0,30)
+
+# Number of systems
+ggplot(Final_Pairs_Variables, aes(x=num_systems)) + geom_histogram(binwidth=1, colour="black", fill="white") +
+  xlim(0,30)
+
+# Number of hospitals with EHR (do one plot for each year)
+ggplot(Final_Pairs_Variables, aes(x=num_hospitals_EHR,fill=as.character(year))) + geom_histogram(binwidth=1) + 
+  facet_grid(cols=vars(year)) + scale_colour_manual(values=cbbPalette) + xlim(0,20)
+
+# Share of hospitals with an EHR
+ggplot(Final_Pairs_Variables, aes(x=share_hosp_EHR,fill=as.character(year))) + geom_histogram(binwidth=.1) + 
+  facet_grid(cols=vars(year)) + scale_fill_manual(values=cbbPalette) + xlim(0,1) + ylim(0,150000) 
+
+# year of expansion (why is 2009 not showing up?)
+ggplot(Final_Pairs_Variables, aes(x=firstyear_usesEHR)) + geom_histogram(binwidth=1) + 
+   scale_fill_manual(values=cbbPalette) + xlim(2008,2016) + ylim(0,1000000)
 
 

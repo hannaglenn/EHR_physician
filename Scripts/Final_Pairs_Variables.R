@@ -284,7 +284,7 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 # Descriptive Variables --------------------------------------------------------------------------------------------
 
-# Number of Hospitals Worked With
+# Number of Hospitals Worked With Total
 count <- Final_Pairs_Variables %>%
   ungroup() %>%
   count(year,DocNPI,name="num_hospitals")
@@ -292,6 +292,39 @@ count <- Final_Pairs_Variables %>%
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   left_join(count,by=c("year","DocNPI"))
 
+# Number of hospitals worked with where samedaycount>0
+count_2 <- Final_Pairs_Variables %>%
+  ungroup() %>%
+  filter(samedaycount>0) %>%
+  count(year,DocNPI,name="num_hospitals_positive")
+
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  left_join(count_2,by=c("year","DocNPI"))
+
+# Number of hospitals worked with that use an EHR in a given year
+count_EHR <- Final_Pairs_Variables %>%
+  ungroup() %>%
+  group_by(DocNPI,year,usesEHR) %>%
+  tally()
+
+count_EHR <- count_EHR %>%
+  group_by(DocNPI,year) %>%
+  mutate(num_hospitals_EHR=ifelse(sum(usesEHR,na.rm=T)==0,0,NA)) %>%
+  mutate(num_hospitals_EHR=ifelse(is.na(num_hospitals_EHR) & usesEHR==1,n,num_hospitals_EHR)) %>%
+  fill(num_hospitals_EHR,.direction="down") %>%
+  fill(num_hospitals_EHR,.direction="up") %>%
+  distinct(DocNPI,year,num_hospitals_EHR)
+
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  ungroup() %>%
+  left_join(count_EHR, by=c("year", "DocNPI"))
+
+# Share of hospitals with EHR
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(share_hosp_EHR=ifelse(num_hospitals_positive>0,num_hospitals_EHR/num_hospitals_positive,0))
+
+observe <- Final_Pairs_Variables %>%
+  filter(firstyear_usesEHR==2015)
 
 # Number of systems worked with
 count_sys <- Final_Pairs_Variables %>%
