@@ -3,6 +3,7 @@
 
 ## 09-30-2021
 Questions to ask at the meeting:
+- Should I limit the sample to AHA hospitals from the beginning? Capturing only physicians relationships with AHA hospitals?
 
 Major Points Discussed:
 
