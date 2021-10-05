@@ -16,9 +16,6 @@ library(readr)
 
 Final_Pairs_Variables <- read_rds(paste0(created_data_path,"Final_Pairs.rds"))
 
-# Drop anyone that graduated medical school 2009 or later
-Final_Pairs_Variables <- Final_Pairs_Variables %>%
-  filter(grad_year<2009)
 
 # Filter out any hospital-physician pairs that have less than 30 shared patients for all years
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
@@ -30,23 +27,6 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 # Labor Variables ---------------------------------------------------------------------------------------------
 
-
-# Filter out any doctors that never work closely with hospitals in the entire dataset
-Final_Pairs_Variables <- Final_Pairs_Variables %>%
-  group_by(year, DocNPI) %>%
-  mutate(totalsharedpatients=sum(samedaycount)) %>%
-  ungroup() %>%
-  group_by(DocNPI) %>%
-  mutate(totalsharedpatients_allyears=sum(totalsharedpatients)) %>%
-  filter(totalsharedpatients_allyears>30)
-
-# Filter out any hospital-physician pairs that have sum less than 30 shared patients in all years
-Final_Pairs_Variables <- Final_Pairs_Variables %>% ungroup() %>%
-  group_by(DocNPI,HospNPI) %>%
-  mutate(sum=sum(samedaycount,na.rm=T)) %>%
-  filter(sum>30) %>%
-  select(-sum) %>%
-  ungroup()
 
 # Create share of samedaycount variable
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
@@ -108,8 +88,6 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 
 
 # Create indicator for whether the physician is ever exposed to an EHR
-
-
 
 # Create variable for when a physician was first exposed to an EHR at their largest share hospital
   # Find out the first year doctors have positive working variables
@@ -206,7 +184,7 @@ smallhosp_EHR <- Final_Pairs_Variables %>%
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   left_join(smallhosp_EHR,by=c("DocNPI","HospNPI","year","smallhosp_NPI","smallhosp"))
 
-# Fill in for the hospitals that are not main
+# Fill in for the hospitals that are not smallest
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   group_by(DocNPI,year) %>%
   fill(smallhosp_EHR,.direction="up") %>%
@@ -280,7 +258,9 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
   mutate(rel_expandyear_any=ifelse(firstyear_usesEHR==0,-1,ifelse(firstyear_usesEHR>0,year-firstyear_usesEHR,NA)))
 
 
-
+# Create indicator for working or not
+Final_Pairs_Variables <- Final_Pairs_Variables %>%
+  mutate(working=ifelse(totalsharedpatients>0,1,0))
 
 # Descriptive Variables --------------------------------------------------------------------------------------------
 
@@ -299,7 +279,8 @@ count_2 <- Final_Pairs_Variables %>%
   count(year,DocNPI,name="num_hospitals_positive")
 
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
-  left_join(count_2,by=c("year","DocNPI"))
+  left_join(count_2,by=c("year","DocNPI")) %>%
+  mutate(num_hospitals_positive=ifelse(is.na(num_hospitals_positive),0,num_hospitals_positive))
 
 # Number of hospitals worked with that use an EHR in a given year
 count_EHR <- Final_Pairs_Variables %>%
@@ -323,8 +304,6 @@ Final_Pairs_Variables <- Final_Pairs_Variables %>%
 Final_Pairs_Variables <- Final_Pairs_Variables %>%
   mutate(share_hosp_EHR=ifelse(num_hospitals_positive>0,num_hospitals_EHR/num_hospitals_positive,0))
 
-observe <- Final_Pairs_Variables %>%
-  filter(firstyear_usesEHR==2015)
 
 # Number of systems worked with
 count_sys <- Final_Pairs_Variables %>%

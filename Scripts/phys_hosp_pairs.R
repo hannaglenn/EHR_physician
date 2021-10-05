@@ -16,12 +16,7 @@ library(janitor)
 # from 2009-2015.
 
 # Read in npi datasets and combine into one------------------
-phys_npidata <- read_rds(paste0(path.currentdata,"phys_npidata.rds"))
-hosp_npidata <- read_rds(paste0(path.currentdata,"hosp_npidata.rds"))
-
-temp_npidata <- bind_rows(phys_npidata,hosp_npidata) 
-temp_npidata <- temp_npidata %>%
-  select(npi,PCP,hospital)
+npidata <- 
 
 # Read in Shared Patient Data, merge to temp_npi along the way ----------------------
 for (t in 2009:2015){
