@@ -13,17 +13,9 @@ library(plm)
 # I limit 
 # The final dataset is called "Final_Pairs.rds"
 
-# Read in physician hospital pairs master file
+# Read in physician hospital pairs created in "phys_hosp_pairs.r"
 Final_Pairs <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
   # This data does not have any repeats of year, HospNPI, DocNPI
-
-# Filter out any hospital-physician pairs that have sum less than 30 shared patients in all years
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
-  group_by(DocNPI,HospNPI) %>%
-  mutate(sum=sum(samedaycount,na.rm=T)) %>%
-  filter(sum>30) %>%
-  select(-sum) %>%
-  ungroup()
 
 
 # Create Experience and Gender Variables ------------------------------------------------------------
@@ -35,7 +27,7 @@ PhysCompare <- PhysCompare %>%
   select(NPI,gender,grad_year) %>%
   mutate(yrs_experience=year-grad_year, female=ifelse(gender=='F',1,ifelse(gender=='M',0,NA)))
 
-# Merge, then drop any physicians that graduated after 2009
+# Merge, then drop any physicians that graduated after 2008
 Final_Pairs <- Final_Pairs %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI"))
 
@@ -224,12 +216,7 @@ Final_Pairs <- Final_Pairs %>%
 
 
 
-#Check if the data is still balanced
-observe <- Final_Pairs %>%
-  select(ID,year)
-  
-is.pbalanced(observe)
-  # True
+
 
 
 
