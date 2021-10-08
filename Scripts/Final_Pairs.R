@@ -362,7 +362,8 @@ Final_Pairs <- Final_Pairs %>%
 # Aggregate the data to the physician level ------------------------------------------
 Physician_Data <- Final_Pairs %>%
   distinct(DocNPI,year,grad_year,female,phys_working,num_hospitals, hosp_EHR, frac_EHR, avg_beds, 
-           avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients)
+           avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients,
+           num_systems)
 
 
 

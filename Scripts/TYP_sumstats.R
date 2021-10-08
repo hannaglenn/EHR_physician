@@ -11,32 +11,34 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 
 # ------------------  Summary Stats and Figures for Third Year Paper -----------------------
 #                     Hanna Glenn, Emory University
-#                     8/27/2021
+#                     10/8/2021
 
 # This script creates preliminary summary stats and figures to explore relationships
 # between EHR and physician decisions. Some of these will be used in my third year paper.
-# The data used is created in "Final_Pairs_Variables.R"
+# The data used is created in "Final_Pairs.R"
 
 # Read in Final_Pairs_Variables.rds
-Final_Pairs_Variables <- read_rds(paste0(created_data_path,"Final_Pairs_Variables.rds"))
+Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
 # General Summary Stats Tables: Separate for Physician, Hospital, Pair level ----------------------------------------------------------------
 
 # Physician Level
-TYP_sumstats_physician <- Final_Pairs_Variables %>% ungroup() %>%
-  distinct(DocNPI,year,.keep_all = T) %>%
+sum_stats <- Physician_Data %>% ungroup() %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
-                 "Concentration Index"="hhi","Years since Graduating"="yrssince_grad"), 
+                 "First Year Exposed to EHR"="minyr_EHR","Years since Graduating"="experience",
+                 "Total Patients with All Entities"="phys_working","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
+                 "Average Hospital Operating Days"="avg_oper_days",
+                 "Fraction of Hospital Patients at EHR Hospital"="frac_EHR_patients"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) %>%
-  mutate(n=n/7)
+  relocate(variable,n,m,sd,min,max)
 
-knitr::kable(TYP_sumstats_physician, "latex",
+knitr::kable(sum_stats, "latex",
              col.names=c("Variable", "Physicians", "Mean", "Std. Dev.", "Min", "Max"),
              digits=2,
              caption="Physician Level Variables",
@@ -47,62 +49,12 @@ knitr::kable(TYP_sumstats_physician, "latex",
              position="h",
              format.args = list(big.mark = ",")) %>%
   kable_styling( full_width=F, latex_options=c("scale_down") ) %>%
-  save_kable("objects/sumstats_physician_table.pdf", density=300)
-
-# Hospital Level
-TYP_sumstats_hospital <- Final_Pairs_Variables %>% ungroup() %>%
-  distinct(HospNPI,year,.keep_all=T) %>%
-  summarise_at(c("Beds"="beds","Documentation Index"= "documentation_index","Decision Index"="decision_index",
-                 "Uses an EHR"="usesEHR","Days Operating in the Year"="days_hosp_operating",
-                 "Recieved Meaningful Use Subsidy"="getsubsidy", "Recieved Subsidy: Stage 1"="stage1"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
-  gather(key=var,value=value) %>%
-  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
-  spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) %>%
-  mutate(n=n/7) 
-
-knitr::kable(TYP_sumstats_hospital, "latex",
-             col.names=c("Variable", "Hospitals", "Mean", "Std. Dev.", "Min", "Max"),
-             digits=2,
-             caption="Hospital Level Variables",
-             booktabs=T,
-             label=NA,
-             escape=F,
-             align=c("l", "c","c","c","c","c"),
-             position="h") %>%
-  kable_styling(full_width=F, latex_options="scale_down")  %>%
-  save_kable("objects/sumstats_hospital_table.pdf",density=300)
-
-# Pair Level
-TYP_sumstats_pair <- Final_Pairs_Variables %>% ungroup() %>%
-  summarise_at(c("Shared Patients Same Day"="samedaycount","Percent Shared Patients"="share_samedaycount"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
-  gather(key=var,value=value) %>%
-  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
-  spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) 
-
-knitr::kable(TYP_sumstats_pair, "latex",
-             col.names=c("Variable", "N", "Mean", "Std. Dev.", "Min", "Max"),
-             digits=2,
-             caption="Physician-Hospital Level Variables",
-             booktabs=T,
-             escape=F,
-             label=NA,
-             align=c("l", "c","c","c","c","c"),
-             position="h",
-             format.args = list(big.mark = ",")) %>%
-  kable_styling(full_width=F, latex_options="scale_down")  %>%
-  save_kable("objects/sumstats_pair_table.pdf",density=300)
+  save_kable("objects/sumstats.pdf", density=300)
 
 
-# AHA EHR Info at the Hospital Level (by year) -----------------------------------------------------------------
-TYP_sumstats_hospEHR_year <- Final_Pairs_Variables %>% ungroup() %>% group_by(year) %>%
-  distinct(HospNPI,.keep_all=T) %>%
-  summarise_at(c("Uses EHR for Documentation"="usesEHRdoc", "Uses EHR for Decision Making"="usesEHRdec", 
+# AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
+sum_stats_year <- Physician_Data %>% group_by(year) %>%
+  summarise_at(c("Physicians Exposed to an EHR"="frac_EHR", "Uses EHR for Decision Making"="usesEHRdec", 
                  "Uses EHR"="usesEHR", 
                  "Recieved Meaningful Use Subsidy"="getsubsidy", "Recieved Subsidy: Stage 1"="stage1"), list(m=mean), na.rm=T) %>%
   dplyr::rename("Uses EHR for Documentation"="Uses EHR for Documentation_m", 
