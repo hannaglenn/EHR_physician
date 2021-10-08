@@ -314,17 +314,60 @@ Final_Pairs <- Final_Pairs %>%
   mutate(avg_oper_days=mean(days_hosp_operating,na.rm=T))
 
 # Descriptive Variable: Years of Experience
-Final_Pairs <- Final_Pairs %>%
+Final_Pairs <- Final_Pairs %>% ungroup() %>%
   mutate(experience=year-grad_year)
 
 
+# Treatment Variable: Indicator for Exposed to EHR
+# Create variable for first year a doc was exposed to EHR
+minyr_EHR <- Final_Pairs %>% ungroup() %>%
+  distinct(DocNPI, year, frac_EHR) %>%
+  filter(frac_EHR>0) %>%
+  group_by(DocNPI) %>%
+  mutate(minyr_EHR=min(year)) %>%
+  ungroup() %>%
+  distinct(DocNPI,minyr_EHR)
+
+Final_Pairs <- Final_Pairs %>% ungroup() %>%
+  left_join(minyr_EHR, by="DocNPI") %>%
+  mutate(minyr_EHR=ifelse(is.na(minyr_EHR),0,minyr_EHR))
+
+# Create "exposed" indicator based on year and min year of EHR
+Final_Pairs <- Final_Pairs %>%
+  mutate(exposed=ifelse(year>=minyr_EHR,1,0))
+
+# Potential Treatment Variables: Documentation and Decision Making Indicators
+Final_Pairs <- Final_Pairs %>%
+  mutate(docEHR=ifelse(EHR==0,0,ifelse(EHR==1 & (documentation_index>24 | is.na(documentation_index)),0,1)),
+         decEHR=ifelse(EHR==0,0,ifelse(EHR==1 & (decision_index>21 | is.na(decision_index)),0,1)))
+
+# Descriptive Variable: Number of systems worked with
+count_sys <- Final_Pairs %>%
+  ungroup() %>%
+  distinct(DocNPI,year,SystemID) %>%
+  count(DocNPI,year,name="num_systems")
+
+Final_Pairs <- Final_Pairs %>%
+  left_join(count_sys,by=c("year","DocNPI"))
+
+# Treatment Variable: fraction of patients at EHR hospital
+Final_Pairs <- Final_Pairs %>% 
+  group_by(DocNPI,year) %>%
+  mutate(num_patients=sum(samedaycount)) %>%
+  mutate(num_patients_EHR=sum(samedaycount[EHR==1],na.rm=T)) %>%
+  ungroup() %>%
+  mutate(frac_EHR_patients=ifelse(num_patients>0,num_patients_EHR/num_patients,0))
+
+
+# Aggregate the data to the physician level ------------------------------------------
+Physician_Data <- Final_Pairs %>%
+  distinct(DocNPI,year,grad_year,female,phys_working,num_hospitals, hosp_EHR, frac_EHR, avg_beds, 
+           avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients)
 
 
 
-
-# Save the Data -----------------------------------------------------------------
-
-saveRDS(Final_Pairs,file="Final_Pairs.rds")
+# Save the Data for Analysis -----------------------------------------------------------------
+saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
 
 
 # Balance Check
