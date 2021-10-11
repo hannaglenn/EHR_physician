@@ -19,7 +19,7 @@ Points of Confusion:
 - none 
 
 
-## 10-7-2021
+## 10-7-2021 (I cancelled this meeting to have more time to make progress)
 Questions to ask at the meeting:
 
 Major Points Discussed:
@@ -29,3 +29,7 @@ Action Items:
 
 
 Points of Confusion:
+
+## 10-14-2021
+Questions to ask:
+- (Look at graph of minimum year exposed to EHR) most physicians are exposed in 2009... I think this will cause issues with analysis. 
