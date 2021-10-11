@@ -1,60 +1,191 @@
 library(tidyverse)
-library(did)
 library(readr)
+library(plm)
+library(lfe)
+library(dotwhisker)
 
-## This script houses the main analysis for my third year paper.
-# The data is developed in another script called Final_Pairs_Variables
+# --------------------    EHR-Physician Analysis  --------------------------
+#                         Hanna Glenn, Emory University
+#                         10/11/2021
 
-Final_Pairs_Variables <- read_rds(paste0(created_data_path,"Final_Pairs_Variables.rds"))
+# This Script reads in the data for my third year paper, "Physician_Data.rds" and uses it to analyze the relationship
+# between EHR adoption and physician labor market decisions. 
 
-# Let's give Sant'Anna and Callaway (2020) a shot...
+# Event Studies for Entire Sample of Doctors ------------------------------------------------------
+# Event Study for Continuous Working Variable
+event_reg <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                  rel_p4 + rel_p5 + rel_p6 + experience + female + avg_beds + avg_oper_days | year,
+                  data=Physician_Data)
 
-did_data <- Final_Pairs_Variables %>%
-  filter(!is.na(firstyear_usesEHR)) %>%
-  filter(!is.na(beds)) %>%
-  filter(firstyear_usesEHR!=2009)
+event_reg_coef <- as_tibble(event_reg$coefficients, rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(estimate=phys_working)
+
+event_reg_ci <- as_tibble(confint(event_reg), rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(conf.low='2.5 %', conf.high='97.5 %')
+
+extra_row <- tibble(term="rel_m1", estimate=0, conf.low=0, conf.high=0, rel_year=-1)
+
+event_plot_table <- event_reg_coef %>%
+  left_join(event_reg_ci, by="term") %>%
+  mutate(rel_year=c(-6,-5,-4,-3,-2,0,1,2,3,4,5,6)) %>%
+  bind_rows(extra_row) %>%
+  arrange(rel_year)
+
+event_plot <- dwplot(event_plot_table, vline=geom_vline(xintercept=0, linetype=2),
+                     order_vars=c("rel_p6", "rel_p5", "rel_p4", "rel_p3", "rel_p2", "rel_p1", "rel_0",
+                                  "rel_m1", "rel_m2", "rel_m3", "rel_m4", "rel_m5", "rel_m6"),
+                     whisker_args=list(color="black", size=1.1),
+                     dot_args=list(color="black")) +
+  coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="Year", x="Estimate and 95% CI") +
+  scale_y_discrete(labels=c("rel_p6"="t+6",
+                            "rel_p5"="t+5",
+                            "rel_p4"="t+4",
+                            "rel_p3"="t+3",
+                            "rel_p2"="t+2",
+                            "rel_p1"="t+1",
+                            "rel_0"="0",
+                            "rel_m1"="t-1",
+                            "rel_m2"="t-2",
+                            "rel_m3"="t-3",
+                            "rel_m4"="t-4",
+                            "rel_m5"="t-5",
+                            "rel_m6"="t-6"))
+event_plot
 
 
-did1 <- att_gt(yname="samedaycount",tname="year",idname="ID",gname="firstyear_usesEHR", 
-               xformla= ~ beds + days_hosp_operating + female, data=did_data,
-               control_group="notyettreated", clustervars="DocNPI")
+# Event Study for Indicator Working Variable
+event_reg_ind <- felm(working_ind ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                    rel_p4 + rel_p5 + rel_p6 + experience + female + avg_beds + avg_oper_days | year,
+                  data=Physician_Data)
 
-did2 <- att_gt(yname="share_samedaycount",tname="year",idname="ID",gname="firstyear_usesEHR", 
-               xformla= ~ beds + days_hosp_operating + female, data=did_data,
-               control_group="notyettreated", clustervars="DocNPI")
-ggdid(did2,ylim = c(-5,5))
-summary(did1)
+event_reg_coef_ind <- as_tibble(event_reg_ind$coefficients, rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(estimate=working_ind)
 
-ggsave("objects/test.pdf", width=9, height=7, units="in")
+event_reg_ci_ind <- as_tibble(confint(event_reg_ind), rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(conf.low='2.5 %', conf.high='97.5 %')
 
-# Look at whether EHR use affects total same day count
-phys_did_data <- did_data %>%
-  distinct(DocNPI, year, totalsharedpatients, .keep_all=T)
+event_plot_ind_table <- event_reg_coef_ind %>%
+  left_join(event_reg_ci_ind, by="term") %>%
+  mutate(rel_year=c(-6,-5,-4,-3,-2,0,1,2,3,4,5,6)) %>%
+  bind_rows(extra_row) %>%
+  arrange(rel_year)
 
-did_totalcount <- att_gt(yname="totalsharedpatients",tname="year",idname="DocNPI",gname="firstyear_usesEHR",
-               xformla= ~ beds + days_hosp_operating + female + yrssince_grad, data=phys_did_data,
-               control_group="notyettreated", clustervars="HospNPI")
-did_totalcount_group <- aggte(did_totalcount,type="group",na.rm=T)
-did_totalcount_dynamic <- aggte(did_totalcount,type="dynamic",na.rm=T)
-ggdid(did_totalcount_dynamic)
+event_plot_ind <- dwplot(event_plot_ind_table, vline=geom_vline(xintercept=0, linetype=2),
+                     order_vars=c("rel_p6", "rel_p5", "rel_p4", "rel_p3", "rel_p2", "rel_p1", "rel_0",
+                                  "rel_m1", "rel_m2", "rel_m3", "rel_m4", "rel_m5", "rel_m6"),
+                     whisker_args=list(color="black", size=1.1),
+                     dot_args=list(color="black")) +
+  coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="Year", x="Estimate and 95% CI") +
+  scale_y_discrete(labels=c("rel_p6"="t+6",
+                            "rel_p5"="t+5",
+                            "rel_p4"="t+4",
+                            "rel_p3"="t+3",
+                            "rel_p2"="t+2",
+                            "rel_p1"="t+1",
+                            "rel_0"="0",
+                            "rel_m1"="t-1",
+                            "rel_m2"="t-2",
+                            "rel_m3"="t-3",
+                            "rel_m4"="t-4",
+                            "rel_m5"="t-5",
+                            "rel_m6"="t-6"))
+event_plot_ind
 
-# Look at whether EHR use impacts working variables
-did_working <- att_gt(yname="working",tname="year",idname="DocNPI",gname="firstyear_usesEHR",
-                         xformla= ~ beds + days_hosp_operating + female + yrssince_grad, data=phys_did_data,
-                         control_group="notyettreated")
-did_working_group <- aggte(did_working,type="group",na.rm=T)
-did_working_dynamic <- aggte(did_working,type="dynamic",na.rm=T)
-ggdid(did_working_dynamic)
+# Repeat Event Studies for Old Doctors ----------------------------------------------------------------
+# Event Study for Continuous Working Variable (Old Doctors)
+event_reg_old <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                    rel_p4 + rel_p5 + rel_p6 + experience + female + avg_beds + avg_oper_days | year,
+                  data=filter(Physician_Data, experience>=40))
 
-# Do the same thing but limit the sample to old physician
-old_phys_did_data <- phys_did_data %>%
-  filter(yrssince_grad>25)
+event_reg_coef_old <- as_tibble(event_reg_old$coefficients, rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(estimate=phys_working)
 
-did_working_old <- att_gt(yname="working",tname="year",idname="DocNPI",gname="firstyear_usesEHR",
-                      xformla= ~ beds + days_hosp_operating + female, data=old_phys_did_data,
-                      control_group="notyettreated")
-did_working_old_group <- aggte(did_working_old,type="group",na.rm=T)
-did_working_old_dynamic <- aggte(did_working_old,type="dynamic",na.rm=T)
-ggdid(did_working_old_dynamic)
+event_reg_ci_old <- as_tibble(confint(event_reg_old), rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(conf.low='2.5 %', conf.high='97.5 %')
+
+extra_row <- tibble(term="rel_m1", estimate=0, conf.low=0, conf.high=0, rel_year=-1)
+
+event_plot_table_old <- event_reg_coef_old %>%
+  left_join(event_reg_ci_old, by="term") %>%
+  mutate(rel_year=c(-6,-5,-4,-3,-2,0,1,2,3,4,5,6)) %>%
+  bind_rows(extra_row) %>%
+  arrange(rel_year)
+
+event_plot_old <- dwplot(event_plot_table_old, vline=geom_vline(xintercept=0, linetype=2),
+                     order_vars=c("rel_p6", "rel_p5", "rel_p4", "rel_p3", "rel_p2", "rel_p1", "rel_0",
+                                  "rel_m1", "rel_m2", "rel_m3", "rel_m4", "rel_m5", "rel_m6"),
+                     whisker_args=list(color="black", size=1.1),
+                     dot_args=list(color="black")) +
+  coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="Year", x="Estimate and 95% CI") +
+  scale_y_discrete(labels=c("rel_p6"="t+6",
+                            "rel_p5"="t+5",
+                            "rel_p4"="t+4",
+                            "rel_p3"="t+3",
+                            "rel_p2"="t+2",
+                            "rel_p1"="t+1",
+                            "rel_0"="0",
+                            "rel_m1"="t-1",
+                            "rel_m2"="t-2",
+                            "rel_m3"="t-3",
+                            "rel_m4"="t-4",
+                            "rel_m5"="t-5",
+                            "rel_m6"="t-6"))
+event_plot_old
+
+
+# Event Study for Indicator Working Variable (Old Doctors)
+event_reg_ind_old <- felm(working_ind ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                        rel_p4 + rel_p5 + rel_p6 + experience + female + avg_beds + avg_oper_days | year,
+                      data=filter(Physician_Data, experience>=40))
+
+event_reg_coef_ind_old <- as_tibble(event_reg_ind_old$coefficients, rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(estimate=working_ind)
+
+event_reg_ci_ind_old<- as_tibble(confint(event_reg_ind_old), rownames="term") %>%
+  filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
+                     "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
+  dplyr::rename(conf.low='2.5 %', conf.high='97.5 %')
+
+event_plot_ind_table_old <- event_reg_coef_ind_old %>%
+  left_join(event_reg_ci_ind_old, by="term") %>%
+  mutate(rel_year=c(-6,-5,-4,-3,-2,0,1,2,3,4,5,6)) %>%
+  bind_rows(extra_row) %>%
+  arrange(rel_year)
+
+event_plot_ind_old <- dwplot(event_plot_ind_table_old, vline=geom_vline(xintercept=0, linetype=2),
+                         order_vars=c("rel_p6", "rel_p5", "rel_p4", "rel_p3", "rel_p2", "rel_p1", "rel_0",
+                                      "rel_m1", "rel_m2", "rel_m3", "rel_m4", "rel_m5", "rel_m6"),
+                         whisker_args=list(color="black", size=1.1),
+                         dot_args=list(color="black")) +
+  coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="Year", x="Estimate and 95% CI") +
+  scale_y_discrete(labels=c("rel_p6"="t+6",
+                            "rel_p5"="t+5",
+                            "rel_p4"="t+4",
+                            "rel_p3"="t+3",
+                            "rel_p2"="t+2",
+                            "rel_p1"="t+1",
+                            "rel_0"="0",
+                            "rel_m1"="t-1",
+                            "rel_m2"="t-2",
+                            "rel_m3"="t-3",
+                            "rel_m4"="t-4",
+                            "rel_m5"="t-5",
+                            "rel_m6"="t-6"))
+event_plot_ind_old
+
 
 

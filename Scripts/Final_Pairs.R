@@ -365,6 +365,27 @@ Physician_Data <- Final_Pairs %>%
            avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients,
            num_systems)
 
+# Create working indicator and relative year variables
+Physician_Data <- Physician_Data %>%
+  mutate(working_ind=ifelse(phys_working>0,1,0)) %>%
+  mutate(rel_exposedyr=ifelse(minyr_EHR>0,year-minyr_EHR,NA))
+
+# Create relative year dummies for event study
+Physician_Data <- Physician_Data %>%
+  mutate(rel_m6=1*(rel_exposedyr<=-6),
+         rel_m5=1*(rel_exposedyr==-5),
+         rel_m4=1*(rel_exposedyr==-4),
+         rel_m3=1*(rel_exposedyr==-3),
+         rel_m2=1*(rel_exposedyr==-2),
+         rel_m1=1*(rel_exposedyr==-1),
+         rel_0=1*(rel_exposedyr==0),
+         rel_p1=1*(rel_exposedyr==1),
+         rel_p2=1*(rel_exposedyr==2),
+         rel_p3=1*(rel_exposedyr==3),
+         rel_p4=1*(rel_exposedyr==4),
+         rel_p5=1*(rel_exposedyr==5),
+         rel_p6=1*(rel_exposedyr==6)) %>%
+  mutate(rel_m1=ifelse(minyr_EHR==0,1,rel_m1))
 
 
 # Save the Data for Analysis -----------------------------------------------------------------
