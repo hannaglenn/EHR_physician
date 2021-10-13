@@ -3,18 +3,22 @@ library(readr)
 library(plm)
 library(lfe)
 library(dotwhisker)
+library(stargazer)
 
 # --------------------    EHR-Physician Analysis  --------------------------
 #                         Hanna Glenn, Emory University
 #                         10/11/2021
 
 # This Script reads in the data for my third year paper, "Physician_Data.rds" and uses it to analyze the relationship
-# between EHR adoption and physician labor market decisions. 
+# between EHR adoption and physician labor market decisions.
+
+# Read in data
+Physician_Data <- read_rds(paste0(created_data_path,"Physician_Data.rds"))
 
 # Event Studies for Entire Sample of Doctors ------------------------------------------------------
 # Event Study for Continuous Working Variable
 event_reg <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                  rel_p4 + rel_p5 + rel_p6 + experience + female + avg_beds + avg_oper_days | year,
+                  rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |year + DocNPI,
                   data=Physician_Data)
 
 event_reg_coef <- as_tibble(event_reg$coefficients, rownames="term") %>%
@@ -55,6 +59,8 @@ event_plot <- dwplot(event_plot_table, vline=geom_vline(xintercept=0, linetype=2
                             "rel_m5"="t-5",
                             "rel_m6"="t-6"))
 event_plot
+
+stargazer(event_reg)
 
 
 # Event Study for Indicator Working Variable
