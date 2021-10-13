@@ -1,0 +1,44 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,hyperref,array,xcolor,multicol,verbatim,mathpazo}
+\usepackage[normalem]{ulem}
+\usepackage[pdftex]{graphicx}
+\usepackage{fullpage}
+
+\usepackage[backend=biber,style=authoryear,
+sorting=ynt,citestyle=authoryear]{biblatex}
+\addbibresource{papercitations.bib}
+\usepackage{setspace}
+\onehalfspacing
+\addtolength{\skip\footins}{2pc plus 5pt}
+
+\title{Physician Response to EHR Implementation in Hospitals}
+\author{Hanna Glenn}
+%\date{\today}
+
+\DeclareLabeldate[online]{%
+  \field{date}
+  \field{year}
+  \field{eventdate}
+  \field{origdate}
+  \field{urldate}
+}
+
+\begin{document}
+
+\maketitle
+
+
+
+\vspace{1.5cm}
+
+Electronic Health Records (EHRs) have become increasingly relevant in the US since 2008, in part after former President Obama stated in 2009, “To improve the quality of our health care while lowering its cost, we will make the immediate investments necessary to ensure that, within five years, all of America’s medical records are computerized.” (\cite{presquote}). The movement towards digitization in health care was expected to have immediate and substantial impacts on cost and quality of care. In particular, a 2005 study estimated hundreds of billions of dollars saved if health information technology were to be fully implemented (\cite{hillestad2005}). The improvement in quality of care was expected due to physicians having more time to spend with patients, better communication across different physicians on the same care plan, and decision-making assistance that could help physicians avoid harmful mistakes. Such expectations on cost and quality led policymakers to incentivize the use of EHRs in hospitals with the the Health Information Technology for Economic and Clinical Health (HITECH) Act in 2008 (\cite{hitech}). This legislation subsidized hospitals which used EHRs “meaningfully”\footnote{According to Quatris Healthco, meaningful use standards proceeded in three stages over time. In Stage 1 (2010), MU focused on data capturing and sharing. In Stage 2, which began in late 2012, MU extended to using EHRs for patient incorporation and using the technology as a helper in care. Stage 3 went from 2014-2016 and focused on making data accessible across hospitals (\cite{meanuse})}. The push towards EHR use is evidenced in hospitals from 2008 onward; the percentage of hospitals with the capability of using a basic EHR system went from 9 percent in 2008 to 84 percent in 2015 (\cite{stats}).
+
+Specifically, an EHR is digital version of a patient’s medical records. These include detailed accounts and notes of medical history and can become advanced enough to provide the physician suggestions for care. Physicians are the primary users of this technology and have a significant role in determining whether potential benefits of EHRs are realized. However, the day-to-day life of physicians changed drastically with the implementation of EHRs. What was expected to be a helpful tool in general has turned out to be burdensome and frustrating for the persons using it. In individual interviews, multiple physicians reported that when using EHRs, they are less satisfied with their job and have both higher burnout and stress levels. Senior physicians in particular were found to “loathe the cumbersome, time-consuming data entry that comes with using EHRs.” (\cite{CollierBurnout}). A physician with the capability to stop working or move to a smaller private practice may choose to do so when the cost of using an EHR in a hospital becomes too high. This paper seeks to understand whether the implementation of EHRs in hospitals led to changes in physician labor market behaviors, such as where to work, how much to work, and whether to work at all.
+
+Using CMS Shared Patient Data from 2009-2015, I construct a panel of physician-hospital pairs that captures a specific working relationship between the pair, most likely the physician working in the hospital. I link the hospitals to AHA survey data for information on EHR use and then aggregate the data to the physician level. To measure the working decisions of physicians, I utilize (1) physician level information, also from the shared patient data, that captures total working life (referrals to labs, pharmacies, other physicians, etc), and (2) an office-based physician level dataset to observe whether physicians are moving from hospitals to private practice. For my analysis, I use a difference-in-difference estimation where treatment is defined as physicians' exposure to an EHR at any of the hospitals they work in. A key identifying assumption in this analysis is that hospitals choose to implement EHRs not based on any factors that are also correlated with physician working decisions.  
+
+
+\newpage
+\printbibliography
+\end{document}
