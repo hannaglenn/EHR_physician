@@ -15,8 +15,8 @@ library(stargazer)
 # Read in data
 Physician_Data <- read_rds(paste0(created_data_path,"Physician_Data.rds"))
 
-# Event Studies for Entire Sample of Doctors ------------------------------------------------------
-# Event Study for Continuous Working Variable
+# Event Studies for Entire Sample of Doctors ----------------------------------------------------------------
+# Continuous Number of Patients Variable
 event_reg <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
                   rel_p4 + rel_p5 + rel_p6 + female + experience + avg_beds + avg_oper_days |year,
                   data=Physician_Data)
@@ -104,7 +104,7 @@ event_plot_ind <- dwplot(event_plot_ind_table, vline=geom_vline(xintercept=0, li
 event_plot_ind
 ggsave("Objects/ind_ES_fullsample.pdf")
 
-# Repeat Event Studies for Old Doctors ----------------------------------------------------------------
+# Repeat Event Studies for Senior Doctors ----------------------------------------------------------------
 # Event Study for Continuous Working Variable (Old Doctors)
 event_reg_old <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
                     rel_p4 + rel_p5 + rel_p6 + female + avg_beds + avg_oper_days | year,
