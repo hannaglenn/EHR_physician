@@ -38,9 +38,8 @@
 
 \section[Motivation]{Motivation}
 
-\begin{frame}{The Potential of HIT}
-\centering
-    \includegraphics[scale=.6]{graphics/News Clip4.PNG}
+\begin{frame}{What is an EHR?}
+
 \end{frame}
 
 \begin{frame}[fragile]{HIT had Great (Expected) Potential in Healthcare}
@@ -114,7 +113,7 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 \end{frame}
 
 
-\section{Model and Data}
+\section{Data}
 
 
 \begin{frame}{Physician's Incentives}
@@ -140,11 +139,14 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 Measures of physician labor market behavior
 \begin{itemize}
     \item Number/percent of shared patients physician $i$ has with hospital $h$: \underline{CMS Shared Patient Data} (2009-2015)
-    \item Total Part B claims for physician $i$: \underline{Medicare Provider Utilization and Payment Data} (starts in 2012)
+    \begin{itemize}
+        \item Main dataset: physician hospital level panel
+        \item Physicians and hospitals in this data work closely together, likely the physician works \textit{in} the hospital
+    \end{itemize}
 \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Data}
+\begin{frame}{Data}
 \begin{equation*}
     p_{iht}=f(\textcolor{blue}{EHR_{ht},EHR_{-h,t}},X_i,H_{jt},...)
 \end{equation*}
@@ -158,7 +160,7 @@ Measures of physician labor market behavior
 \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Data}
+\begin{frame}{Data}
 \begin{equation*}
     p_{iht}=f(EHR_{ht},EHR_{-h,t},\textcolor{blue}{X_i},H_{jt},...)
 \end{equation*}
@@ -171,7 +173,7 @@ Physician level characteristics
 \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Data}
+\begin{frame}{Data}
 \begin{equation*}
     p_{iht}=f(EHR_{ht},EHR_{-h,t},X_i,\textcolor{blue}{H_{jt}},...)
 \end{equation*}
@@ -228,7 +230,7 @@ Hospital Level Characteristics
     
     \vspace{2mm}
     
-    \item My idea is to estimate these two separately, but there are issues because of spillover effects (if hospital $-h$ implements an EHR)
+    \item My idea is to estimate these two separately, but there are issues because of spillover effects (hospital $-h$ implements an EHR)
     
     \vspace{2mm}
     
