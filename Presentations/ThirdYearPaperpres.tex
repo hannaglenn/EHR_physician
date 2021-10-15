@@ -8,6 +8,7 @@
 \usepackage[style=authoryear]{biblatex}
 \bibliography{demo.bib}
 \usepackage{pgfplots}
+\usepackage{bbm}
 
 
 \usepgfplotslibrary{dateplot}
@@ -39,6 +40,16 @@
 \section[Motivation]{Motivation}
 
 \begin{frame}{What is an EHR?}
+
+\begin{itemize}
+    \item Computer-program technology that hospitals purchase
+    \item Performance of EHR depends on level purchased:
+    \begin{itemize}
+        \item All include electronic patient records
+        \item More complex systems allow for decision making assistance
+        \item More recently, patient interfaces are being developed
+    \end{itemize}
+\end{itemize}
 
 \end{frame}
 
@@ -118,142 +129,69 @@ Does EHR implementation in hospitals affect labor market decisions of physicians
 
 \begin{frame}{Physician's Incentives}
 \begin{itemize}
-    \item Physician decides to work, possibly at a handful of hospitals
-    \item Some proportion of these implement a new technology (an EHR)
-    \item Two ways to think about the effect:
+    \item Physician has a choice set of where to work, including multiple hospitals and office-based locations
+    \item All physicians I consider work closely with at least one hospital at some point in time
+    \item Some proportion of hospitals implement a new technology (an EHR)
+    \item How to think about the effect on labor:
     \begin{enumerate}
-        \item The cost of switching hospitals is higher (attachment to EHR hospital)
-        \item The cost of switching hospitals is lower (increased burden at EHR hospital)
+        \item EHR makes seeing patients easier (or more difficult), thus the number of patients seen increases (or decreases)
+        \item EHR imposes a burden with a high cost, so the physician switches to working at an office-based location where they have more control
+        \item A senior physician could be tipped to retire early instead of taking on the cost of learning a new technology
     \end{enumerate}
 \end{itemize}
 \end{frame}
 
 
-\begin{frame}{Data}
-\begin{equation*}
-    \textcolor{blue}{p_{iht}}=f(EHR_{ht},EHR_{-h,t},X_i,H_{jt},...)
-\end{equation*}
+\begin{frame}{Measures of Physician Labor Market Decisions}
 
-\vspace{3mm}
 
-Measures of physician labor market behavior
-\begin{itemize}
-    \item Number/percent of shared patients physician $i$ has with hospital $h$: \underline{CMS Shared Patient Data} (2009-2015)
+     Total Patients: \underline{CMS Shared Patient Data} (2009-2015)
     \begin{itemize}
-        \item Main dataset: physician hospital level panel
-        \item Physicians and hospitals in this data work closely together, likely the physician works \textit{in} the hospital
+        \item Sum of shared patients with all entities that have an NPI
     \end{itemize}
-\end{itemize}
+    
+     Indicator for whether they are working
+    \begin{itemize}
+        \item =1 if Total Patients $>0$
+    \end{itemize}
+    
+     Indicator for working in office-based location
+    \begin{itemize}
+        \item Comes from SK$\&$A database of office-based physicians
+    \end{itemize}
+
 \end{frame}
 
-\begin{frame}{Data}
-\begin{equation*}
-    p_{iht}=f(\textcolor{blue}{EHR_{ht},EHR_{-h,t}},X_i,H_{jt},...)
-\end{equation*}
+\begin{frame}{Measures of EHR Use}
+
+Physician-level Indicator that captures exposure to \textit{any} EHR
+\begin{itemize}
+    \item With information on shared patients between physicians and hospitals, I limit to physicians working in hospitals
+    \item Fraction of hospitals worked with that use an EHR comes from the AHA survey
+    \item Similarly, I can capture hospitals that use EHRs for decision making vs. documentation using the AHA Survey IT Supplement 
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Other Characteristics}
+
+Medical school graduation date, gender: \underline{Physician Compare}
 
 \vspace{5mm}
 
-\begin{itemize}
-    \item Main variable (binary for whether a hospital uses an EHR) comes from AHA survey
-    \item AHA IT Supplement also has information on EHRs that can help with documentation or decision making
-    \item (\textit{Considering Later}) Meaningful use data gives information on which hospitals received a subsidy for achieving "meaningful use"
-\end{itemize}
+Average size of hospital worked with (measured in beds), average hospital days operating: \underline{AHA Survey}
 \end{frame}
 
-\begin{frame}{Data}
+\section{Analysis}
+
+\begin{frame}{Event Studies}
 \begin{equation*}
-    p_{iht}=f(EHR_{ht},EHR_{-h,t},\textcolor{blue}{X_i},H_{jt},...)
+    Y_{it}= \sum_{t=-6}^6 \mathbbm{1}_{\{\text{relative treatment year}_{i}=t\}} + \alpha_t + \delta_{i} + \mathbb{X}_{it}
 \end{equation*}
-
-\vspace{5mm}
-
-Physician level characteristics
-\begin{itemize}
-    \item Medical school graduation date, gender: \underline{Physician Compare}
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Data}
-\begin{equation*}
-    p_{iht}=f(EHR_{ht},EHR_{-h,t},X_i,\textcolor{blue}{H_{jt}},...)
-\end{equation*}
-
-\vspace{5mm}
-
-Hospital Level Characteristics
-\begin{itemize}
-    \item Number of beds: AHA Survey
-    \item Number of days out of the year operating: AHA Survey
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Summary Statistics}
-\centering
-
-\includegraphics[scale=.8]{Objects/sumstats_pair_table.pdf}
-
-\vspace{3mm}
-
-\includegraphics[scale=.8]{Objects/sumstats_physician_table.pdf}
-
-\end{frame}
-
-\begin{frame}{Summary Statistics}
-\centering
-\includegraphics[scale=.8]{Objects/sumstats_hospital_table.pdf}
     
 \end{frame}
 
-\begin{frame}{Variation in EHR Adoption}
-\centering
-\includegraphics[scale=.53]{Objects/TYP_plot_hospEHR_year.pdf}
-\end{frame}
-
-\begin{frame}{Looking at Shares when EHRs are Adopted}
-    \centering
-    \includegraphics[scale=.5]{Objects/relyear_treatment.pdf}
-\end{frame}
-
-
-
-
-
-\section{Plans}
-
-\begin{frame}{Initial Plan: Difference in Difference}
-\begin{itemize}
-    \item Interested in two treatment effects
-    \begin{enumerate}
-        \item The effect of EHR at hospital $h$ on share at hospital $h$
-        \item The effect of EHR at hospital $h$ on share at hospital $-h$
-    \end{enumerate}
-    
-    \vspace{2mm}
-    
-    \item My idea is to estimate these two separately, but there are issues because of spillover effects (hospital $-h$ implements an EHR)
-    
-    \vspace{2mm}
-    
-    \item Control group will be physicians who have not yet been exposed to an EHR at \textbf{any} hospital at time $t$
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Other Ideas}
-\begin{itemize}
-    \item Aggregate to physician level dataset if there is insufficient data for the control group
-    \item Have a continuous measure of EHR use that captures share of exposure to EHRs
-    \item IV: bandwidth, state privacy laws
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Other Points}
-\begin{itemize}
-    \item Want to dig deeper into how a hospital qualified for meaningful use subsidies
-    \item Physician location
-    \item Bring in other measures of work from shared patient data
-\end{itemize}
-    
-\end{frame}
 
 
 
