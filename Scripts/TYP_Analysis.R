@@ -4,6 +4,7 @@ library(plm)
 library(lfe)
 library(dotwhisker)
 library(stargazer)
+library(estimatr)
 
 # --------------------    EHR-Physician Analysis  --------------------------
 #                         Hanna Glenn, Emory University
@@ -321,6 +322,15 @@ ind_dd_2010_never <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*po
                     avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2010))
 summary(ind_dd_2010_never)
 
+# Did with compairson as never treated, only for older physicians
+cont_dd_2010_never_old <- lm(phys_working ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2010)))
+summary(cont_dd_2010_never_old)
+
+ind_dd_2010_never_old <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
+                          avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & (minyr_EHR==0 | minyr_EHR==2010)))
+summary(ind_dd_2010_never_old)
+
 # Treated in 2011 ----------------------------------------------------------------------------
 # Look at some graphs (comparing treated 2011 to never treated or treated after 2011)
 ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2010)), aes(year,phys_working,color=factor(exposed_2011))) +
@@ -355,6 +365,14 @@ ind_dd_2011_never <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*po
                     avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2011))
 summary(ind_dd_2011_never)
 
+# DiD with compairson as never treated, only for older physicians
+cont_dd_2011_never_old <- lm(phys_working ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2011)))
+summary(cont_dd_2011_never_old)
+
+ind_dd_2011_never_old <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & (minyr_EHR==0 | minyr_EHR==2011)))
+summary(ind_dd_2011_never_old)
 
 # Treated in 2012 ----------------------------------------------------------------------------
 # Look at some graphs (comparing treated 2011 to never treated or treated after 2011)
@@ -390,6 +408,15 @@ ind_dd_2012_never <- lm(working_ind ~ exposed_2012 + post_2012+ exposed_2012*pos
 summary(ind_dd_2012_never)
   # Second indicator DD is the only one that shows something happening
 
+# Did with compairson as never treated, only for older physicians
+cont_dd_2012_never_old <- lm(phys_working ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2012)))
+summary(cont_dd_2012_never_old)
+
+ind_dd_2012_never_old <- lm(working_ind ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & (minyr_EHR==0 | minyr_EHR==2012)))
+summary(ind_dd_2012_never_old)
+
 
 
 # Treated in 2013 ----------------------------------------------------------------------------
@@ -422,6 +449,15 @@ summary(cont_dd_2013_never)
 ind_dd_2013_never <- lm(working_ind ~ exposed_2013 + post_2013+ exposed_2013*post_2013 + experience + female + 
                           avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2013))
 summary(ind_dd_2013_never)
+
+# Did with compairson as never treated, only for older physicians
+cont_dd_2013_never_old <- lm(phys_working ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2013)))
+summary(cont_dd_2013_never_old)
+
+ind_dd_2013_never_old <- lm(working_ind ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & (minyr_EHR==0 | minyr_EHR==2013)))
+summary(ind_dd_2013_never_old)
 
 
 
@@ -456,9 +492,25 @@ ind_dd_2014_never <- lm(working_ind ~ exposed_2014 + post_2014+ exposed_2014*pos
                           avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2014))
 summary(ind_dd_2014_never)
 
+# Did with compairson as never treated, only for older physicians
+cont_dd_2014_never_old <- lm(phys_working ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2014)))
+summary(cont_dd_2014_never_old)
 
+ind_dd_2014_never_old <- lm(working_ind ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & (minyr_EHR==0 | minyr_EHR==2014)))
+summary(ind_dd_2014_never_old)
+
+
+
+
+# Save regressions in stargazer table based on depenent variable-----------------------------------
 stargazer(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
           cont_dd_2014_never, 
+          se = starprep(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
+                                 cont_dd_2014_never, se_type = "HC1"),
+          p = starprep(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
+                               cont_dd_2014_never, stat = "p.value"),
           title="Continuous Dep. Variable Results",
           dep.var.labels=c("Total Patients (Conditional on Staying in the Job)"),
           type='latex' , 
@@ -466,10 +518,36 @@ stargazer(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_20
 
 stargazer(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_never,
           ind_dd_2014_never, 
+          se = starprep(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_never,
+                        ind_dd_2014_never, se_type = "HC1"),
+          p = starprep(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_never,
+                       ind_dd_2014_never, stat = "p.value"),
           title="Indicator for Working Dep. Variable Results",
           dep.var.labels=c("Working"),
           type='latex' , 
           out="Objects/indicator.tex")
+
+stargazer(cont_dd_2010_never_old, cont_dd_2011_never_old, cont_dd_2012_never_old, cont_dd_2013_never_old,
+          cont_dd_2014_never_old, 
+          se = starprep(cont_dd_2010_never_old, cont_dd_2011_never_old, cont_dd_2012_never_old, cont_dd_2013_never_old,
+                        cont_dd_2014_never_old, se_type = "HC1"),
+          p = starprep(cont_dd_2010_never_old, cont_dd_2011_never_old, cont_dd_2012_never_old, cont_dd_2013_never_old,
+                       cont_dd_2014_never_old, stat = "p.value"),
+          title="Difference in Difference Results (limited to older physicians)",
+          dep.var.labels=c("Total Patients (Conditional on Staying in the Job)"),
+          type='latex' , 
+          out="Objects/continuous_old.tex")
+
+stargazer(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, ind_dd_2013_never_old,
+          ind_dd_2014_never_old, 
+          se = starprep(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, ind_dd_2013_never_old,
+                        ind_dd_2014_never_old, se_type = "HC1"),
+          p = starprep(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, ind_dd_2013_never_old,
+                       ind_dd_2014_never_old, stat = "p.value"),
+          title="Difference in Difference Linear Probability Model Results (limited to older physicians)",
+          dep.var.labels=c("Working"),
+          type='latex' , 
+          out="Objects/indicator_old.tex")
 
 
 
