@@ -390,6 +390,27 @@ Physician_Data <- Physician_Data %>%
          rel_p6=1*(rel_exposedyr==6)) %>%
   mutate(rel_m1=ifelse(minyr_EHR==0,1,rel_m1))
 
+# Create indicators for exposure and "post_year" to use in year-specific diff in diff 
+Physician_Data <- Physician_Data %>%
+  mutate(exposed_2010=1*(minyr_EHR==2010),
+         exposed_2011=1*(minyr_EHR==2011),
+         exposed_2012=1*(minyr_EHR==2012),
+         exposed_2013=1*(minyr_EHR==2013),
+         exposed_2014=1*(minyr_EHR==2014),
+         post_2010=1*(year>=2010),
+         post_2011=1*(year>=2011),
+         post_2012=1*(year>=2012),
+         post_2013=1*(year>=2013),
+         post_2014=1*(year>=2014))
+
+# Create an indicator for whether the physician stays working in all years
+Physician_Data <- Physician_Data %>%
+  group_by(DocNPI) %>%
+  mutate(n=sum(working_ind)) %>%
+  ungroup() %>%
+  mutate(working_allyears=1*(n==7)) %>%
+  select(-n)
+
 
 # Save the Data for Analysis -----------------------------------------------------------------
 saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))

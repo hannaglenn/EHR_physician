@@ -284,13 +284,192 @@ ggsave("Objects/ind_ES_subset2009.pdf")
 
 
 
+# Look more closely at what is happening each year -------------------------------------------
+
+# Treated in 2010 ----------------------------------------------------------------------------
+# Look at some graphs (comparing treated in 2010 to never treated or treated after 2010)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2009)), aes(year,phys_working,color=factor(exposed_2010))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2010) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2009), aes(year,working_ind,color=factor(exposed_2010))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2010)
+  # Neither of these graphs point to anything substantial happening in 2010. For the working variable, the lines stay
+  # parallel for all of the years. For the working indicator, the lines dont break until 2015. 
+
+# Look at some graphs(comparing treated in 2010 to never treated only)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2010)), aes(year,phys_working,color=factor(exposed_2010))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2010) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2010), aes(year,working_ind,color=factor(exposed_2010))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2010)
+# Neither of these graphs point to anything substantial happening in 2010. For the working variable, the lines stay
+# parallel for all of the years. The working indicator seems to break a little bit after 2010
+
+# DiD with comparison as never treated or treated after 2010
+cont_dd_2010 <- lm(phys_working ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2009)))
+summary(cont_dd_2010)
+
+ind_dd_2010 <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2009))
+summary(ind_dd_2010)
+
+# DiD with comparison as never treated or treated after 2010
+cont_dd_2010_never <- lm(phys_working ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2010)))
+summary(cont_dd_2010_never)
+
+ind_dd_2010_never <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2010))
+summary(ind_dd_2010_never)
+
+# Treated in 2011 ----------------------------------------------------------------------------
+# Look at some graphs (comparing treated 2011 to never treated or treated after 2011)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2010)), aes(year,phys_working,color=factor(exposed_2011))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2011) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2010), aes(year,working_ind,color=factor(exposed_2011))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2011)
+# Neither of these graphs point to anything substantial happening in 2011. For the working variable, the lines stay
+# parallel for all of the years. For the working indicator, never exposed line is slightly steeper after 2011 
+
+# Look at some graphs (comparing treated 2011 to never treated only)
+ggplot(filter(Physician_Data,working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2011)), aes(year,phys_working,color=factor(exposed_2011))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2011) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2011), aes(year,working_ind,color=factor(exposed_2011))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2011)
+  # Similar story with these graphs
+
+# DiD (comparison group is never treated or treated after 2011)
+cont_dd_2011 <- lm(phys_working ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2010)))
+summary(cont_dd_2011)
+
+ind_dd_2011 <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2010))
+summary(ind_dd_2011)
+
+# DiD (comparison group is never treated only)
+cont_dd_2011_never <- lm(phys_working ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2011)))
+summary(cont_dd_2011_never)
+
+ind_dd_2011_never <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2011))
+summary(ind_dd_2011_never)
+
+
+# Treated in 2012 ----------------------------------------------------------------------------
+# Look at some graphs (comparing treated 2011 to never treated or treated after 2011)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2011)), aes(year,phys_working,color=factor(exposed_2012))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2012) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2011), aes(year,working_ind,color=factor(exposed_2012))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2012)
+# Neither of these graphs point to anything substantial happening in 2012. 
+
+# Look at some graphs (comparing treated 2011 to never treated only)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2012)), aes(year,phys_working,color=factor(exposed_2012))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2012) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2012), aes(year,working_ind,color=factor(exposed_2012))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2012)
+# Similar story with these graphs (indicator may show something)
+
+# DiD (comparison group is never treated or treated after 2011)
+cont_dd_2012 <- lm(phys_working ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2011)))
+summary(cont_dd_2012)
+
+ind_dd_2012 <- lm(working_ind ~ exposed_2012 + post_2012+ exposed_2012*post_2012 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2011))
+summary(ind_dd_2012)
+
+# DiD (comparison group is never treated only)
+cont_dd_2012_never <- lm(phys_working ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2012)))
+summary(cont_dd_2012_never)
+
+ind_dd_2012_never <- lm(working_ind ~ exposed_2012 + post_2012+ exposed_2012*post_2012 + experience + female + 
+                          avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2012))
+summary(ind_dd_2012_never)
+  # Second indicator DD is the only one that shows something happening
 
 
 
+# Treated in 2013 ----------------------------------------------------------------------------
+# Look at some graphs (comparing treated 2013 to never treated or treated after 2013)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2012)), aes(year,phys_working,color=factor(exposed_2013))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2013) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2012), aes(year,working_ind,color=factor(exposed_2013))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2013)
+
+# Look at some graphs (comparing treated 2011 to never treated only)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2013)), aes(year,phys_working,color=factor(exposed_2013))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2013) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2013), aes(year,working_ind,color=factor(exposed_2013))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2013)
+
+# DiD (comparison group is never treated or treated after 2011)
+cont_dd_2013 <- lm(phys_working ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2012)))
+summary(cont_dd_2013)
+
+ind_dd_2013 <- lm(working_ind ~ exposed_2013 + post_2013+ exposed_2013*post_2013 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2012))
+summary(ind_dd_2013)
+
+# DiD (comparison group is never treated only)
+cont_dd_2013_never <- lm(phys_working ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2013)))
+summary(cont_dd_2013_never)
+
+ind_dd_2013_never <- lm(working_ind ~ exposed_2013 + post_2013+ exposed_2013*post_2013 + experience + female + 
+                          avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2013))
+summary(ind_dd_2013_never)
 
 
 
+# Treated in 2014 ----------------------------------------------------------------------------
+# Look at some graphs (comparing treated 2014 to never treated or treated after 2014)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2013)), aes(year,phys_working,color=factor(exposed_2014))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2014) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2013), aes(year,working_ind,color=factor(exposed_2014))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2014)
 
+# Look at some graphs (comparing treated 2011 to never treated only)
+ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2014)), aes(year,phys_working,color=factor(exposed_2014))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2014) 
+ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2014), aes(year,working_ind,color=factor(exposed_2014))) +
+  stat_summary(geom='line') + geom_vline(xintercept=2014)
+
+# DiD (comparison group is never treated or treated after 2011)
+cont_dd_2014 <- lm(phys_working ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2013)))
+summary(cont_dd_2014)
+
+ind_dd_2014 <- lm(working_ind ~ exposed_2014 + post_2014+ exposed_2014*post_2014 + experience + female + 
+                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2013))
+summary(ind_dd_2014)
+
+# DiD (comparison group is never treated only)
+cont_dd_2014_never <- lm(phys_working ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2014)))
+summary(cont_dd_2014_never)
+
+ind_dd_2014_never <- lm(working_ind ~ exposed_2014 + post_2014+ exposed_2014*post_2014 + experience + female + 
+                          avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2014))
+summary(ind_dd_2014_never)
+
+
+stargazer(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
+          cont_dd_2014_never, 
+          title="Continuous Dep. Variable Results",
+          dep.var.labels=c("Total Patients (Conditional on Staying in the Job)"),
+          type='latex' , 
+          out="Objects/continuous.tex")
+
+stargazer(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_never,
+          ind_dd_2014_never, 
+          title="Indicator for Working Dep. Variable Results",
+          dep.var.labels=c("Working"),
+          type='latex' , 
+          out="Objects/indicator.tex")
 
 
 
