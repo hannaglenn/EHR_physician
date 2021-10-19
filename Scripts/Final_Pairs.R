@@ -77,6 +77,9 @@ is.pbalanced(balance_check)
 # I need to think about adding more hospital characteristics to this dataset
 AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
 
+AHAmainsurvey <- AHAmainsurvey %>%
+  mutate(ID=as.character(ID))
+
 Final_Pairs <- Final_Pairs %>% ungroup() %>%
   mutate(AHAID=as.character(AHAID)) %>%
   left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never") %>%
