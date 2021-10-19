@@ -4,6 +4,8 @@
 \usepackage[normalem]{ulem}
 \usepackage[pdftex]{graphicx}
 \usepackage{fullpage}
+\usepackage{import}
+\usepackage{adjustbox}
 
 \usepackage[backend=biber,style=authoryear,
 sorting=ynt,citestyle=authoryear]{biblatex}
@@ -38,6 +40,10 @@ Specifically, an EHR is digital version of a patient’s medical records. These 
 
 Using CMS Shared Patient Data from 2009-2015, I construct a panel of physician-hospital pairs that captures a specific working relationship between the pair, most likely the physician working in the hospital. I link the hospitals to AHA survey data for information on EHR use and then aggregate the data to the physician level. To measure the working decisions of physicians, I utilize (1) physician level information, also from the shared patient data, that captures total working life (referrals to labs, pharmacies, other physicians, etc), and (2) an office-based physician level dataset to observe whether physicians are moving from hospitals to private practice. For my analysis, I use a difference-in-difference estimation where treatment is defined as physicians' exposure to an EHR at any of the hospitals they work in. A key identifying assumption in this analysis is that hospitals choose to implement EHRs not based on any factors that are also correlated with physician working decisions.  
 
+
+\newpage
+
+\import{Objects/}{continuous.tex}
 
 \newpage
 \printbibliography
