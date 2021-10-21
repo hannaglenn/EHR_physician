@@ -6,6 +6,7 @@ library(dotwhisker)
 library(stargazer)
 library(estimatr)
 library(stats)
+library(did)
 
 # --------------------    EHR-Physician Analysis  --------------------------
 #                         Hanna Glenn, Emory University
@@ -497,5 +498,26 @@ stargazer(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, i
 
 
 
+#### Now try event studies for each year (only intensive margin) -------------------------------
+
+# Treated in 2010
 
 
+#### Callaway and Sant'Anna analysis -------------------------------------------------------
+reg_data <- Physician_Data %>%
+  mutate(DocNPI=as.numeric(DocNPI)) %>%
+  filter(!is.na(female), !is.na(experience), !is.na(avg_oper_days), !is.na(avg_beds))
+
+cont_es <- att_gt(yname = "phys_working_hosp",
+              gname = "minyr_EHR",
+              idname = "DocNPI",
+              tname = "year",
+              xformla = ~female + experience + avg_oper_days + avg_beds,
+              data = reg_data,
+              control_group="notyettreated",
+              est_method = "reg"
+)
+summary(cont_es)
+ggdid(cont_es)
+dynamic_es <- aggte(cont_es, type = "dynamic", na.rm=T)
+ggdid(dynamic_es)

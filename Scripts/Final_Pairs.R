@@ -30,27 +30,23 @@ PhysCompare <- PhysCompare %>%
 
 # Merge, then drop any physicians that graduated after 2008
 Final_Pairs <- Final_Pairs %>%
-  left_join(PhysCompare, by=c("DocNPI"="NPI"))
-
-Final_Pairs <- Final_Pairs %>%
-  distinct()
-
-Final_Pairs <- Final_Pairs %>%
+  left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
+  distinct() %>%
   filter(grad_year<2009)
 
-#### Create total_services Variable --------------------------------------------------------- ####
-# Read in MedPhys_PUF.R (created from Physician Compare in "MedPhys_PUF.R)
-#MedPhys_PUF <- read_rds(paste0(created_data_path,"MedPhys_PUF.rds"))
 
-#Final_Pairs <- Final_Pairs %>%
-  #left_join(MedPhys_PUF,by=c("DocNPI"="NPI","year"))
+#### Create num_billings_partB Variable --------------------------------------------------------- ####
+#Read in MedPhys_PUF.R (created from Physician Compare in "MedPhys_PUF.R)
+MedPhys_PUF <- read_rds(paste0(created_data_path,"MedPhys_PUF.rds"))
 
-
-
-
+Final_Pairs <- Final_Pairs %>%
+  left_join(MedPhys_PUF,by=c("DocNPI"="NPI","year")) %>%
+  rename(num_billings_partB=total_services)
 
 
-# Create EHR Variables ---------------------------------------------------------------------- ####
+
+
+#### Create EHR Variables ---------------------------------------------------------------------- ####
 #Read in AHA-NPI crosswalk
 AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
 
@@ -200,13 +196,19 @@ Final_Pairs <- Final_Pairs %>%
               #stage2=ifelse(is.na(stage2),0,stage2), stage3=ifelse(is.na(stage3),0,stage3))
 
 
-# Bring in Working variable from other shared patient entities--------------------------------------------
+# Bring in Working variable from all hospital shared patient entities--------------------------------------------
 phys_working <- read_rds(paste0(created_data_path,"phys_working.rds"))
 
 # merge by year & DocNPI
 Final_Pairs <- Final_Pairs %>%
   mutate(DocNPI=as.character(DocNPI)) %>%
   left_join(phys_working, by=c("year","DocNPI"))
+
+# Create a labor market variable for just sum of hospital shared patients
+Final_Pairs <- Final_Pairs %>%
+  group_by(DocNPI, year) %>%
+  mutate(phys_working_hosp=sum(samedaycount)) %>%
+  ungroup()
 
 
 # Bring in SK&A -----------------------------------------------------------------------------------------
@@ -367,11 +369,12 @@ Final_Pairs <- Final_Pairs %>%
 Physician_Data <- Final_Pairs %>%
   distinct(DocNPI,year,grad_year,female,phys_working,num_hospitals, hosp_EHR, frac_EHR, avg_beds, 
            avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients,
-           num_systems)
+           num_systems, phys_working_hosp)
 
 # Create working indicator and relative year variables
 Physician_Data <- Physician_Data %>%
   mutate(working_ind=ifelse(phys_working>0,1,0)) %>%
+  mutate(working_ind_hosp=ifelse(phys_working_hosp>0,1,0)) %>%
   mutate(rel_exposedyr=ifelse(minyr_EHR>0,year-minyr_EHR,NA))
 
 # Create relative year dummies for event study
@@ -410,6 +413,14 @@ Physician_Data <- Physician_Data %>%
   mutate(n=sum(working_ind)) %>%
   ungroup() %>%
   mutate(working_allyears=1*(n==7)) %>%
+  select(-n)
+
+# Create an indicator for whether the physician stays working in their hospitals in all years
+Physician_Data <- Physician_Data %>%
+  group_by(DocNPI) %>%
+  mutate(n=sum(working_ind_hosp)) %>%
+  ungroup() %>%
+  mutate(working_allyears_hosp=1*(n==7)) %>%
   select(-n)
 
 
