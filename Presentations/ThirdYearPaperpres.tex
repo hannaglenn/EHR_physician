@@ -9,6 +9,8 @@
 \bibliography{demo.bib}
 \usepackage{pgfplots}
 \usepackage{bbm}
+\usepackage{import}
+\usepackage{graphics}
 
 
 \usepgfplotslibrary{dateplot}
@@ -78,12 +80,13 @@ In the short run:
 \begin{itemize}
     \item Physicians spend more time entering information into a computer and learning a new software
     \item Physicians have experienced significant burn-out from using and learning EHRs
+    \item Loss of autonomy
 \end{itemize}
 
 In the long run:
 \begin{itemize}
     \item Could make daily tasks easier or harder
-    \item Continued loss of autonomy as technology progresses
+    \item Progressing loss of autonomy as technology progresses
 \end{itemize}
 
 \end{frame}
@@ -115,21 +118,14 @@ Did EHR implementation in hospitals affect labor market decisions of physicians,
 
 \section{Contribution}
 
-\begin{frame}{Branches of Literature}
-\centering
-\includegraphics[scale=.5]{graphics/Contribution_litgraphic.PNG}
-
+\begin{frame}{Effect of Health Information Technology}
+    
 \end{frame}
 
-\begin{frame}{Physician Labor Literature}
-\centering
-    \includegraphics[scale=.45]{graphics/labor_litgraphic.PNG}
+\begin{frame}{Physician Labor Decisions}
+    
 \end{frame}
 
-\begin{frame}{EHR Literature}
-    \centering
-    \includegraphics[scale=.45]{graphics/EHR_litgraphic.PNG}
-\end{frame}
 
 
 \section{Data}
@@ -142,9 +138,9 @@ Did EHR implementation in hospitals affect labor market decisions of physicians,
     \item Some proportion of hospitals implement a new technology (an EHR)
     \item How to think about the effect on labor:
     \begin{enumerate}
-        \item EHR makes seeing patients easier (or more difficult), thus the number of patients seen increases (or decreases)
-        \item EHR imposes a burden with a high cost, so the physician switches to working at an office-based location where they have more control
-        \item A senior physician could be tipped to retire early instead of taking on the cost of learning a new technology
+        \item EHR makes seeing patients easier (or more difficult), thus physician can see more (or less) patients
+        \item If the cost of sing an EHR is high enough, the physician can switch to working at an office-based location where they have more control
+        \item A senior physician may have incentive to retire early instead of taking on the cost of learning a new technology
     \end{enumerate}
 \end{itemize}
 \end{frame}
@@ -174,8 +170,8 @@ Did EHR implementation in hospitals affect labor market decisions of physicians,
 
 Physician-level Indicator that captures exposure to \textit{any} EHR
 \begin{itemize}
-    \item With information on shared patients between physicians and hospitals, I limit to physicians working in hospitals
-    \item Fraction of hospitals worked with that use an EHR comes from the AHA survey
+    \item With information on shared patients between physicians and hospitals, I limit to physicians who work in at least one hospital at some point in the time frame
+    \item Hospital EHR use comes from AHA survey
     \item Similarly, I can capture hospitals that use EHRs for decision making vs. documentation using the AHA Survey IT Supplement 
 \end{itemize}
 
@@ -191,17 +187,46 @@ Medical school graduation date, gender: \underline{Physician Compare}
 Average size of hospital worked with (measured in beds), average hospital days operating: \underline{AHA Survey}
 \end{frame}
 
-\section{Analysis}
+\begin{frame}{Summary Stats}
+\centering
+    \includegraphics[scale=.7]{Objects/sumstats.pdf}
+\end{frame}
 
-\begin{frame}{Event Studies}
-\begin{equation*}
-    Y_{it}= \sum_{t=-6}^6 \mathbbm{1}_{\{\text{relative treatment year}_{i}=t\}} + \alpha_t + \delta_{i} + \mathbb{X}_{it}
-\end{equation*}
-    
+\begin{frame}{Physician EHR Use}
+    \centering
+    \includegraphics[scale=.5]{Objects/sum_stats_year.pdf}
 \end{frame}
 
 
+\section{Analysis}
 
+\begin{frame}{Analysis}
+
+
+    
+\end{frame}
+
+\section{Results}
+
+\begin{frame}[shrink=30]{Total Patients}
+\centering
+\import{Objects/}{continuous.tex}
+\end{frame}
+
+\begin{frame}[shrink=30]{Total Patients}
+\centering
+\import{Objects/}{continuous_old.tex}
+\end{frame}
+
+\begin{frame}[shrink=30]{Working}
+\centering
+\import{Objects/}{indicator.tex}
+\end{frame}
+
+\begin{frame}[shrink=30]{Retirement?}
+\centering
+\import{Objects/}{indicator_old.tex}
+\end{frame}
 
 
 
