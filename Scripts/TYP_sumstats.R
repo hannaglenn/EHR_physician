@@ -20,7 +20,7 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 # Read in Final_Pairs_Variables.rds
 Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
-# General Summary Stats Tables: Separate for Physician, Hospital, Pair level ----------------------------------------------------------------
+# General Summary Stats Tables:  ----------------------------------------------------------------
 
 # Physician Level
 sum_stats <- Physician_Data %>% ungroup() %>%
@@ -39,7 +39,7 @@ sum_stats <- Physician_Data %>% ungroup() %>%
   relocate(variable,n,m,sd,min,max)
 
 knitr::kable(sum_stats, "latex",
-             col.names=c("Variable", "Physicians", "Mean", "Std. Dev.", "Min", "Max"),
+             col.names=c("Variable", "Physician-Year", "Mean", "Std. Dev.", "Min", "Max"),
              digits=2,
              caption="Physician Level Variables",
              booktabs=T,

@@ -5,6 +5,7 @@ library(lfe)
 library(dotwhisker)
 library(stargazer)
 library(estimatr)
+library(stats)
 
 # --------------------    EHR-Physician Analysis  --------------------------
 #                         Hanna Glenn, Emory University
@@ -20,7 +21,7 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_Data.rds"))
 # Continuous Number of Patients Variable
 event_reg <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
                   rel_p4 + rel_p5 + rel_p6 + female + experience + avg_beds + avg_oper_days |year,
-                  data=Physician_Data)
+                  data=filter(Physician_Data,working_allyears==1))
 
 event_reg_coef <- as_tibble(event_reg$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -109,7 +110,7 @@ ggsave("Objects/ind_ES_fullsample.pdf")
 # Event Study for Continuous Working Variable (Old Doctors)
 event_reg_old <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
                     rel_p4 + rel_p5 + rel_p6 + female + avg_beds + avg_oper_days | year,
-                  data=filter(Physician_Data, experience>=40))
+                  data=filter(Physician_Data, working_allyears==1 & experience>=37))
 
 event_reg_coef_old <- as_tibble(event_reg_old$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -154,7 +155,7 @@ ggsave("Objects/cont_ES_oldsample.pdf")
 # Event Study for Indicator Working Variable (Old Doctors)
 event_reg_ind_old <- felm(working_ind ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
                         rel_p4 + rel_p5 + rel_p6 + female + avg_beds + avg_oper_days | year,
-                      data=filter(Physician_Data, experience>=40))
+                      data=filter(Physician_Data, experience>=37))
 
 event_reg_coef_ind_old <- as_tibble(event_reg_ind_old$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -198,7 +199,7 @@ ggsave("Objects/ind_ES_oldsample.pdf")
 # Event Studies for Sample of Doctors excluding 2009 treatment ------------------------------------------------------
 event_reg_subset <- felm(phys_working ~ rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
                     rel_p4 + rel_p5 + female + experience + avg_beds + avg_oper_days |year,
-                  data=filter(Physician_Data,minyr_EHR>2009))
+                  data=filter(Physician_Data,working_allyears==1 & minyr_EHR>2009))
 
 event_reg_coef_subset <- as_tibble(event_reg_subset$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -287,234 +288,170 @@ ggsave("Objects/ind_ES_subset2009.pdf")
 
 # Look more closely at what is happening each year -------------------------------------------
 
+# Create yearly datasets so the variables can have the same names
+data_2010 <- Physician_Data %>%
+  filter(minyr_EHR==2010 | minyr_EHR==0) %>%
+  rename(treated=exposed_2010, post=post_2010)
+data_2011 <- Physician_Data %>%
+  filter(minyr_EHR==2011 | minyr_EHR==0) %>%
+  rename(treated=exposed_2011, post=post_2011)
+data_2012 <- Physician_Data %>%
+  filter(minyr_EHR==2012 | minyr_EHR==0) %>%
+  rename(treated=exposed_2012, post=post_2012)
+data_2013 <- Physician_Data %>%
+  filter(minyr_EHR==2013 | minyr_EHR==0) %>%
+  rename(treated=exposed_2013, post=post_2013)
+data_2014 <- Physician_Data %>%
+  filter(minyr_EHR==2014 | minyr_EHR==0) %>%
+  rename(treated=exposed_2014, post=post_2014)
+  
+
 # Treated in 2010 ----------------------------------------------------------------------------
-# Look at some graphs (comparing treated in 2010 to never treated or treated after 2010)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2009)), aes(year,phys_working,color=factor(exposed_2010))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2010) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2009), aes(year,working_ind,color=factor(exposed_2010))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2010)
-  # Neither of these graphs point to anything substantial happening in 2010. For the working variable, the lines stay
-  # parallel for all of the years. For the working indicator, the lines dont break until 2015. 
 
 # Look at some graphs(comparing treated in 2010 to never treated only)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2010)), aes(year,phys_working,color=factor(exposed_2010))) +
+ggplot(filter(data_2010, working_allyears==1), aes(year,phys_working,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2010) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2010), aes(year,working_ind,color=factor(exposed_2010))) +
+ggplot(data_2010, aes(year,working_ind,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2010)
 # Neither of these graphs point to anything substantial happening in 2010. For the working variable, the lines stay
 # parallel for all of the years. The working indicator seems to break a little bit after 2010
 
-# DiD with comparison as never treated or treated after 2010
-cont_dd_2010 <- lm(phys_working ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2009)))
-summary(cont_dd_2010)
-
-ind_dd_2010 <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2009))
-summary(ind_dd_2010)
-
-# DiD with comparison as never treated or treated after 2010
-cont_dd_2010_never <- lm(phys_working ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2010)))
+# DiD with comparison as never treated
+cont_dd_2010_never <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                     avg_beds + avg_oper_days, data=filter(data_2010, working_allyears==1))
 summary(cont_dd_2010_never)
 
-ind_dd_2010_never <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2010))
+ind_dd_2010_never <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                    avg_beds + avg_oper_days, data_2010)
 summary(ind_dd_2010_never)
 
 # Did with compairson as never treated, only for older physicians
-cont_dd_2010_never_old <- lm(phys_working ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
-                           avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2010)))
+cont_dd_2010_never_old <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(data_2010, experience>=35 & working_allyears==1))
 summary(cont_dd_2010_never_old)
 
-ind_dd_2010_never_old <- lm(working_ind ~ exposed_2010 + post_2010 + exposed_2010*post_2010 + experience + female + 
-                          avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & (minyr_EHR==0 | minyr_EHR==2010)))
+ind_dd_2010_never_old <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                          avg_beds + avg_oper_days, data=filter(data_2010, experience>=35))
 summary(ind_dd_2010_never_old)
 
 # Treated in 2011 ----------------------------------------------------------------------------
-# Look at some graphs (comparing treated 2011 to never treated or treated after 2011)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2010)), aes(year,phys_working,color=factor(exposed_2011))) +
+
+# Look at some graphs(comparing treated in 2010 to never treated only)
+ggplot(filter(data_2011, working_allyears==1), aes(year,phys_working,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2011) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2010), aes(year,working_ind,color=factor(exposed_2011))) +
+ggplot(data_2011, aes(year,working_ind,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2011)
-# Neither of these graphs point to anything substantial happening in 2011. For the working variable, the lines stay
-# parallel for all of the years. For the working indicator, never exposed line is slightly steeper after 2011 
 
-# Look at some graphs (comparing treated 2011 to never treated only)
-ggplot(filter(Physician_Data,working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2011)), aes(year,phys_working,color=factor(exposed_2011))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2011) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2011), aes(year,working_ind,color=factor(exposed_2011))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2011)
-  # Similar story with these graphs
-
-# DiD (comparison group is never treated or treated after 2011)
-cont_dd_2011 <- lm(phys_working ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2010)))
-summary(cont_dd_2011)
-
-ind_dd_2011 <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2010))
-summary(ind_dd_2011)
-
-# DiD (comparison group is never treated only)
-cont_dd_2011_never <- lm(phys_working ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2011)))
+# DiD with comparison as never treated
+cont_dd_2011_never <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(data_2011, working_allyears==1))
 summary(cont_dd_2011_never)
 
-ind_dd_2011_never <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2011))
+ind_dd_2011_never <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                          avg_beds + avg_oper_days, data_2011)
 summary(ind_dd_2011_never)
 
-# DiD with compairson as never treated, only for older physicians
-cont_dd_2011_never_old <- lm(phys_working ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
-                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2011)))
+# Did with comparison as never treated, only for older physicians
+cont_dd_2011_never_old <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(data_2011, experience>=35 & working_allyears==1))
 summary(cont_dd_2011_never_old)
 
-ind_dd_2011_never_old <- lm(working_ind ~ exposed_2011 + post_2011 + exposed_2011*post_2011 + experience + female + 
-                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & (minyr_EHR==0 | minyr_EHR==2011)))
+ind_dd_2011_never_old <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(data_2011, experience>=35))
 summary(ind_dd_2011_never_old)
 
+
 # Treated in 2012 ----------------------------------------------------------------------------
-# Look at some graphs (comparing treated 2011 to never treated or treated after 2011)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2011)), aes(year,phys_working,color=factor(exposed_2012))) +
+# Look at some graphs(comparing treated in 2010 to never treated only)
+ggplot(filter(data_2012, working_allyears==1), aes(year,phys_working,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2012) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2011), aes(year,working_ind,color=factor(exposed_2012))) +
+ggplot(data_2012, aes(year,working_ind,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2012)
-# Neither of these graphs point to anything substantial happening in 2012. 
 
-# Look at some graphs (comparing treated 2011 to never treated only)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2012)), aes(year,phys_working,color=factor(exposed_2012))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2012) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2012), aes(year,working_ind,color=factor(exposed_2012))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2012)
-# Similar story with these graphs (indicator may show something)
-
-# DiD (comparison group is never treated or treated after 2011)
-cont_dd_2012 <- lm(phys_working ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2011)))
-summary(cont_dd_2012)
-
-ind_dd_2012 <- lm(working_ind ~ exposed_2012 + post_2012+ exposed_2012*post_2012 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2011))
-summary(ind_dd_2012)
-
-# DiD (comparison group is never treated only)
-cont_dd_2012_never <- lm(phys_working ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
-                           avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2012)))
+# DiD with comparison as never treated
+cont_dd_2012_never <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(data_2012, working_allyears==1))
 summary(cont_dd_2012_never)
 
-ind_dd_2012_never <- lm(working_ind ~ exposed_2012 + post_2012+ exposed_2012*post_2012 + experience + female + 
-                          avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2012))
+ind_dd_2012_never <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                          avg_beds + avg_oper_days, data_2012)
 summary(ind_dd_2012_never)
-  # Second indicator DD is the only one that shows something happening
 
-# Did with compairson as never treated, only for older physicians
-cont_dd_2012_never_old <- lm(phys_working ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
-                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2012)))
+# Did with comparison as never treated, only for older physicians
+cont_dd_2012_never_old <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(data_2012, experience>=35 & working_allyears==1))
 summary(cont_dd_2012_never_old)
 
-ind_dd_2012_never_old <- lm(working_ind ~ exposed_2012 + post_2012 + exposed_2012*post_2012 + experience + female + 
-                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=35 & (minyr_EHR==0 | minyr_EHR==2012)))
+ind_dd_2012_never_old <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(data_2012, experience>=35))
 summary(ind_dd_2012_never_old)
 
 
-
 # Treated in 2013 ----------------------------------------------------------------------------
-# Look at some graphs (comparing treated 2013 to never treated or treated after 2013)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2012)), aes(year,phys_working,color=factor(exposed_2013))) +
+# Look at some graphs(comparing treated in 2010 to never treated only)
+ggplot(filter(data_2013, working_allyears==1), aes(year,phys_working,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2013) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2012), aes(year,working_ind,color=factor(exposed_2013))) +
+ggplot(data_2013, aes(year,working_ind,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2013)
 
-# Look at some graphs (comparing treated 2011 to never treated only)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2013)), aes(year,phys_working,color=factor(exposed_2013))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2013) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2013), aes(year,working_ind,color=factor(exposed_2013))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2013)
-
-# DiD (comparison group is never treated or treated after 2011)
-cont_dd_2013 <- lm(phys_working ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2012)))
-summary(cont_dd_2013)
-
-ind_dd_2013 <- lm(working_ind ~ exposed_2013 + post_2013+ exposed_2013*post_2013 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2012))
-summary(ind_dd_2013)
-
-# DiD (comparison group is never treated only)
-cont_dd_2013_never <- lm(phys_working ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
-                           avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2013)))
+# DiD with comparison as never treated
+cont_dd_2013_never <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(data_2013, working_allyears==1))
 summary(cont_dd_2013_never)
 
-ind_dd_2013_never <- lm(working_ind ~ exposed_2013 + post_2013+ exposed_2013*post_2013 + experience + female + 
-                          avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2013))
+ind_dd_2013_never <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                          avg_beds + avg_oper_days, data_2013)
 summary(ind_dd_2013_never)
 
-# Did with compairson as never treated, only for older physicians
-cont_dd_2013_never_old <- lm(phys_working ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
-                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2013)))
+# Did with comparison as never treated, only for older physicians
+cont_dd_2013_never_old <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(data_2013, experience>=35 & working_allyears==1))
 summary(cont_dd_2013_never_old)
 
-ind_dd_2013_never_old <- lm(working_ind ~ exposed_2013 + post_2013 + exposed_2013*post_2013 + experience + female + 
-                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & (minyr_EHR==0 | minyr_EHR==2013)))
+ind_dd_2013_never_old <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(data_2013, experience>=35))
 summary(ind_dd_2013_never_old)
 
 
-
 # Treated in 2014 ----------------------------------------------------------------------------
-# Look at some graphs (comparing treated 2014 to never treated or treated after 2014)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2013)), aes(year,phys_working,color=factor(exposed_2014))) +
+# Look at some graphs(comparing treated in 2010 to never treated only)
+ggplot(filter(data_2014, working_allyears==1), aes(year,phys_working,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2014) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2013), aes(year,working_ind,color=factor(exposed_2014))) +
+ggplot(data_2014, aes(year,working_ind,color=factor(treated))) +
   stat_summary(geom='line') + geom_vline(xintercept=2014)
 
-# Look at some graphs (comparing treated 2011 to never treated only)
-ggplot(filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2014)), aes(year,phys_working,color=factor(exposed_2014))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2014) 
-ggplot(filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2014), aes(year,working_ind,color=factor(exposed_2014))) +
-  stat_summary(geom='line') + geom_vline(xintercept=2014)
-
-# DiD (comparison group is never treated or treated after 2011)
-cont_dd_2014 <- lm(phys_working ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
-                     avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR>2013)))
-summary(cont_dd_2014)
-
-ind_dd_2014 <- lm(working_ind ~ exposed_2014 + post_2014+ exposed_2014*post_2014 + experience + female + 
-                    avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR>2013))
-summary(ind_dd_2014)
-
-# DiD (comparison group is never treated only)
-cont_dd_2014_never <- lm(phys_working ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
-                           avg_beds + avg_oper_days, data=filter(Physician_Data, working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2014)))
+# DiD with comparison as never treated
+cont_dd_2014_never <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                           avg_beds + avg_oper_days, data=filter(data_2014, working_allyears==1))
 summary(cont_dd_2014_never)
 
-ind_dd_2014_never <- lm(working_ind ~ exposed_2014 + post_2014+ exposed_2014*post_2014 + experience + female + 
-                          avg_beds + avg_oper_days, data=filter(Physician_Data, minyr_EHR==0 | minyr_EHR==2014))
+ind_dd_2014_never <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                          avg_beds + avg_oper_days, data_2014)
 summary(ind_dd_2014_never)
 
-# Did with compairson as never treated, only for older physicians
-cont_dd_2014_never_old <- lm(phys_working ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
-                               avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & working_allyears==1 & (minyr_EHR==0 | minyr_EHR==2014)))
+# Did with comparison as never treated, only for older physicians
+cont_dd_2014_never_old <- lm(phys_working ~ treated + post + treated*post + experience + female + 
+                               avg_beds + avg_oper_days, data=filter(data_2014, experience>=35 & working_allyears==1))
 summary(cont_dd_2014_never_old)
 
-ind_dd_2014_never_old <- lm(working_ind ~ exposed_2014 + post_2014 + exposed_2014*post_2014 + experience + female + 
-                              avg_beds + avg_oper_days, data=filter(Physician_Data, experience>=37 & (minyr_EHR==0 | minyr_EHR==2014)))
+ind_dd_2014_never_old <- lm(working_ind ~ treated + post + treated*post + experience + female + 
+                              avg_beds + avg_oper_days, data=filter(data_2014, experience>=35))
 summary(ind_dd_2014_never_old)
 
-
-
-
-# Save regressions in stargazer table based on depenent variable-----------------------------------
+# Save regressions in stargazer table based on dependent variable-----------------------------------
 stargazer(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
           cont_dd_2014_never, 
           se = starprep(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
                                  cont_dd_2014_never, se_type = "HC1"),
           p = starprep(cont_dd_2010_never, cont_dd_2011_never, cont_dd_2012_never, cont_dd_2013_never,
                                cont_dd_2014_never, stat = "p.value"),
-          title="Continuous Dep. Variable Results",
-          dep.var.labels=c("Total Patients (Conditional on Staying in the Job)"),
+          title="Difference in Difference by Year: Full Sample of Doctors",
+          dep.var.labels=c("Dep. Variable: Total Patients (Conditional on Staying in the Job)"),
           type='latex' , 
-          out="Objects/continuous.tex")
+          out="Objects/continuous.tex", 
+          column.sep.width = "0pt", 
+          font.size = "scriptsize",
+          keep.stat=c("n","adj.rsq"))
 
 stargazer(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_never,
           ind_dd_2014_never, 
@@ -522,10 +459,13 @@ stargazer(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_n
                         ind_dd_2014_never, se_type = "HC1"),
           p = starprep(ind_dd_2010_never, ind_dd_2011_never, ind_dd_2012_never, ind_dd_2013_never,
                        ind_dd_2014_never, stat = "p.value"),
-          title="Indicator for Working Dep. Variable Results",
+          title="Difference in Difference Linear Probability Model by Year; Full Sample of Doctors",
           dep.var.labels=c("Working"),
           type='latex' , 
-          out="Objects/indicator.tex")
+          out="Objects/indicator.tex",
+          column.sep.width = "0pt", 
+          font.size = "scriptsize",
+          keep.stat=c("n","adj.rsq"))
 
 stargazer(cont_dd_2010_never_old, cont_dd_2011_never_old, cont_dd_2012_never_old, cont_dd_2013_never_old,
           cont_dd_2014_never_old, 
@@ -533,10 +473,13 @@ stargazer(cont_dd_2010_never_old, cont_dd_2011_never_old, cont_dd_2012_never_old
                         cont_dd_2014_never_old, se_type = "HC1"),
           p = starprep(cont_dd_2010_never_old, cont_dd_2011_never_old, cont_dd_2012_never_old, cont_dd_2013_never_old,
                        cont_dd_2014_never_old, stat = "p.value"),
-          title="Difference in Difference Results (limited to older physicians)",
+          title="Difference in Difference by Year (limited to older physicians)",
           dep.var.labels=c("Total Patients (Conditional on Staying in the Job)"),
           type='latex' , 
-          out="Objects/continuous_old.tex")
+          out="Objects/continuous_old.tex",
+          column.sep.width = "0pt", 
+          font.size = "scriptsize",
+          keep.stat=c("n","adj.rsq"))
 
 stargazer(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, ind_dd_2013_never_old,
           ind_dd_2014_never_old, 
@@ -544,10 +487,13 @@ stargazer(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, i
                         ind_dd_2014_never_old, se_type = "HC1"),
           p = starprep(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, ind_dd_2013_never_old,
                        ind_dd_2014_never_old, stat = "p.value"),
-          title="Difference in Difference Linear Probability Model Results (limited to older physicians)",
+          title="Difference in Difference Linear Probability Model by Year (limited to older physicians)",
           dep.var.labels=c("Working"),
           type='latex' , 
-          out="Objects/indicator_old.tex")
+          out="Objects/indicator_old.tex",
+          column.sep.width = "0pt", 
+          font.size = "scriptsize",
+          keep.stat=c("n","adj.rsq"))
 
 
 

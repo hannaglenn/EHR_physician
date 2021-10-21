@@ -2,6 +2,7 @@ library(tidyverse)
 library(readr)
 library(plm)
 
+
 # --------------------    Build Variables Onto Main Hospital-Physician Pair Data --------------------------
 #                         Hanna Glenn, Emory University
 #                         9/3/2021
@@ -337,7 +338,7 @@ Final_Pairs <- Final_Pairs %>% ungroup() %>%
 
 # Create "exposed" indicator based on year and min year of EHR
 Final_Pairs <- Final_Pairs %>%
-  mutate(exposed=ifelse(year>=minyr_EHR,1,0))
+  mutate(exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0))
 
 # Potential Treatment Variables: Documentation and Decision Making Indicators
 Final_Pairs <- Final_Pairs %>%
