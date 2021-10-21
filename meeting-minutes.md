@@ -30,6 +30,15 @@ Action Items:
 
 Points of Confusion:
 
-## 10-14-2021
+## 10-21-2021
 Questions to ask:
-- (Look at graph of minimum year exposed to EHR) most physicians are exposed in 2009... I think this will cause issues with analysis. 
+- Show the tables with diff in diffs for each year 
+
+Major Points Discussed:
+- Before I present results on the extensive margin, I need to think a lot more about the billing relationship between physicians and hospitals. Since I'm seeing younger physicians drop out of the data, it may be that once they become employees of the hospital they no longer bill individually. I need to do some detective work to see if physicians who drop out are truly dropping out or not (do they leave for one year? look up their NPI and see if they are still practicing, etc. )
+- Instead of year diff in diffs, create event studies for each year. That way I can see the effect in the years after treatment. Think about manually deciding the control groups: it may be that those who are never exposed to EHRs are just totally different. Think about making the control group those who adopt at least a couple years after. Also use Callaway and Sat'Anna's package and compare. 
+- For the intensive margin:
+-   Be very clear about the population of physicians. 
+-   Limit to just hospital patients so I don't have double counts
+-   Also use part B 
+- Another potential outcome (instead of waiting for the SK&A data) is to look at hospital patients vs. nonhospital patients and see whether doctors are switching out of hospital settings
