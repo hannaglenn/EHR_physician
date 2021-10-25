@@ -20,14 +20,14 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_Data.rds"))
 
 # Event Studies for Entire Sample of Doctors ----------------------------------------------------------------
 # Continuous Number of Patients Variable
-event_reg <- felm(phys_working ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                  rel_p4 + rel_p5 + rel_p6 + female + experience + avg_beds + avg_oper_days |year,
-                  data=filter(Physician_Data,working_allyears==1))
+event_reg <- felm(phys_working_hosp ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                  rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year,
+                  data=filter(Physician_Data,working_allyears_hosp==1))
 
 event_reg_coef <- as_tibble(event_reg$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
                      "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
-  dplyr::rename(estimate=phys_working)
+  dplyr::rename(estimate=phys_working_hosp)
 
 event_reg_ci <- as_tibble(confint.default(event_reg), rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -198,14 +198,14 @@ ggsave("Objects/ind_ES_oldsample.pdf")
 
 
 # Event Studies for Sample of Doctors excluding 2009 treatment ------------------------------------------------------
-event_reg_subset <- felm(phys_working ~ rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                    rel_p4 + rel_p5 + female + experience + avg_beds + avg_oper_days |year,
-                  data=filter(Physician_Data,working_allyears==1 & minyr_EHR>2009))
+event_reg_subset <- felm(phys_working_hosp ~ rel_m5 + rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                    rel_p4 + rel_p5 + female + avg_oper_days |DocNPI +year,
+                  data=filter(Physician_Data,working_allyears_hosp==1 & minyr_EHR!=2009))
 
 event_reg_coef_subset <- as_tibble(event_reg_subset$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
                      "rel_p2", "rel_p3", "rel_p4", "rel_p5")) %>%
-  dplyr::rename(estimate=phys_working)
+  dplyr::rename(estimate=phys_working_hosp)
 
 event_reg_ci_subset <- as_tibble(confint.default(event_reg_subset), rownames="term") %>%
   filter(term %in% c("rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -949,13 +949,15 @@ event_plot_2014_ind
 #### Callaway and Sant'Anna analysis -------------------------------------------------------
 reg_data <- Physician_Data %>%
   mutate(DocNPI=as.numeric(DocNPI)) %>%
-  filter(!is.na(female), !is.na(experience), !is.na(avg_oper_days), !is.na(avg_beds))
+  filter(!is.na(avg_oper_days), !is.na(avg_beds)) %>%
+  filter(working_allyears_hosp==1) %>%
+  filter(minyr_EHR<2014)
 
 cont_es <- att_gt(yname = "phys_working_hosp",
               gname = "minyr_EHR",
               idname = "DocNPI",
               tname = "year",
-              xformla = ~female + experience + avg_oper_days + avg_beds,
+              xformla = ~ avg_oper_days + avg_beds,
               data = reg_data,
               control_group="notyettreated",
               est_method = "reg"
