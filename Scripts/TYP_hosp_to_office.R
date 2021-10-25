@@ -18,15 +18,15 @@ library(did)
 Physician_Data <- read_rds(paste0(created_data_path,"Physician_Data.rds"))
 
 # Event Study, Full Sample ------------------------------------------------------------
-event_fullsample <- felm(phys_working_hosp ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + 
-                                rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                                rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
-                              data=filter(Physician_Data,working_allyears_hosp==1))
+event_fullsample <- felm(nonhosp_ind ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + 
+                           rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                           rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
+                         data=Physician_Data)
 
 event_fullsample_coef <- as_tibble(event_fullsample$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
                      "rel_p2", "rel_p3", "rel_p4", "rel_p5", "rel_p6")) %>%
-  dplyr::rename(estimate=phys_working_hosp)
+  dplyr::rename(estimate=nonhosp_ind)
 
 event_fullsample_ci <- as_tibble(confint.default(event_fullsample), rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -43,10 +43,10 @@ event_fullsample_table <- event_fullsample_coef %>%
   mutate(model="All")
 
 event_fullsample_plot <- dwplot(event_fullsample_table, vline=geom_vline(xintercept=0, linetype=2),
-                                     whisker_args=list(color="black", size=1.1),
-                                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
-                                     dot_args=list(color="black")) + #xlim(-150,150) +
+                                whisker_args=list(color="black", size=1.1),
+                                vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                              "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
+                                dot_args=list(color="black")) + #xlim(-150,150) +
   coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c("rel_p5"="t+5",
                             "rel_p4"="t+4",
@@ -66,9 +66,9 @@ ggsave("Objects/event_fullsample.pdf")
 
 # Event Study, Old Doctors
 event_oldsample <- felm(phys_working_hosp ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + 
-                           rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                           rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
-                         data=filter(Physician_Data,working_allyears_hosp==1 & experience>35))
+                          rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                          rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
+                        data=filter(Physician_Data,working_allyears_hosp==1 & experience>35))
 
 event_oldsample_coef <- as_tibble(event_oldsample$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -90,10 +90,10 @@ event_oldsample_table <- event_oldsample_coef %>%
   mutate(model="Experience>35")
 
 event_oldsample_plot <- dwplot(event_oldsample_table, vline=geom_vline(xintercept=0, linetype=2),
-                                whisker_args=list(color="black", size=1.1),
-                                vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                              "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
-                                dot_args=list(color="black")) + #xlim(-150,150) +
+                               whisker_args=list(color="black", size=1.1),
+                               vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                             "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
+                               dot_args=list(color="black")) + #xlim(-150,150) +
   coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c("rel_p5"="t+5",
                             "rel_p4"="t+4",
@@ -114,9 +114,9 @@ ggsave("Objects/event_oldsample.pdf")
 # Put both full sample event studies on the same graph
 event_joined_table <- bind_rows(event_fullsample_table, event_oldsample_table) 
 event_plot <- dwplot(event_joined_table, vline=geom_vline(xintercept=0, linetype=2),
-                               whisker_args=list(size=1.1),
-                               vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                             "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6")) +
+                     whisker_args=list(size=1.1),
+                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6")) +
   coord_flip()  + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c("rel_p5"="t+5",
                             "rel_p4"="t+4",
@@ -165,10 +165,10 @@ event_hosp_fullsample_table <- event_hosp_fullsample_coef %>%
   mutate(model="All")
 
 event_hosp_fullsample_plot <- dwplot(event_hosp_fullsample_table, vline=geom_vline(xintercept=0, linetype=2),
-                     whisker_args=list(color="black", size=1.1),
-                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
-                     dot_args=list(color="black")) + xlim(-150,150) +
+                                     whisker_args=list(color="black", size=1.1),
+                                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
+                                     dot_args=list(color="black")) + xlim(-150,150) +
   coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c("rel_p5"="t+5",
                             "rel_p4"="t+4",
@@ -182,15 +182,15 @@ event_hosp_fullsample_plot <- dwplot(event_hosp_fullsample_table, vline=geom_vli
                             "rel_m4"="t-4",
                             "rel_m5"="t-5",
                             "rel_m6"="t-6")) + ggtitle("\nEffect of EHR Implementation on Patients Billed in Hospital (Only Hospitalists)\n")
- 
+
 event_hosp_fullsample_plot
 ggsave("Objects/event_hosp_fullsample.pdf")
 
 # Limit to old hospitalists
 event_hosp_oldsample <- felm(phys_working_hosp ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + 
-                                rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                                rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
-                              data=filter(hospitalist_data,working_allyears_hosp==1 & experience>35))
+                               rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                               rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
+                             data=filter(hospitalist_data,working_allyears_hosp==1 & experience>35))
 
 event_hosp_oldsample_coef <- as_tibble(event_hosp_oldsample$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -212,10 +212,10 @@ event_hosp_oldsample_table <- event_hosp_oldsample_coef %>%
   mutate(model="Experience>35")
 
 event_hosp_oldsample_plot <- dwplot(event_hosp_oldsample_table, vline=geom_vline(xintercept=0, linetype=2),
-                                     whisker_args=list(color="black", size=1.1),
-                                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
-                                     dot_args=list(color="black")) +
+                                    whisker_args=list(color="black", size=1.1),
+                                    vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                                  "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
+                                    dot_args=list(color="black")) +
   coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c(
     "rel_p5"="t+5",
@@ -230,7 +230,7 @@ event_hosp_oldsample_plot <- dwplot(event_hosp_oldsample_table, vline=geom_vline
     "rel_m4"="t-4",
     "rel_m5"="t-5",
     "rel_m6"="t-6")) + ggtitle("\nEffect of EHR Implementation on Patients Billed in Hospital (Only Senior Hospitalists)\n") 
-  
+
 
 event_hosp_oldsample_plot
 ggsave("Objects/event_hosp_oldsample.pdf")
@@ -238,9 +238,9 @@ ggsave("Objects/event_hosp_oldsample.pdf")
 # Put two event studies on one graph
 event_joined_hospitalist_table <- bind_rows(event_hosp_fullsample_table, event_hosp_oldsample_table) 
 event_hosp_plot <- dwplot(event_joined_hospitalist_table, vline=geom_vline(xintercept=0, linetype=2),
-                     whisker_args=list(size=1.1),
-                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6")) +
+                          whisker_args=list(size=1.1),
+                          vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                        "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6")) +
   coord_flip()  + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c("rel_p5"="t+5",
                             "rel_p4"="t+4",
@@ -270,9 +270,9 @@ nonhospitalist_data <- Physician_Data %>%
 
 # Full sample of doctors who work in multiple hospitals
 event_nonhosp_fullsample <- felm(phys_working_hosp ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + 
-                                rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                                rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
-                              data=filter(nonhospitalist_data,working_allyears_hosp==1))
+                                   rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                                   rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
+                                 data=filter(nonhospitalist_data,working_allyears_hosp==1))
 
 event_nonhosp_fullsample_coef <- as_tibble(event_nonhosp_fullsample$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -294,10 +294,10 @@ event_nonhosp_fullsample_table <- event_nonhosp_fullsample_coef %>%
   mutate(model="All")
 
 event_nonhosp_fullsample_plot <- dwplot(event_nonhosp_fullsample_table, vline=geom_vline(xintercept=0, linetype=2),
-                                     whisker_args=list(color="black", size=1.1),
-                                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
-                                     dot_args=list(color="black")) + xlim(-150,150) +
+                                        whisker_args=list(color="black", size=1.1),
+                                        vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                                      "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
+                                        dot_args=list(color="black")) + xlim(-150,150) +
   coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c(
     "rel_p5"="t+5",
@@ -318,9 +318,9 @@ ggsave("Objects/event_nonhosp_fullsample.pdf")
 
 # Sample of old doctors who work in multiple hospitals
 event_nonhosp_oldsample <- felm(phys_working_hosp ~ rel_m6 + rel_m5 + rel_m4 + rel_m3 + rel_m2 + 
-                                   rel_0 + rel_p1 + rel_p2 + rel_p3 + 
-                                   rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
-                                 data=filter(nonhospitalist_data,working_allyears_hosp==1 & experience>35))
+                                  rel_0 + rel_p1 + rel_p2 + rel_p3 + 
+                                  rel_p4 + rel_p5 + rel_p6 + avg_beds + avg_oper_days |DocNPI + year|0|DocNPI,
+                                data=filter(nonhospitalist_data,working_allyears_hosp==1 & experience>35))
 
 event_nonhosp_oldsample_coef <- as_tibble(event_nonhosp_oldsample$coefficients, rownames="term") %>%
   filter(term %in% c("rel_m6", "rel_m5", "rel_m4", "rel_m3", "rel_m2", "rel_0", "rel_p1",
@@ -342,10 +342,10 @@ event_nonhosp_oldsample_table <- event_nonhosp_oldsample_coef %>%
   mutate(model="Experience>35")
 
 event_nonhosp_oldsample_plot <- dwplot(event_nonhosp_oldsample_table, vline=geom_vline(xintercept=0, linetype=2),
-                                        whisker_args=list(color="black", size=1.1),
-                                        vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                                      "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
-                                        dot_args=list(color="black")) +
+                                       whisker_args=list(color="black", size=1.1),
+                                       vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                                     "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6"),
+                                       dot_args=list(color="black")) +
   coord_flip() + theme_bw() + theme(legend.position="none") + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c(
     "rel_p5"="t+5",
@@ -366,9 +366,9 @@ ggsave("Objects/event_nonhosp_oldsample.pdf")
 # Join these two event studies on one graph
 event_joined_nonhosp_table <- bind_rows(event_nonhosp_fullsample_table, event_nonhosp_oldsample_table) 
 event_nonhosp_plot <- dwplot(event_joined_nonhosp_table, vline=geom_vline(xintercept=0, linetype=2),
-                     whisker_args=list(size=1.1),
-                     vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
-                                   "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6")) +
+                             whisker_args=list(size=1.1),
+                             vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
+                                           "rel_0","rel_m1","rel_m2","rel_m3","rel_m4","rel_m5","rel_m6")) +
   coord_flip()  + labs(y="\nEvent Time\n", x="\nEstimate and 95% CI\n") +
   scale_y_discrete(labels=c("rel_p5"="t+5",
                             "rel_p4"="t+4",
