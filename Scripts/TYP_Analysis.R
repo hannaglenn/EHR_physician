@@ -499,8 +499,451 @@ stargazer(ind_dd_2010_never_old, ind_dd_2011_never_old, ind_dd_2012_never_old, i
 
 
 #### Now try event studies for each year (only intensive margin) -------------------------------
-
 # Treated in 2010
+reg_data_2010 <- Physician_Data %>%
+  filter(minyr_EHR==0 | minyr_EHR==2010 | minyr_EHR>2011) %>%
+  mutate(expand_2009=(minyr_EHR==2010)*(year==2009),
+         expand_2010=(minyr_EHR==2010)*(year==2010),
+         expand_2011=(minyr_EHR==2010)*(year==2011),
+         expand_2012=(minyr_EHR==2010)*(year==2012),
+         expand_2013=(minyr_EHR==2010)*(year==2013),
+         expand_2014=(minyr_EHR==2010)*(year==2014),
+         expand_2015=(minyr_EHR==2010)*(year==2015))
+
+event_reg_2010 <- felm(phys_working_hosp ~ expand_2010 + expand_2011 + expand_2012 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2010)
+
+point_est_2010 <- as_tibble(c(event_reg_2010$coefficients[c("expand_2010", "expand_2011", "expand_2012", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2010 <- as_tibble(confint(event_reg_2010)[c("expand_2010", "expand_2011", "expand_2012", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+              rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2010 <- tibble(term="expand_2009", estimate=0, conf.low=0, conf.high=0, year=2009)
+
+event_plot_dat_2010 <- point_est_2010 %>%
+  left_join(ci_est_2010, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2010) %>%
+  arrange(year)
+
+event_plot_2010 <- dwplot(event_plot_dat_2010, 
+                     vline=geom_vline(xintercept=0, linetype=2), 
+                     vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                    "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                     whisker_args = list(color="black", size=1.1),
+                     dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                              "expand_2010" = "2010", 
+                              "expand_2011" = "2011", 
+                              "expand_2012" = "2012", 
+                              "expand_2013" = "2013",
+                              "expand_2014" = "2014",
+                              "expand_2015" = "2015"))
+event_plot_2010
+
+# Still 2010, Indicator
+event_reg_2010_ind <- felm(nonhosp_ind ~ expand_2010 + expand_2011 + expand_2012 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days + female + experience| year, data=reg_data_2010)
+
+point_est_2010_ind <- as_tibble(c(event_reg_2010_ind$coefficients[c("expand_2010", "expand_2011", "expand_2012", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2010_ind <- as_tibble(confint(event_reg_2010_ind)[c("expand_2010", "expand_2011", "expand_2012", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2010 <- tibble(term="expand_2009", estimate=0, conf.low=0, conf.high=0, year=2009)
+
+event_plot_dat_2010_ind <- point_est_2010_ind %>%
+  left_join(ci_est_2010_ind, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2010) %>%
+  arrange(year)
+
+event_plot_2010_ind <- dwplot(event_plot_dat_2010_ind, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2010_ind
+
+
+# Treated in 2011
+reg_data_2011 <- Physician_Data %>%
+  filter(minyr_EHR==0 | minyr_EHR==2011 | minyr_EHR>2012) %>%
+  mutate(expand_2009=(minyr_EHR==2011)*(year==2009),
+         expand_2010=(minyr_EHR==2011)*(year==2010),
+         expand_2011=(minyr_EHR==2011)*(year==2011),
+         expand_2012=(minyr_EHR==2011)*(year==2012),
+         expand_2013=(minyr_EHR==2011)*(year==2013),
+         expand_2014=(minyr_EHR==2011)*(year==2014),
+         expand_2015=(minyr_EHR==2011)*(year==2015))
+
+event_reg_2011 <- felm(phys_working_hosp ~ expand_2009 + expand_2011 + expand_2012 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2011)
+
+point_est_2011 <- as_tibble(c(event_reg_2011$coefficients[c("expand_2009", "expand_2011", "expand_2012", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+
+ci_est_2011 <- as_tibble(confint(event_reg_2011)[c("expand_2009", "expand_2011", "expand_2012", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2011 <- tibble(term="expand_2010", estimate=0, conf.low=0, conf.high=0, year=2010)
+
+event_plot_dat_2011 <- point_est_2011 %>%
+  left_join(ci_est_2011, by="term") %>%
+  mutate(year=c(2009,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2011) %>%
+  arrange(year)
+
+event_plot_2011 <- dwplot(event_plot_dat_2011, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2011
+
+# Still 2011, Indicator
+event_reg_2011_ind <- felm(nonhosp_ind ~ expand_2009 + expand_2011 + expand_2012 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2011)
+
+point_est_2011_ind <- as_tibble(c(event_reg_2011_ind$coefficients[c("expand_2009", "expand_2011", "expand_2012", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+
+ci_est_2011_ind <- as_tibble(confint(event_reg_2011_ind)[c("expand_2009", "expand_2011", "expand_2012", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2011 <- tibble(term="expand_2010", estimate=0, conf.low=0, conf.high=0, year=2010)
+
+event_plot_dat_2011_ind <- point_est_2011_ind %>%
+  left_join(ci_est_2011_ind, by="term") %>%
+  mutate(year=c(2009,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2011) %>%
+  arrange(year)
+
+event_plot_2011_ind <- dwplot(event_plot_dat_2011_ind, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2011_ind
+
+
+# Treated in 2012
+reg_data_2012 <- Physician_Data %>%
+  filter(minyr_EHR==0 | minyr_EHR==2012 | minyr_EHR>2013) %>%
+  mutate(expand_2009=(minyr_EHR==2012)*(year==2009),
+         expand_2010=(minyr_EHR==2012)*(year==2010),
+         expand_2011=(minyr_EHR==2012)*(year==2011),
+         expand_2012=(minyr_EHR==2012)*(year==2012),
+         expand_2013=(minyr_EHR==2012)*(year==2013),
+         expand_2014=(minyr_EHR==2012)*(year==2014),
+         expand_2015=(minyr_EHR==2012)*(year==2015))
+
+event_reg_2012 <- felm(phys_working_hosp ~ expand_2009 + expand_2010 + expand_2012 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2012)
+
+point_est_2012 <- as_tibble(c(event_reg_2012$coefficients[c("expand_2009", "expand_2010", "expand_2012", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2012 <- as_tibble(confint(event_reg_2012)[c("expand_2009", "expand_2010", "expand_2012", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2012 <- tibble(term="expand_2011", estimate=0, conf.low=0, conf.high=0, year=2011)
+
+event_plot_dat_2012 <- point_est_2012 %>%
+  left_join(ci_est_2012, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2012) %>%
+  arrange(year)
+
+event_plot_2012 <- dwplot(event_plot_dat_2012, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2012
+
+# Still 2012, Indicator
+event_reg_2012_ind <- felm(nonhosp_ind ~ expand_2009 + expand_2010 + expand_2012 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2012)
+
+point_est_2012_ind <- as_tibble(c(event_reg_2012_ind$coefficients[c("expand_2009", "expand_2010", "expand_2012", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2012_ind <- as_tibble(confint(event_reg_2012_ind)[c("expand_2009", "expand_2010", "expand_2012", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2012_ind <- tibble(term="expand_2011", estimate=0, conf.low=0, conf.high=0, year=2011)
+
+event_plot_dat_2012_ind <- point_est_2012_ind %>%
+  left_join(ci_est_2012_ind, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2012) %>%
+  arrange(year)
+
+event_plot_2012_ind <- dwplot(event_plot_dat_2012_ind, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2012_ind
+
+
+# Treated in 2013
+reg_data_2013 <- Physician_Data %>%
+  filter(minyr_EHR==0 | minyr_EHR==2013 | minyr_EHR>2014) %>%
+  mutate(expand_2009=(minyr_EHR==2013)*(year==2009),
+         expand_2010=(minyr_EHR==2013)*(year==2010),
+         expand_2011=(minyr_EHR==2013)*(year==2011),
+         expand_2012=(minyr_EHR==2013)*(year==2012),
+         expand_2013=(minyr_EHR==2013)*(year==2013),
+         expand_2014=(minyr_EHR==2013)*(year==2014),
+         expand_2015=(minyr_EHR==2013)*(year==2015))
+
+event_reg_2013 <- felm(phys_working_hosp ~ expand_2009 + expand_2010 + expand_2011 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2013)
+
+point_est_2013 <- as_tibble(c(event_reg_2013$coefficients[c("expand_2009", "expand_2010", "expand_2011", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2013 <- as_tibble(confint(event_reg_2013)[c("expand_2009", "expand_2010", "expand_2011", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2013 <- tibble(term="expand_2012", estimate=0, conf.low=0, conf.high=0, year=2012)
+
+event_plot_dat_2013 <- point_est_2013 %>%
+  left_join(ci_est_2013, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2013) %>%
+  arrange(year)
+
+event_plot_2013 <- dwplot(event_plot_dat_2013, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2013
+
+# Still 2013, Indicator
+event_reg_2013_ind <- felm(nonhosp_ind ~ expand_2009 + expand_2010 + expand_2011 + expand_2013 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2013)
+
+point_est_2013_ind <- as_tibble(c(event_reg_2013_ind$coefficients[c("expand_2009", "expand_2010", "expand_2011", 
+                                                            "expand_2013", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2013_ind <- as_tibble(confint(event_reg_2013_ind)[c("expand_2009", "expand_2010", "expand_2011", 
+                                                   "expand_2013", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2013_ind <- tibble(term="expand_2012", estimate=0, conf.low=0, conf.high=0, year=2012)
+
+event_plot_dat_2013_ind <- point_est_2013_ind %>%
+  left_join(ci_est_2013_ind, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2013) %>%
+  arrange(year)
+
+event_plot_2013_ind <- dwplot(event_plot_dat_2013_ind, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2013_ind
+
+# Treated in 2014
+reg_data_2014 <- Physician_Data %>%
+  filter(minyr_EHR==0 | minyr_EHR==2014) %>%
+  mutate(expand_2009=(minyr_EHR==2014)*(year==2009),
+         expand_2010=(minyr_EHR==2014)*(year==2010),
+         expand_2011=(minyr_EHR==2014)*(year==2011),
+         expand_2012=(minyr_EHR==2014)*(year==2012),
+         expand_2013=(minyr_EHR==2014)*(year==2013),
+         expand_2014=(minyr_EHR==2014)*(year==2014),
+         expand_2015=(minyr_EHR==2014)*(year==2015))
+
+event_reg_2014 <- felm(phys_working_hosp ~ expand_2009 + expand_2010 + expand_2011 + expand_2012 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2014)
+
+point_est_2014 <- as_tibble(c(event_reg_2014$coefficients[c("expand_2009", "expand_2010", "expand_2011", 
+                                                            "expand_2012", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2014 <- as_tibble(confint(event_reg_2014)[c("expand_2009", "expand_2010", "expand_2011", 
+                                                   "expand_2012", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2014 <- tibble(term="expand_2013", estimate=0, conf.low=0, conf.high=0, year=2013)
+
+event_plot_dat_2014 <- point_est_2014 %>%
+  left_join(ci_est_2014, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2014) %>%
+  arrange(year)
+
+event_plot_2014 <- dwplot(event_plot_dat_2014, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2014
+
+# Still 2014, Indicator
+event_reg_2014_ind <- felm(nonhosp_ind ~ expand_2009 + expand_2010 + expand_2011 + expand_2012 + expand_2014 +
+                         expand_2015 + avg_beds + avg_oper_days | year + DocNPI, data=reg_data_2014)
+
+point_est_2014_ind <- as_tibble(c(event_reg_2014_ind$coefficients[c("expand_2009", "expand_2010", "expand_2011", 
+                                                            "expand_2012", "expand_2014", "expand_2015"),]),
+                            rownames="term") %>%
+  rename(estimate=value)
+ci_est_2014_ind <- as_tibble(confint(event_reg_2014_ind)[c("expand_2009", "expand_2010", "expand_2011", 
+                                                   "expand_2012", "expand_2014", "expand_2015"),],
+                         rownames = "term") %>%
+  rename(conf.low='2.5 %', conf.high='97.5 %')
+
+new.row_2014 <- tibble(term="expand_2013", estimate=0, conf.low=0, conf.high=0, year=2013)
+
+event_plot_dat_2014_ind <- point_est_2014_ind %>%
+  left_join(ci_est_2014_ind, by="term") %>%
+  mutate(year=c(2010,2011,2012,2013,2014,2015)) %>%
+  bind_rows(new.row_2014) %>%
+  arrange(year)
+
+event_plot_2014_ind <- dwplot(event_plot_dat_2014_ind, 
+                          vline=geom_vline(xintercept=0, linetype=2), 
+                          vars_order = c( "expand_2015","expand_2014","expand_2013",
+                                          "expand_2012","expand_2011","expand_2010", "expand_2009"),
+                          whisker_args = list(color="black", size=1.1),
+                          dot_args = list(color="black")) + 
+  coord_flip() + theme_bw() + theme(legend.position = "none") +
+  labs(y = "Year",
+       x = "Estimate and 95% CI") +
+  scale_y_discrete(labels = c( "expand_2009" = "2009", 
+                               "expand_2010" = "2010", 
+                               "expand_2011" = "2011", 
+                               "expand_2012" = "2012", 
+                               "expand_2013" = "2013",
+                               "expand_2014" = "2014",
+                               "expand_2015" = "2015"))
+event_plot_2014_ind
+
 
 
 #### Callaway and Sant'Anna analysis -------------------------------------------------------

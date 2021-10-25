@@ -369,7 +369,7 @@ Final_Pairs <- Final_Pairs %>%
 Physician_Data <- Final_Pairs %>%
   distinct(DocNPI,year,grad_year,female,phys_working,num_hospitals, hosp_EHR, frac_EHR, avg_beds, 
            avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients,
-           num_systems, phys_working_hosp)
+           num_systems, phys_working_hosp, num_billings_partB)
 
 # Create working indicator and relative year variables
 Physician_Data <- Physician_Data %>%
@@ -422,6 +422,17 @@ Physician_Data <- Physician_Data %>%
   ungroup() %>%
   mutate(working_allyears_hosp=1*(n==7)) %>%
   select(-n)
+
+# Create an indicator for exposed ever
+Physician_Data <- Physician_Data %>%
+  group_by(DocNPI) %>%
+  mutate(n=sum(exposed)) %>%
+  ungroup() %>%
+  mutate(exposed_ever=ifelse(n>0,1,0))
+
+# Create dummy for having positive shared patients with all entities but none with hospitals
+Physician_Data <- Physician_Data %>%
+  mutate(nonhosp_ind = ifelse(phys_working>0 & phys_working_hosp==0,1,0))
 
 
 # Save the Data for Analysis -----------------------------------------------------------------
