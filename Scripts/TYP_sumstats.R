@@ -23,11 +23,11 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 # General Summary Stats Tables:  ----------------------------------------------------------------
 
 # Physician Level
-sum_stats <- Physician_Data %>% ungroup() %>%
+sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Years since Graduating"="experience",
-                 "Total Patients with All Entities"="phys_working","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Total Patients Billed with Hospitals"="phys_working_hosp","Fraction of Hospitals with EHR"="frac_EHR",
                  "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
                  "Average Hospital Operating Days"="avg_oper_days",
                  "Fraction of Hospital Patients at EHR Hospital"="frac_EHR_patients"), 
@@ -38,18 +38,40 @@ sum_stats <- Physician_Data %>% ungroup() %>%
   spread(key=statistic, value=value) %>%
   relocate(variable,n,m,sd,min,max)
 
+# Hospitalist Level
+sum_stats_hospitalist <- Physician_Data %>% ungroup() %>% filter(num_hospitals==1) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Years since Graduating"="experience",
+                 "Total Patients Billed with Hospitals"="phys_working_hosp","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
+                 "Average Hospital Operating Days"="avg_oper_days",
+                 "Fraction of Hospital Patients at EHR Hospital"="frac_EHR_patients"), 
+               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,n,m,sd,min,max)
+
+# Merge the two summary stats tables
+sum_stats <- sum_stats_fullsample %>%
+  left_join(sum_stats_hospitalist, by="variable")
+
 knitr::kable(sum_stats, "latex",
-             col.names=c("Variable", "Physician-Year", "Mean", "Std. Dev.", "Min", "Max"),
+             col.names=c("Variable", "Number Physicians", "Mean", "Std. Dev.", "Min", "Max","Number Physicians", "Mean", "Std. Dev.", "Min", "Max"),
              digits=2,
              caption="Physician Level Variables",
              booktabs=T,
              escape=F,
              label=NA,
-             align=c("l", "c","c","c","c","c"),
+             align=c("l", "c","c","c","c","c","c","c","c","c","c"),
              position="h",
              format.args = list(big.mark = ",")) %>%
   kable_styling( full_width=F, latex_options=c("scale_down") ) %>%
+  add_header_above(c(" "=1, "Full Sample"=5, "Hospitalists" =5)) %>%
   save_kable("objects/sumstats.pdf", density=300)
+
 
 
 # AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
@@ -109,6 +131,9 @@ ggsave("objects/relyear_treatment_ind.pdf", width=8, height=5, units="in")
 
 
 # Create graph showing the distributions of important variables---------------------------------------------------------
+# Patients billed with hospitals
+ggplot(filter(Physician_Data,working_allyears_hosp==1), aes(x=phys_working_hosp)) + geom_histogram(binwidth=1000, colour="black", fill="white") 
+
 # Number of hospitals with positive same day count
 ggplot(Physician_Data, aes(x=num_hospitals)) + geom_histogram(binwidth=1, colour="black", fill="white") +
   xlim(0,30)

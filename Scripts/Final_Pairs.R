@@ -434,6 +434,17 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   mutate(nonhosp_ind = ifelse(phys_working>0 & phys_working_hosp==0,1,0))
 
+# Now drop physicians who have crazy outliers for hospital working variable
+drop_outliers <- Physician_Data %>%
+  filter(phys_working_hosp>15000) %>%
+  distinct(DocNPI) %>%
+  mutate(drop=1)
+
+Physician_Data <- Physician_Data %>%
+  left_join(drop_outliers) %>%
+  filter(is.na(drop)) %>%
+  select(-drop)
+
 
 # Save the Data for Analysis -----------------------------------------------------------------
 saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
