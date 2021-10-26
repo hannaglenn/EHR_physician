@@ -43,16 +43,18 @@
 
 \begin{frame}{What is an EHR?}
 \begin{itemize}
-    \item Computer-program technology that hospitals purchase
+    \item Technology purchased and implemented by hospitals
+\end{itemize}
+
+\begin{itemize}
+    \item Used for:
     \vspace{3mm}
-    \item What EHR is used for depends on level purchased:
-    \vspace{2mm}
     \begin{itemize}
-        \item All include electronic patient records
-        \vspace{2mm}
-        \item More complex systems allow for decision making assistance
-        \vspace{2mm}
-        \item More recently, patient interfaces are being developed
+        \item Electronic patient records
+        \vspace{3mm}
+        \item More complex (and expensive) EHRs allow for decision making assistance
+        \vspace{3mm}
+        \item Continuing to evolve over time
     \end{itemize}
 \end{itemize}
 \end{frame}
@@ -76,16 +78,15 @@
 \end{frame}
 
 \begin{frame}[fragile]{What does this mean for physicians?}
-In the short run:
+Immediate Effects:
 \begin{itemize}
-    \item Physicians spend more time entering information into a computer and learning a new software
-    \item Physicians have experienced significant burn-out from using and learning EHRs
-    \item Loss of autonomy
+    \item Large startup costs (time, productivity)
+    \item Possible loss of autonomy
 \end{itemize}
 
-In the long run:
+Long Run Effects:
 \begin{itemize}
-    \item Could make daily tasks easier or harder
+    \item Productivity could increase or decrease
     \item Progressing loss of autonomy as technology progresses
 \end{itemize}
 
@@ -113,79 +114,90 @@ In the long run:
 
 Did EHR implementation in hospitals affect physician labor outcomes?
 \begin{itemize}
-    \item Intensive Margin
+    \item Intensive Margin / Productivity
     \item Extensive Margin
     \item Hospital $\rightarrow$ Office?
 \end{itemize}
-    
 \end{frame}
 
 
 \section{Contribution}
 
-\begin{frame}{Health Information Technology}
+\begin{frame}{Literature}
     
 \end{frame}
 
-\begin{frame}{Physician Labor}
-    
-\end{frame}
 
-\begin{frame}{Technology and Labor Relationship}
-    
-\end{frame}
 
 
 
 \section{Data}
 
 
-\begin{frame}{Physician's Incentives}
+\begin{frame}{What I Want to Capture}
 \begin{itemize}
-    \item Physician has a choice set of where to work, including multiple hospitals and office-based locations
-    \item All physicians I consider work closely with at least one hospital at some point in time
-    \item Some proportion of hospitals implement a new technology (an EHR)
-    \item How to think about the effect on labor:
-    \begin{enumerate}
-        \item EHR makes seeing patients easier (or more difficult), thus physician can see more (or less) patients
-        \item If the cost of sing an EHR is high enough, the physician can switch to working at an office-based location where they have more control
-        \item A senior physician may have incentive to retire early instead of taking on the cost of learning a new technology
-    \end{enumerate}
+    \item Initial Implementation
+    \begin{itemize}
+        \item Productivity gains/losses
+        \item Immediate changes to labor market decisions: retirement or place of work
+    \end{itemize}
+    \item Loss of autonomy and cost of learning/using new technology
+    \begin{itemize}
+        \item Could cause physicians to move to settings where they have more control
+    \end{itemize}
 \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{About the Data}
+    Main measurements come from \underline{CMS Shared Patient Data} (2009-2015)
+    \begin{itemize}
+        \item Lists 2 NPIs and the number of billings those two entities shared in the same day
+    \end{itemize}
+    
+    How I use it:
+    \begin{itemize}
+        \item Limit the NPIs to physician-hospital pairs, where physicians are PCPs, internists, hospitalists
+        \item Limit the billings to those which occur in the same day
+        \item Only keep pairs with sufficient number of billings together to suggest a close relationship between physician and hospital
+        \item Aggregate to the physician level to avoid spillover effects
+    \end{itemize}
 \end{frame}
 
 
 \begin{frame}{Measures of Physician Labor Market Decisions}
 
 
-     Total Patients: \underline{CMS Shared Patient Data} (2009-2015)
+     Total hospital patients: 
     \begin{itemize}
-        \item Sum of shared patients with all entities that have an NPI
+        \item Sum of shared patients with all hospitals
+    \end{itemize}
+     
+     \vspace{4mm}
+     
+     Indicator for switching work setting:
+    \begin{itemize}
+        \item Positive billings shared with all entities but shared entities with hospitals becomes 0
+        \item \color{gray}{SK$\&$A database of office-based physicians}
     \end{itemize}
     
-     Indicator for whether they are working
-    \begin{itemize}
-        \item =1 if Total Patients $>0$
-    \end{itemize}
+    \vspace{4mm}
     
-     Indicator for working in office-based location
-    \begin{itemize}
-        \item Comes from SK$\&$A database of office-based physicians
-    \end{itemize}
+    \textcolor{gray}
+     {Indicator for retirement/ leaving the labor force}
 
 \end{frame}
 
-\begin{frame}{Measures of EHR Use}
+\begin{frame}{Measure of EHR Use}
 
-Physician-level Indicator that captures exposure to \textit{any} EHR
+Physician-level treatment variable that captures exposure to \textit{any} EHR
 \begin{itemize}
-    \item With information on shared patients between physicians and hospitals, I limit to physicians who work in at least one hospital at some point in the time frame
-    \item Hospital EHR use comes from AHA survey
-    \item Similarly, I can capture hospitals that use EHRs for decision making vs. documentation using the AHA Survey IT Supplement 
+    \item Individual hospital EHR use comes from AHA survey
+    \item Treatment turns on the first time any of the shared hospitals implements an EHR
 \end{itemize}
-
-
 \end{frame}
+
 
 \begin{frame}{Other Characteristics}
 
@@ -196,9 +208,9 @@ Medical school graduation date, gender: \underline{Physician Compare}
 Average size of hospital worked with (measured in beds), average hospital days operating: \underline{AHA Survey}
 \end{frame}
 
-\begin{frame}{Summary Stats}
+\begin{frame}{Summary Statistics}
 \centering
-    \includegraphics[scale=.7]{Objects/sumstats.pdf}
+    \includegraphics[scale=.8]{Objects/sumstats.pdf}
 \end{frame}
 
 \begin{frame}{Physician EHR Use}
@@ -209,8 +221,10 @@ Average size of hospital worked with (measured in beds), average hospital days o
 
 \section{Analysis}
 
-\begin{frame}{Analysis}
-
+\begin{frame}{Event Studies}
+\begin{equation*}
+    Y_{it}=\alpha_t+\delta_i
+\end{equation*}
 
     
 \end{frame}
@@ -228,7 +242,13 @@ Average size of hospital worked with (measured in beds), average hospital days o
 \end{frame}
 
 \begin{frame}{Hospital to Office?}
-    
+    \centering
+    \includegraphics[scale=.5]{Objects/event_plot_office_to_hosp.pdf}
+\end{frame}
+
+\begin{frame}{Hospital to Office?}
+    \centering
+    \includegraphics[scale=.5]{Objects/event_hosp_plot_hosp_to_office.pdf}
 \end{frame}
 
 
