@@ -67,9 +67,10 @@ knitr::kable(sum_stats, "latex",
              label=NA,
              align=c("l", "c","c","c","c","c","c","c","c","c","c"),
              position="h",
+             linesep = "\\addlinespace",
              format.args = list(big.mark = ",")) %>%
   kable_styling( full_width=F, latex_options=c("scale_down") ) %>%
-  add_header_above(c(" "=1, "Full Sample"=5, "Hospitalists" =5)) %>%
+  add_header_above(c(" "=1, "Full Sample"=5, "Works with Only 1 Hospital" =5)) %>%
   save_kable("objects/sumstats.pdf", density=300)
 
 
@@ -85,14 +86,14 @@ sum_stats_year <- Physician_Data %>% group_by(year) %>%
 
 # Create a dataframe out of the summary stats to put in a ggplot
 sum_stats_year <- as.data.frame(sum_stats_year)
-sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Fraction of Physicians Working","Fraction of Hospitals using EHR",
-                                                                                    "Fraction of Physicians Exposed to an EHR"))
+sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Fraction of Hospitals \nusing EHR",
+                                                                          "Fraction of Physicians \nExposed to an EHR"))
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
 ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
   geom_line() +geom_point() + labs(x="\nYear", y="Percent\n", 
-                                   title="\nPhysician Variables by Year\n") + 
+                                   title="\nEHR use Over Time\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(.2,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
 ggsave("objects/sum_stats_year.pdf", width=8, height=5, units="in")

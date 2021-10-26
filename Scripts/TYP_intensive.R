@@ -42,6 +42,15 @@ event_fullsample_table <- event_fullsample_coef %>%
   arrange(rel_year) %>%
   mutate(model="All")
 
+# Calculate the sample mean of y one period before adoption
+mean_fullsample <- Physician_Data %>%
+  filter(rel_m1==1) %>%
+  ungroup() %>%
+  mutate(avg=mean(phys_working_hosp)) %>%
+  distinct(avg)
+
+avg_fullsample <- formatC(mean_fullsample$avg, digits = 0, format = "f")
+
 event_fullsample_plot <- dwplot(event_fullsample_table, vline=geom_vline(xintercept=0, linetype=2),
                                      whisker_args=list(color="black", size=1.1),
                                      vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
@@ -59,7 +68,9 @@ event_fullsample_plot <- dwplot(event_fullsample_table, vline=geom_vline(xinterc
                             "rel_m3"="t-3",
                             "rel_m4"="t-4",
                             "rel_m5"="t-5",
-                            "rel_m6"="t-6")) + ggtitle("\nEffect of EHR Implementation on Patients Billed in Hospital\n")
+                            "rel_m6"="t-6")) +
+  #scale_x_discrete(labels=c("0"=paste0("0 (",avg_fullsample," , ",avg_oldsample,")"))) +
+  ggtitle("\nEffect of EHR Implementation on Patients Billed in Hospital\n")
 
 event_fullsample_plot
 ggsave("Objects/event_fullsample.pdf")
@@ -89,6 +100,15 @@ event_oldsample_table <- event_oldsample_coef %>%
   arrange(rel_year) %>%
   mutate(model="Experience>35")
 
+# Calculate the sample mean of y one period before adoption
+mean_oldsample <- Physician_Data %>%
+  filter(rel_m1==1 & experience>35) %>%
+  ungroup() %>%
+  mutate(avg=mean(phys_working_hosp)) %>%
+  distinct(avg)
+
+avg_oldsample <- formatC(mean_oldsample$avg, digits = 0, format = "f")
+
 event_oldsample_plot <- dwplot(event_oldsample_table, vline=geom_vline(xintercept=0, linetype=2),
                                 whisker_args=list(color="black", size=1.1),
                                 vars_order =c("rel_p5", "rel_p4","rel_p3","rel_p2","rel_p1",
@@ -111,6 +131,7 @@ event_oldsample_plot <- dwplot(event_oldsample_table, vline=geom_vline(xintercep
 event_oldsample_plot
 ggsave("Objects/event_oldsample.pdf")
 
+
 # Put both full sample event studies on the same graph
 event_joined_table <- bind_rows(event_fullsample_table, event_oldsample_table) 
 event_plot <- dwplot(event_joined_table, vline=geom_vline(xintercept=0, linetype=2),
@@ -129,7 +150,9 @@ event_plot <- dwplot(event_joined_table, vline=geom_vline(xintercept=0, linetype
                             "rel_m3"="t-3",
                             "rel_m4"="t-4",
                             "rel_m5"="t-5",
-                            "rel_m6"="t-6")) + ggtitle("\nEffect of EHR Implementation on Patients Billed in Hospital\n")
+                            "rel_m6"="t-6")) + 
+  scale_x_continuous(breaks=c(-100,0,100), labels=c("-100", paste0("0 (",avg_fullsample," , ",avg_oldsample,")"),"100")) +
+  ggtitle("\nEffect of EHR Implementation on Patients Billed with Hospitals\n")
 
 event_plot
 ggsave("Objects/event_plot.pdf")
