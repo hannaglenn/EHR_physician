@@ -222,77 +222,78 @@ Average size of hospital worked with (measured in beds), average hospital days o
 \section{Analysis}
 
 \begin{frame}{Event Studies}
-\begin{equation*}
-    Y_{it}=\alpha_t+\delta_i
-\end{equation*}
+
 
     
 \end{frame}
 
 \section{Results}
 
-\begin{frame}{Intensive Margin (R)}
-\centering
-\includegraphics[scale=.45]{Objects/event_plot.pdf}
-\end{frame}
-
-\begin{frame}{Intensive Margin (Stata xtevent)}
+\begin{frame}{Dep. Variable: Patients Billed with Hospitals}
 \begin{figure}[ht]
         \begin{minipage}[b]{0.47\linewidth}
             \centering
             \includegraphics[width=\textwidth]{Objects/xtevent_fullsample.pdf}
-            \caption{Full Sample}
-            \label{fig:a}
+            \caption{\small All Physicians\\}
         \end{minipage}
         \hspace{0.2cm}
         \begin{minipage}[b]{0.47\linewidth}
             \centering
             \includegraphics[width=\textwidth]{Objects/xtevent_oldsample.pdf}
-            \caption{Old Sample}
-            \label{fig:b}
+            \caption{\small Phys. $>$ 35 yrs Experience}
         \end{minipage}
     \end{figure}
 \end{frame}
 
-
-
-\begin{frame}{Intensive Margin: Phys. who work with 1 hospital (R)}
-\centering
-\includegraphics[scale=.45]{Objects/event_hosp_plot.pdf}
-\end{frame}
-
-\begin{frame}{Intensive Margin: Phys. who work with 1 hospital (Stata xtevent)}
+\begin{frame}{Dep. Variable: Patients Billed with Hospitals}
 \begin{figure}[ht]
         \begin{minipage}[b]{0.47\linewidth}
             \centering
             \includegraphics[width=\textwidth]{Objects/xtevent_hosp_fullsample.pdf}
-            \caption{Full Sample}
-            \label{fig:a}
+            \caption{\small All Physicians \\(Only 1 Hospital)}
         \end{minipage}
         \hspace{0.2cm}
         \begin{minipage}[b]{0.47\linewidth}
             \centering
             \includegraphics[width=\textwidth]{Objects/xtevent_hosp_oldsample.pdf}
-            \caption{Old Sample}
-            \label{fig:b}
+            \caption{\small Phys. $>$ 35yrs\\ (Only 1 Hospital)}
         \end{minipage}
     \end{figure}
 \end{frame}
 
 
-
-
-\begin{frame}{Hospital to Office?}
-    \centering
-    \includegraphics[scale=.5]{Objects/event_plot_office_to_hosp.pdf}
+\begin{frame}{Dep. Variable: Probability of Billing, but not With Hospitals}
+\begin{figure}[ht]
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_fullsample_ind.pdf}
+            \caption{\small All Physicians}
+        \end{minipage}
+        \hspace{0.2cm}
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_oldsample_ind.pdf}
+            \caption{\small Phys. $>$ 35yrs Experience}
+        \end{minipage}
+    \end{figure}
 \end{frame}
 
-\begin{frame}{Hospital to Office?}
-    \centering
-    \includegraphics[scale=.5]{Objects/event_hosp_plot_hosp_to_office.pdf}
+
+\begin{frame}{Dep. Variable: Probability of Billing, but not With Hospitals}
+\begin{figure}[ht]
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_hosp_fullsample_ind.pdf}
+            \caption{\small All Physicians \\(Only 1 Hospital)}
+        \end{minipage}
+        \hspace{0.2cm}
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_hosp_oldsample_ind.pdf}
+            \caption{\small Phys. $>$ 35yrs Experience\\ (Only 1 Hospital)}
+        \end{minipage}
+    \end{figure}
 \end{frame}
-
-
 
 
 
