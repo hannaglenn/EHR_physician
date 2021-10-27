@@ -2,20 +2,16 @@
 
 \usetheme[progressbar=frametitle]{metropolis}
 \usepackage{appendixnumberbeamer}
-\usepackage{multicol}
+\usepackage{pgfpages}
 \usepackage{booktabs}
-\usepackage[scale=2]{ccicons}
-\usepackage[style=authoryear]{biblatex}
-\bibliography{demo.bib}
-\usepackage{pgfplots}
-\usepackage{bbm}
-\usepackage{import}
-\usepackage{graphics}
+\usepackage{xcolor}
 
+\usepackage{pgfplots}
 
 \usepgfplotslibrary{dateplot}
 
-
+\setbeameroption{show notes on second screen=right}
+\setbeamertemplate{note page}{\pagecolor{yellow!5}\insertnote}\usepackage{palatino}
 \usepackage{xspace}
 \newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
 
@@ -23,10 +19,9 @@
 
 \subtitle{Hanna Glenn}
  \date{\today}
-% \date{}
-%\author{Presented by: Hanna Glenn}
-% \institute{Center for modern beamer themes}
-% \titlegraphic{\hfill\includegraphics[height=1.5cm]{logo.pdf}}
+
+\setbeamertemplate{itemize item}{\scalebox{.6}{$\blacktriangleright$ }}     
+\setbeamertemplate{itemize subitem}{\scalebox{.8}{$\centerdot$ }} 
 
 \begin{document}
 
@@ -37,11 +32,15 @@
 \begin{frame}{Table of Contents}
   \setbeamertemplate{section in toc}[sections numbered]
   \tableofcontents%[hideallsubsections]
+  
+  \note[item]{Roadmap of the presentation}
 \end{frame}
+
+
 
 \section[Motivation]{Motivation}
 
-\begin{frame}{What is an EHR?}
+\begin{frame}[fragile]{What is an EHR?}
 \begin{itemize}
     \item Technology purchased and implemented by hospitals
 \end{itemize}
@@ -57,56 +56,73 @@
         \item Continuing to evolve over time
     \end{itemize}
 \end{itemize}
+
+\note[item]{Get everyone on the same page about how to think about EHRs}
+\note[item]{A product in the form of technology that is sold to hospitals (and others, but we focus on hospital setting)}
+\note[item]{The most standard element of an EHR is that it converts paper records to electronic records}
+\note[item]{New elements of EHRs: interropability, patient interface, decision-making assistance}
+
 \end{frame}
 
 \begin{frame}[fragile]{HIT: Great (Expected) Potential in Healthcare}
 \begin{alertblock}{Cost Saving}
 \begin{itemize}
-    \item Possible cost reduction of hundreds of billions of dollars \\ (\cite{hillestad2005})
+    \item Possible cost reduction of hundreds of billions of dollars \\ \scriptsize (Hillestad et al 2005, HA)
 \end{itemize}
 \end{alertblock}
 
 \begin{alertblock}{Quality Improvement}
 \begin{itemize}
     \item Improved efficiency, patient safety improvements, physicians have decision support that could prevent unnecessary complications, etc.
-    \item Significant policy push for EHR implementation: HITECH Act, 2008 provided financial incentive for hospitals to implement EHRs \nocite{hitech}
+    \item Significant policy push for EHR implementation: HITECH Act, 2008 provided financial incentive for hospitals to implement EHRs 
 \end{itemize}
 \end{alertblock}
 
-\textcolor{blue}{The percentage of hospitals with basic EHR capability rose from 9$\%$ in 2008 to 84$\%$ in 2015.} (\cite{stats})
+\vspace{4mm}
+
+\textcolor{blue}{The percentage of hospitals with basic EHR capability rose from 9$\%$ in 2008 to 84$\%$ in 2015.} \scriptsize (Health IT Dashboard)
+
+\note[item]{Why do we care about EHRs or health information technology in the first place?}
 
 \end{frame}
 
-\begin{frame}[fragile]{What does this mean for physicians?}
+\begin{frame}[fragile]{What could this mean for physicians?}
+Physicians are the ones who put this technology to use, how they respond will partially determine the technology's impacts
+
+\vspace{3mm}
+
+
 Immediate Effects:
 \begin{itemize}
     \item Large startup costs (time, productivity)
     \item Possible loss of autonomy
 \end{itemize}
 
+\vspace{4mm}
+
 Long Run Effects:
 \begin{itemize}
-    \item Productivity could increase or decrease
+    \item Productivity could increase
     \item Progressing loss of autonomy as technology progresses
 \end{itemize}
 
 \end{frame}
 
-\begin{frame}[noframenumbering]{Physician Burnout in the Media}
+\begin{frame}[noframenumbering]{Physician Response to EHRs}
 \begin{center}
     \includegraphics[scale=.4]{graphics/News Clip1.PNG}
 \end{center}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Physician Burnout in the Media}
+\begin{frame}[noframenumbering]{Physician Response to EHRs}
 \begin{center}
     \includegraphics[scale=.5]{graphics/News Clip2.PNG}
 \end{center}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Physician Burnout in the Media}
+\begin{frame}[noframenumbering]{Physician Response to EHRs}
 \begin{center}
-    \includegraphics[scale=.45]{graphics/News Clip3.PNG}
+    \includegraphics[scale=.35]{graphics/News Clip3.PNG}
 \end{center}
 \end{frame}
 
@@ -124,7 +140,216 @@ Did EHR implementation in hospitals affect physician labor outcomes?
 \section{Contribution}
 
 \begin{frame}{Literature}
-    
+\footnotesize 
+\begin{columns}
+    \column{0.34\textwidth}
+        \centering
+        \underline{ EHR $\rightarrow$ Healthcare }
+        \begin{itemize}
+            \item Small improvements for severe health conditions \\ \vspace{1mm}
+            \tiny(Agha 2014, JHE; McCullough et al 2016, RAND; Meyerhoefer et al, ILRR)
+            
+            \footnotesize
+            
+            \item Higher ``levels" of EHR use $\rightarrow$ decline in quality of care\\ \vspace{1mm}
+            \tiny (Appari et al 2013)
+            
+            \footnotesize 
+            
+            \item No decrease in cost \\ \vspace{1mm}
+            \tiny (Agha 2014, JHE; Dranove et al 2019; AEJ) 
+            
+            \footnotesize
+            
+            \item Productivity and opinion about EHRs varies drastically \\ \vspace{1mm}
+            \tiny (Hitt $\&$ Tambe 2016, Butler $\&$ Johnson 2016, Meyerhoefer et al 2016)
+            
+        \end{itemize}
+
+    \column{0.33\textwidth}
+    \color{gray}
+        \centering
+        \underline{ Technology $\rightarrow$ Labor }
+        \begin{itemize}
+        \color{gray}
+            \item Erosion effect vs. wage effect \\ \vspace{1mm}
+            \tiny (Zeira $\&$ Joseph 2011)
+            
+            \footnotesize
+            
+            \item Cause retirement? \\ \vspace{1mm}
+            \tiny (Schleife 2006, Cavapozzi et al 2013, Roger et al 2006, Friedburg 2003)
+            
+            \footnotesize
+            
+            \item Older, well educated members of labor force exited at higher rates due to computerization \\ \vspace{1mm}
+            \tiny (Willis and Hudomiet 2020)
+        \end{itemize}
+        
+        
+    \column{0.33\textwidth}
+        \color{gray}
+        \centering
+        Physician Labor \underline{ Determinants }
+        \begin{itemize}
+        \color{gray}
+            \item Physicians not very responsive to wage changes in terms of hours worked \\ \vspace{1mm}
+            \tiny (Baltagi et al 2005, Sloan 2018)
+            
+            \footnotesize
+            
+            \item Peronal life factors matter more for retirement than work conditions \\ \vspace{1mm}
+            \tiny (Bahrami 2002)
+            
+            \footnotesize
+            
+            \item Physician burnout: early retirement and less hours worked \\ \vspace{1mm} 
+            \tiny (Dewa et al 2014)
+        \end{itemize}
+        
+        
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]{Literature}
+\footnotesize 
+\begin{columns}
+    \column{0.34\textwidth}
+    \color{gray}
+        \centering
+        \underline{ EHR $\rightarrow$ Healthcare }
+        \begin{itemize}
+        \color{gray}
+            \item Small improvements for severe health conditions \\ \vspace{1mm}
+            \tiny(Agha 2014, JHE; McCullough et al 2016, RAND; Meyerhoefer et al, ILRR)
+            
+            \footnotesize
+            
+            \item Higher ``levels" of EHR use $\rightarrow$ decline in quality of care\\ \vspace{1mm}
+            \tiny (Appari et al 2013)
+            
+            \footnotesize 
+            
+            \item No decrease in cost \\ \vspace{1mm}
+            \tiny (Agha 2014, JHE; Dranove et al 2019; AEJ) 
+            
+            \footnotesize
+            
+            \item Productivity and opinion about EHRs varies drastically \\ \vspace{1mm}
+            \tiny (Hitt $\&$ Tambe 2016, Butler $\&$ Johnson 2016, Meyerhoefer et al 2016)
+            
+        \end{itemize}
+        
+    \column{0.33\textwidth}
+        \centering
+        \underline{ Technology $\rightarrow$ Labor }
+        \begin{itemize}
+            \item Erosion effect vs. wage effect \\ \vspace{1mm}
+            \tiny (Zeira $\&$ Joseph 2011)
+            
+            \footnotesize
+            
+            \item Cause retirement? \\ \vspace{1mm}
+            \tiny (Schleife 2006, Cavapozzi et al 2013, Roger et al 2006, Friedburg 2003)
+            
+            \footnotesize
+            
+            \item Older, well educated members of labor force exited at higher rates due to computerization \\ \vspace{1mm}
+            \tiny (Willis and Hudomiet 2020)
+        \end{itemize}
+        
+        
+    \column{0.33\textwidth}
+    \color{gray}
+        \centering
+        Physician Labor \underline{ Determinants }
+        \begin{itemize}
+        \color{gray}
+            \item Physicians not very responsive to wage changes in terms of hours worked \\ \vspace{1mm}
+            \tiny (Baltagi et al 2005, Sloan 2018)
+            
+            \footnotesize
+            
+            \item Peronal life factors matter more for retirement than work conditions \\ \vspace{1mm}
+            \tiny (Bahrami 2002)
+            
+            \footnotesize
+            
+            \item Physician burnout: early retirement and less hours worked \\ \vspace{1mm} 
+            \tiny (Dewa et al 2014)
+        \end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Literature}
+\footnotesize 
+\begin{columns}
+    \column{0.34\textwidth}
+    \color{gray}
+        \centering
+        \underline{ EHR $\rightarrow$ Healthcare }
+        \begin{itemize}
+        \color{gray}
+            \item Small improvements for severe health conditions \\ \vspace{1mm}
+            \tiny(Agha 2014, JHE; McCullough et al 2016, RAND; Meyerhoefer et al, ILRR)
+            
+            \footnotesize
+            
+            \item Higher ``levels" of EHR use $\rightarrow$ decline in quality of care\\ \vspace{1mm}
+            \tiny (Appari et al 2013)
+            
+            \footnotesize 
+            
+            \item No decrease in cost \\ \vspace{1mm}
+            \tiny (Agha 2014, JHE; Dranove et al 2019; AEJ) 
+            
+            \footnotesize
+            
+            \item Productivity and opinion about EHRs varies drastically \\ \vspace{1mm}
+            \tiny (Hitt $\&$ Tambe 2016, Butler $\&$ Johnson 2016, Meyerhoefer et al 2016)
+            
+        \end{itemize}
+        
+    \column{0.33\textwidth}
+    \color{gray}
+        \centering
+        \underline{ Technology $\rightarrow$ Labor }
+        \begin{itemize}
+        \color{gray}
+            \item Erosion effect vs. wage effect \\ \vspace{1mm}
+            \tiny (Zeira $\&$ Joseph 2011)
+            
+            \footnotesize
+            
+            \item Cause retirement? \\ \vspace{1mm}
+            \tiny (Schleife 2006, Cavapozzi et al 2013, Roger et al 2006, Friedburg 2003)
+            
+            \footnotesize
+            
+            \item Older, well educated members of labor force exited at higher rates due to computerization \\ \vspace{1mm}
+            \tiny (Willis and Hudomiet 2020)
+        \end{itemize}
+        
+        
+    \column{0.33\textwidth}
+        \centering
+        Physician Labor \underline{ Determinants }
+        \begin{itemize}
+            \item Physicians not very responsive to wage changes in terms of hours worked \\ \vspace{1mm}
+            \tiny (Baltagi et al 2005, Sloan 2018)
+            
+            \footnotesize
+            
+            \item Peronal life factors matter more for retirement than work conditions \\ \vspace{1mm}
+            \tiny (Bahrami 2002)
+            
+            \footnotesize
+            
+            \item Physician burnout: early retirement and less hours worked \\ \vspace{1mm} 
+            \tiny (Dewa et al 2014)
+        \end{itemize}
+\end{columns}
 \end{frame}
 
 
@@ -137,14 +362,15 @@ Did EHR implementation in hospitals affect physician labor outcomes?
 \begin{frame}{What I Want to Capture}
 \begin{itemize}
     \item Initial Implementation
+    \vspace{3mm}
     \begin{itemize}
-        \item Productivity gains/losses
-        \item Immediate changes to labor market decisions: retirement or place of work
+        \item Productivity gains/losses?
+        \vspace{3mm}
+        \item Retirement or change in place of work?
+        \vspace{3mm}
     \end{itemize}
-    \item Loss of autonomy and cost of learning/using new technology
-    \begin{itemize}
-        \item Could cause physicians to move to settings where they have more control
-    \end{itemize}
+    \item Do the effects change over time after the technology is implemented?
+
 \end{itemize}
 
 
@@ -153,8 +379,9 @@ Did EHR implementation in hospitals affect physician labor outcomes?
 \begin{frame}{About the Data}
     Main measurements come from \underline{CMS Shared Patient Data} (2009-2015)
     \begin{itemize}
-        \item Lists 2 NPIs and the number of billings those two entities shared in the same day
+        \item Lists 2 NPIs and the number of billings those two entities shared
     \end{itemize}
+    \vspace{3mm}
     
     How I use it:
     \begin{itemize}
@@ -169,7 +396,7 @@ Did EHR implementation in hospitals affect physician labor outcomes?
 \begin{frame}{Measures of Physician Labor Market Decisions}
 
 
-     Total hospital patients: 
+     Hospital patients: 
     \begin{itemize}
         \item Sum of shared patients with all hospitals
     \end{itemize}
@@ -179,7 +406,7 @@ Did EHR implementation in hospitals affect physician labor outcomes?
      Indicator for switching work setting:
     \begin{itemize}
         \item Positive billings shared with all entities but shared entities with hospitals becomes 0
-        \item \color{gray}{SK$\&$A database of office-based physicians}
+        \item Database of office-based physicians
     \end{itemize}
     
     \vspace{4mm}
@@ -192,8 +419,10 @@ Did EHR implementation in hospitals affect physician labor outcomes?
 \begin{frame}{Measure of EHR Use}
 
 Physician-level treatment variable that captures exposure to \textit{any} EHR
+\vspace{3mm}
 \begin{itemize}
     \item Individual hospital EHR use comes from AHA survey
+    \vspace{3mm}
     \item Treatment turns on the first time any of the shared hospitals implements an EHR
 \end{itemize}
 \end{frame}
@@ -201,7 +430,7 @@ Physician-level treatment variable that captures exposure to \textit{any} EHR
 
 \begin{frame}{Other Characteristics}
 
-Medical school graduation date, gender: \underline{Physician Compare}
+Medical school graduation date: \underline{Physician Compare}
 
 \vspace{5mm}
 
@@ -211,6 +440,8 @@ Average size of hospital worked with (measured in beds), average hospital days o
 \begin{frame}{Summary Statistics}
 \centering
     \includegraphics[scale=.8]{Objects/sumstats.pdf}
+    
+    \note[item]{Need to divide n by 7 to get actual number of physicians}
 \end{frame}
 
 \begin{frame}{Physician EHR Use}
@@ -230,6 +461,7 @@ Average size of hospital worked with (measured in beds), average hospital days o
 \end{frame}
 
 \section{Results}
+
 
 \begin{frame}{Dep. Variable: Patients Billed with Hospitals}
 \begin{figure}[ht]
@@ -328,6 +560,15 @@ Average size of hospital worked with (measured in beds), average hospital days o
             \caption{\small Phys.$>$35yrs Experience\\ (Only 1 Hospital)}
         \end{minipage}
     \end{figure}
+\end{frame}
+
+
+\section{Continuing Work}
+
+\begin{frame}{Plans}
+    \begin{itemize}
+        \item Analysis on retirement decision of physicians: requires a better understanding of why physicians would drop out of this Medicaid data
+    \end{itemize}
 \end{frame}
 
 
