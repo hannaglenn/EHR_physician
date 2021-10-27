@@ -80,20 +80,20 @@ sum_stats_year <- Physician_Data %>% group_by(year) %>%
   summarise_at(c("Fraction of Physicians Working"="working_ind", "Fraction of Hospitals using EHR"="frac_EHR", 
                  "Fraction of Physicians Exposed to an EHR"="exposed"), list(m=mean), na.rm=T) %>%
   dplyr::rename("Fraction of Physicians Working"="Fraction of Physicians Working_m", 
-                "Fraction of Hospitals using EHR"="Fraction of Hospitals using EHR_m",
-                "Fraction of Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")
+                "Hospitals using EHR"="Fraction of Hospitals using EHR_m",
+                "Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")
 
 
 # Create a dataframe out of the summary stats to put in a ggplot
 sum_stats_year <- as.data.frame(sum_stats_year)
-sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Fraction of Hospitals \nusing EHR",
-                                                                          "Fraction of Physicians \nExposed to an EHR"))
+sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Hospitals using EHR",
+                                                                          "Physicians Exposed to an EHR"))
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
 ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
   geom_line() +geom_point() + labs(x="\nYear", y="Percent\n", 
-                                   title="\nEHR use Over Time\n") + 
+                                   title="\nEHR Use Over Time\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(.2,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
 ggsave("objects/sum_stats_year.pdf", width=8, height=5, units="in")
