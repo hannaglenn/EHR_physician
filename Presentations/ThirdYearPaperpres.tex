@@ -221,8 +221,10 @@ Average size of hospital worked with (measured in beds), average hospital days o
 
 \section{Analysis}
 
-\begin{frame}{Event Studies}
-
+\begin{frame}{Event Study}
+\begin{equation*}
+    y_{it}=\alpha_i+\delta_t+q_{it}'\lambda+\sum_{k=-5}^5 \beta_kz_{i,t-k} + \varepsilon_{it}
+\end{equation*}
 
     
 \end{frame}
@@ -291,6 +293,39 @@ Average size of hospital worked with (measured in beds), average hospital days o
             \centering
             \includegraphics[width=\textwidth]{Objects/xtevent_hosp_oldsample_ind.pdf}
             \caption{\small Phys. $>$ 35yrs Experience\\ (Only 1 Hospital)}
+        \end{minipage}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Dep. Variable: Appears in Office-Based Data}
+\begin{figure}[ht]
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_fullsample_office.pdf}
+            \caption{\small All Physicians}
+        \end{minipage}
+        \hspace{0.2cm}
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_oldsample_office.pdf}
+            \caption{\small Phys.$>$35yrs Experience}
+        \end{minipage}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Dep. Variable: Appears in Office-Based Data}
+\begin{figure}[ht]
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_hosp_fullsample_office.pdf}
+            \caption{\small All Physicians \\(Only 1 Hospital)}
+        \end{minipage}
+        \hspace{0.2cm}
+        \begin{minipage}[b]{0.47\linewidth}
+            \centering
+            \includegraphics[width=\textwidth]{Objects/xtevent_hosp_oldsample_office.pdf}
+            \caption{\small Phys.$>$35yrs Experience\\ (Only 1 Hospital)}
         \end{minipage}
     \end{figure}
 \end{frame}
