@@ -36,51 +36,15 @@ sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max)
-
-# Hospitalist Level
-sum_stats_hospitalist <- Physician_Data %>% ungroup() %>% filter(num_hospitals==1) %>%
-  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
-                 "Female"="female", "Number of Systems Worked With"="num_systems",
-                 "Years since Graduating"="experience",
-                 "Total Patients Billed with Hospitals"="phys_working_hosp","Fraction of Hospitals with EHR"="frac_EHR",
-                 "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
-                 "Average Hospital Operating Days"="avg_oper_days",
-                 "Fraction of Hospital Patients at EHR Hospital"="frac_EHR_patients"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
-  gather(key=var,value=value) %>%
-  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
-  spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max)
-
-# Merge the two summary stats tables
-sum_stats <- sum_stats_fullsample %>%
-  left_join(sum_stats_hospitalist, by="variable")
-
-knitr::kable(sum_stats, "latex",
-             col.names=c("Variable", "Number Physicians", "Mean", "Std. Dev.", "Min", "Max","Number Physicians", "Mean", "Std. Dev.", "Min", "Max"),
-             digits=2,
-             caption="Physician Level Variables",
-             booktabs=T,
-             escape=F,
-             label=NA,
-             align=c("l", "c","c","c","c","c","c","c","c","c","c"),
-             position="h",
-             linesep = "\\addlinespace",
-             format.args = list(big.mark = ",")) %>%
-  kable_styling( full_width=F, latex_options=c("scale_down") ) %>%
-  add_header_above(c(" "=1, "Full Sample"=5, "Works with Only 1 Hospital" =5)) %>%
-  save_kable("objects/sumstats.pdf", density=300)
-
+  relocate(variable,n,m,sd,min,max) %>%
+  mutate(n=round(n/7))
 
 
 # AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% group_by(year) %>%
-  summarise_at(c("Fraction of Physicians Working"="working_ind", "Fraction of Hospitals using EHR"="frac_EHR", 
+  summarise_at(c("Fraction of Hospitals using EHR"="frac_EHR", 
                  "Fraction of Physicians Exposed to an EHR"="exposed"), list(m=mean), na.rm=T) %>%
-  dplyr::rename("Fraction of Physicians Working"="Fraction of Physicians Working_m", 
-                "Hospitals using EHR"="Fraction of Hospitals using EHR_m",
+  dplyr::rename("Hospitals using EHR"="Fraction of Hospitals using EHR_m",
                 "Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")
 
 
@@ -98,37 +62,74 @@ ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) +
 
 ggsave("objects/sum_stats_year.pdf", width=8, height=5, units="in")
 
-# Graph of treatment physician with continuous labor variable-------------------------------------------
+# Graph continuous labor variable with lines for each year treated ------------------------------------
+cont_treatment_graph <- data.frame(year=double(), labor=double(), Treatment=character())
+for (i in 2010:2013){
+year <- Physician_Data %>%
+  filter(working_allyears_hosp==1) %>%
+  filter(minyr_EHR==i) %>%
+  group_by(year) %>%
+  mutate(labor=mean(phys_working_hosp)) %>%
+  distinct(year,labor) %>%
+  mutate(Treatment=paste0("Treatment Year: ",i))
 
-EHR_treatment_cont <- Physician_Data %>%
-  filter(minyr_EHR>0) %>%
-  group_by(rel_exposedyr) %>%
-  mutate(labor=mean(phys_working)) %>%
-  distinct(rel_exposedyr,labor) 
+cont_treatment_graph <- rbind(cont_treatment_graph, year)
+}
 
-# Relative Year Treatment Plot
-ggplot(EHR_treatment_cont,aes(x=rel_exposedyr,y=labor)) + geom_point() + geom_line() + labs(x="\nYear Relative to EHR Exposure", y="Labor Variable\n", 
-                                                                                                                             title="\nPhysician Labor in Year Relative to EHR Exposure\n") + 
-  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
-  guides(linetype=guide_legend(nrow=8)) 
+never_treated <- Physician_Data %>%
+  filter(working_allyears_hosp==1) %>%
+  filter(minyr_EHR==0) %>%
+  group_by(year) %>%
+  mutate(labor=mean(phys_working_hosp)) %>%
+  distinct(year,labor) %>%
+  mutate(Treatment=paste0("Never Treated"))
 
-ggsave("objects/relyear_treatment_cont.pdf", width=8, height=5, units="in")
+cont_treatment_graph <- rbind(cont_treatment_graph, never_treated)
+
+cont_treatment_graph <- cont_treatment_graph %>%
+  filter(2009<year & year<2015)
+
+ggplot(cont_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
+  labs(x="\nYear", y="Hospital Patients\n", 
+       title="\nNumber of Hospitals Patients by Treatment\n") +
+  scale_colour_manual(values=cbbPalette) 
+  
+ggsave("objects/cont_treatment_graph.pdf", width=8, height=5, units="in")
 
 
-# Graph of treatment physician with indicator labor variable-------------------------------------------
-EHR_treatment_ind <- Physician_Data %>%
-  filter(minyr_EHR>0) %>%
-  group_by(rel_exposedyr) %>%
-  mutate(labor=mean(working_ind)) %>%
-  distinct(rel_exposedyr,labor) 
+# Graph indicator labor variable with lines for each year treated ------------------------------------
+ind_treatment_graph <- data.frame(year=double(), labor=double(), Treatment=character())
+for (i in 2010:2013){
+  year <- Physician_Data %>%
+    filter(minyr_EHR==i) %>%
+    group_by(year) %>%
+    mutate(labor=mean(nonhosp_ind)) %>%
+    distinct(year,labor) %>%
+    mutate(Treatment=paste0("Treatment Year: ",i))
+  
+  ind_treatment_graph <- rbind(ind_treatment_graph, year)
+}
 
-# Relative Year Treatment Plot
-ggplot(EHR_treatment_ind,aes(x=rel_exposedyr,y=labor)) + geom_point() + geom_line() + labs(x="\nYear Relative to EHR Exposure", y="Labor Variable\n", 
-                                                                                            title="\nPhysician Labor in Year Relative to EHR Exposure\n") + 
-  scale_colour_manual(values=cbbPalette)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm')) +
-  guides(linetype=guide_legend(nrow=8)) 
+never_treated_ind <- Physician_Data %>%
+  filter(minyr_EHR==0) %>%
+  group_by(year) %>%
+  mutate(labor=mean(nonhosp_ind)) %>%
+  distinct(year,labor) %>%
+  mutate(Treatment=paste0("Never Treated"))
 
-ggsave("objects/relyear_treatment_ind.pdf", width=8, height=5, units="in")
+ind_treatment_graph <- rbind(ind_treatment_graph, never_treated_ind)
+
+ind_treatment_graph <- ind_treatment_graph %>%
+  filter(2009<year)
+
+ggplot(ind_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
+  labs(x="\nYear", y="Hospital Patients\n", 
+       title="\nProbability of Positive Patients only Outside of Hospitals\n") +
+  scale_colour_manual(values=cbbPalette) 
+
+ggsave("objects/ind_treatment_graph.pdf", width=8, height=5, units="in")
+
+
 
 
 # Create graph showing the distributions of important variables---------------------------------------------------------

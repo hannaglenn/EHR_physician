@@ -24,7 +24,7 @@ Final_Pairs <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
 PhysCompare <- read_csv(paste0(raw_data_path,"DAC_NationalDownloadableFile.csv"))
 
 PhysCompare <- PhysCompare %>%
-  rename(gender=gndr,grad_year=Grd_yr) %>%
+  dplyr::rename(gender=gndr,grad_year=Grd_yr) %>%
   select(NPI,gender,grad_year) %>%
   mutate(female=ifelse(gender=='F',1,ifelse(gender=='M',0,NA)))
 
@@ -210,54 +210,61 @@ Final_Pairs <- Final_Pairs %>%
   mutate(phys_working_hosp=sum(samedaycount)) %>%
   ungroup()
 
+# Create indicator for working, but not in hospitals
+Final_Pairs <- Final_Pairs %>%
+  group_by(DocNPI, year) %>%
+  mutate(nonhosp_ind=ifelse(phys_working_hosp==0 & phys_working>0, 1, 0)) %>%
+  ungroup()
+
 
 # Bring in SK&A -----------------------------------------------------------------------------------------
-ska2009 <- read_csv(paste0(raw_data_path,"SK&A/SKA2009.csv"))
-ska2009 <- ska2009 %>%
-  mutate(year=2009) %>%
-  select(npi,year)
+#ska2009 <- read_csv(paste0(raw_data_path,"SK&A/SKA2009.csv"))
+#ska2009 <- ska2009 %>%
+  #mutate(year=2009) %>%
+  #select(npi,year)
 
-ska2010 <- read_csv(paste0(raw_data_path,"SK&A/SKA2010.csv"))
-ska2010 <- ska2010 %>%
-  mutate(year=2010) %>%
-  select(npi,year)
+#ska2010 <- read_csv(paste0(raw_data_path,"SK&A/SKA2010.csv"))
+#ska2010 <- ska2010 %>%
+  #mutate(year=2010) %>%
+  #select(npi,year)
 
-ska2011 <- read_csv(paste0(raw_data_path,"SK&A/SKA2011.csv"))
-ska2011 <- ska2011 %>%
-  mutate(year=2011) %>%
-  select(npi,year)
+#ska2011 <- read_csv(paste0(raw_data_path,"SK&A/SKA2011.csv"))
+#ska2011 <- ska2011 %>%
+  #mutate(year=2011) %>%
+  #select(npi,year)
 
-ska2012 <- read_csv(paste0(raw_data_path,"SK&A/SKA2012.csv"))
-ska2012 <- ska2012 %>%
-  mutate(year=2012) %>%
-  select(npi,year)
+#ska2012 <- read_csv(paste0(raw_data_path,"SK&A/SKA2012.csv"))
+#ska2012 <- ska2012 %>%
+  #mutate(year=2012) %>%
+  #select(npi,year)
 
-ska2013 <- read_csv(paste0(raw_data_path,"SK&A/SKA2013.csv"))
-ska2013 <- ska2013 %>%
-  mutate(year=2013) %>%
-  select(npi,year)
+#ska2013 <- read_csv(paste0(raw_data_path,"SK&A/SKA2013.csv"))
+#ska2013 <- ska2013 %>%
+  #mutate(year=2013) %>%
+  #select(npi,year)
 
-ska2014 <- read_csv(paste0(raw_data_path,"SK&A/SKA2014.csv"))
-ska2014 <- ska2014 %>%
-  mutate(year=2014) %>%
-  select(npi,year)
+#ska2014 <- read_csv(paste0(raw_data_path,"SK&A/SKA2014.csv"))
+#ska2014 <- ska2014 %>%
+  #mutate(year=2014) %>%
+  #select(npi,year)
 
-ska2015 <- read_csv(paste0(raw_data_path,"SK&A/SKA2015.csv"))
-ska2015 <- ska2015 %>%
-  mutate(year=2015) %>%
-  select(npi,year)
+#ska2015 <- read_csv(paste0(raw_data_path,"SK&A/SKA2015.csv"))
+#ska2015 <- ska2015 %>%
+  #mutate(year=2015) %>%
+  #select(npi,year)
 
-ska <- rbind(ska2009, ska2010, ska2011, ska2012, ska2013, ska2014, ska2015)
+#ska <- rbind(ska2009, ska2010, ska2011, ska2012, ska2013, ska2014, ska2015)
 
-ska <- ska %>%
-  mutate(ska=1, npi=as.character(npi))
+#ska <- ska %>%
+  #mutate(ska=1, npi=as.character(npi))
 
 # Merge Final_Pairs and SKA
-Final_Pairs <- Final_Pairs %>%
-  left_join(ska, by=c("DocNPI"="npi","year")) %>%
-  mutate(ska=if_else(is.na(ska),0,ska))
+#Final_Pairs <- Final_Pairs %>%
+  #left_join(ska, by=c("DocNPI"="npi","year")) %>%
+  #mutate(ska=if_else(is.na(ska),0,ska))
 
   
+
 
 # Create Extra Variables (Reading in data is complete) --------------------------------------------
 
@@ -410,21 +417,21 @@ Final_Pairs <- Final_Pairs %>%
 
 # Treatment Variable: start office work
 # Create variable for first year a doc was in SKA data
-minyr_ska <- Final_Pairs %>% ungroup() %>%
-  distinct(DocNPI, year, ska) %>%
-  filter(ska==1) %>%
-  group_by(DocNPI) %>%
-  mutate(minyr_ska=min(year)) %>%
-  ungroup() %>%
-  distinct(DocNPI,minyr_ska)
+#minyr_ska <- Final_Pairs %>% ungroup() %>%
+  #distinct(DocNPI, year, ska) %>%
+  #filter(ska==1) %>%
+  #group_by(DocNPI) %>%
+  #mutate(minyr_ska=min(year)) %>%
+  #ungroup() %>%
+  #distinct(DocNPI,minyr_ska)
 
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
-  left_join(minyr_ska, by="DocNPI") %>%
-  mutate(minyr_ska=ifelse(is.na(minyr_ska),0,minyr_ska))
+#Final_Pairs <- Final_Pairs %>% ungroup() %>%
+  #left_join(minyr_ska, by="DocNPI") %>%
+  #mutate(minyr_ska=ifelse(is.na(minyr_ska),0,minyr_ska))
 
 # Create "to_office" indicator based on year and min year of ska
-Final_Pairs <- Final_Pairs %>%
-  mutate(to_office=ifelse(minyr_ska>0 & year>=minyr_ska,1,0))
+#Final_Pairs <- Final_Pairs %>%
+  #mutate(to_office=ifelse(minyr_ska>0 & year>=minyr_ska,1,0))
 
 
 
@@ -432,7 +439,7 @@ Final_Pairs <- Final_Pairs %>%
 Physician_Data <- Final_Pairs %>%
   distinct(DocNPI,year,grad_year,female,phys_working,num_hospitals, hosp_EHR, frac_EHR, avg_beds, 
            avg_oper_days, experience, minyr_EHR, exposed, num_patients, num_patients_EHR, frac_EHR_patients,
-           num_systems, phys_working_hosp, num_billings_partB, ska, to_office, minyr_ska)
+           num_systems, phys_working_hosp, num_billings_partB, nonhosp_ind)
 
 # Create working indicator and relative year variables
 Physician_Data <- Physician_Data %>%
@@ -491,7 +498,8 @@ Physician_Data <- Physician_Data %>%
   group_by(DocNPI) %>%
   mutate(n=sum(exposed)) %>%
   ungroup() %>%
-  mutate(exposed_ever=ifelse(n>0,1,0))
+  mutate(exposed_ever=ifelse(n>0,1,0)) %>%
+  select(-n)
 
 # Now drop physicians who have crazy outliers for hospital working variable
 drop_outliers <- Physician_Data %>%
