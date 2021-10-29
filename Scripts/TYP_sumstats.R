@@ -91,7 +91,7 @@ cont_treatment_graph <- cont_treatment_graph %>%
 
 ggplot(cont_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
   labs(x="\nYear", y="Hospital Patients\n", 
-       title="\nNumber of Hospitals Patients by Treatment\n") +
+       title="\nHospital Patient Count by Treatment\n") +
   scale_colour_manual(values=cbbPalette) 
   
 ggsave("objects/cont_treatment_graph.pdf", width=8, height=5, units="in")
