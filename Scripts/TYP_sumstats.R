@@ -90,7 +90,7 @@ cont_treatment_graph <- cont_treatment_graph %>%
   filter(2009<year & year<2015)
 
 ggplot(cont_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
-  labs(x="\nYear", y="Hospital Patients\n", 
+  labs(x="\nYear", y="Avergae Number of Patients in Hospitals\n", 
        title="\nHospital Patient Count by Treatment\n") +
   scale_colour_manual(values=cbbPalette) 
   
