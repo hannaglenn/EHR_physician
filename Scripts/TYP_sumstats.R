@@ -56,7 +56,7 @@ sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
 ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
-  geom_line() +geom_point() + labs(x="\nYear", y="Percent\n", 
+  geom_line() +geom_point() + labs(x="\nYear", y="Proportion\n", 
                                    title="\nEHR Use Over Time\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(.2,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
