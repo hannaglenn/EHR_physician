@@ -7,15 +7,16 @@ library(plm)
 #                         Hanna Glenn, Emory University
 #                         9/3/2021
 
-# This script develops the main dataset to be used in my third year paper.
-# First, I bring in Physician Compare for information about medical school graduation and gender. Next, I bring in 
-# MedPhys_PUF, which has information on total Part B claims for a physician from 2012-2015. 
-# For EHR information, I use the main and supplement AHA surveys and CMS data on hospitals which received meaningful use subsidies.
-# I limit 
-# The final dataset is called "Final_Pairs.rds"
+# ORDER::::: 4
+
+# This script develops the main dataset to be used in the paper.
+# This builds on the physician-hospital pairs created in "data2_pairs.R"
+# First, I bring in (raw) Physician Compare for information about medical school graduation and gender. 
+# For EHR information, I use the (raw) main and supplement AHA surveys.
+# The final dataset is called "Data.rds"
 
 # Read in physician hospital pairs created in "phys_hosp_pairs.r"
-Final_Pairs <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
+data <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
   # This data does not have any repeats of year, HospNPI, DocNPI
 
 
@@ -26,10 +27,11 @@ PhysCompare <- read_csv(paste0(raw_data_path,"DAC_NationalDownloadableFile.csv")
 PhysCompare <- PhysCompare %>%
   dplyr::rename(gender=gndr,grad_year=Grd_yr) %>%
   select(NPI,gender,grad_year) %>%
-  mutate(female=ifelse(gender=='F',1,ifelse(gender=='M',0,NA)))
+  mutate(female=ifelse(gender=='F',1,ifelse(gender=='M',0,NA))) %>%
+  select(-gender)
 
 # Merge, then drop any physicians that graduated after 2008
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
   filter(grad_year<2009)
@@ -37,38 +39,43 @@ Final_Pairs <- Final_Pairs %>%
 
 #### Create num_billings_partB Variable --------------------------------------------------------- ####
 #Read in MedPhys_PUF.R (created from Physician Compare in "MedPhys_PUF.R)
-MedPhys_PUF <- read_rds(paste0(created_data_path,"MedPhys_PUF.rds"))
+#MedPhys_PUF <- read_rds(paste0(created_data_path,"MedPhys_PUF.rds"))
 
-Final_Pairs <- Final_Pairs %>%
-  left_join(MedPhys_PUF,by=c("DocNPI"="NPI","year")) %>%
-  rename(num_billings_partB=total_services)
+#Final_Pairs <- Final_Pairs %>%
+#  left_join(MedPhys_PUF,by=c("DocNPI"="NPI","year")) %>%
+#  rename(num_billings_partB=total_services)
 
 
+
+
+#skip this, not using in my analysis for now since years are so limited
 
 
 #### Create EHR Variables ---------------------------------------------------------------------- ####
-#Read in AHA-NPI crosswalk
+#Read in AHA-NPI crosswalk data
 AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
 
 # Merge crosswalk to main data
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   left_join(AHANPI_cw,by=c("HospNPI"="NPI"))
 
 # See how many unique hospitals in the dataset have an AHAID
 num_hosp <- Final_Pairs %>% ungroup() %>%
   filter(!is.na(AHAID)) %>%
   distinct(HospNPI)
-  # There are 4483 unique hospitals in the data that are not missing AHAID
+  # There are 4482 unique hospitals in the data that are not missing AHAID (good)
 
-# I'll only keep pairs with AHA hospitals since that is where EHR information comes from
-Final_Pairs <- Final_Pairs %>%
+# Only keep pairs with AHA hospitals since that is where EHR information comes from
+data <- data %>%
   filter(!is.na(AHAID))
+  #10.9 mill
 
-balance_check <- Final_Pairs %>% ungroup() %>%
+balance_check <- data %>% ungroup() %>%
   distinct(year,ID)
 
 # Check if still balanced
 is.pbalanced(balance_check)
+  #TRUE
 
 # Read in main AHA survey data
 # I need to think about adding more hospital characteristics to this dataset
@@ -77,7 +84,7 @@ AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
 AHAmainsurvey <- AHAmainsurvey %>%
   mutate(ID=as.character(ID))
 
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
+data <- data %>% ungroup() %>%
   mutate(AHAID=as.character(AHAID)) %>%
   left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never") %>%
   rename(SystemID="SYSID","days_hosp_operating"=DCOV, beds=BDTOT) %>%
@@ -103,19 +110,19 @@ num_always_missing_EHR <- Final_Pairs %>% ungroup() %>%
   # There are only 40 hospitals that never answer this question, but they typically have answers to the other questions in the survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
-Final_Pairs <- Final_Pairs %>% group_by(AHAID) %>%
+data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_0=min(year[EHLTH==0],na.rm=T),lastyear_0=max(year[EHLTH==0],na.rm=T)) %>%
   mutate(firstyear_0=ifelse(is.infinite(firstyear_0),NA,firstyear_0),lastyear_0=ifelse(is.infinite(lastyear_0),NA,lastyear_0)) %>%
   mutate(EHLTH=ifelse(firstyear_0<year & year<lastyear_0 & is.na(EHLTH),0,EHLTH))
   # Fill in 542
 
-Final_Pairs <- Final_Pairs %>% group_by(AHAID) %>%
+data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_1=min(year[EHLTH==1],na.rm=T),lastyear_1=max(year[EHLTH==1],na.rm=T)) %>%
   mutate(firstyear_1=ifelse(is.infinite(firstyear_1),NA,firstyear_1),lastyear_1=ifelse(is.infinite(lastyear_1),NA,lastyear_1)) %>%
   mutate(EHLTH=ifelse(firstyear_1<year & year<lastyear_1 & is.na(EHLTH),1,EHLTH))
   # Fill in 379
 
-Final_Pairs <- Final_Pairs %>% group_by(AHAID) %>%
+data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_2=min(year[EHLTH==2],na.rm=T),lastyear_2=max(year[EHLTH==2],na.rm=T)) %>%
   mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
   mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
@@ -123,7 +130,7 @@ Final_Pairs <- Final_Pairs %>% group_by(AHAID) %>%
   # Fill in 346
 
 # Get rid of unneeded variables 
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
+data <- data %>% ungroup() %>%
   select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
 
 # Read in AHA IT Survey --------------------------------------------------------------------------------------
@@ -144,7 +151,7 @@ for (i in 2012:2015){
 
 AHAIT <- rbind(AHAIT2009, AHAIT2010, AHAIT2011, AHAIT2012, AHAIT2013, AHAIT2014, AHAIT2015)
 
-# Create index out of survey answers
+# Create index out of supplement survey answers
 AHAIT <- AHAIT %>%
   mutate(CSEDPD=as.numeric(CSEDPD), CSEDNA=as.numeric(CSEDNA), CSEDPL=as.numeric(CSEDPL), CSEDML=as.numeric(CSEDML), CSEDDS=as.numeric(CSEDDS), CSEDAD=as.numeric(CSEDAD), CSDSCG=as.numeric(CSDSCG), CSDSCR=as.numeric(CSDSCR), CSDSDA=as.numeric(CSDSDA), CSDSDD=as.numeric(CSDSDD), CSDSDL=as.numeric(CSDSDL), CSDSDS=as.numeric(CSDSDS)) %>%
   rowwise() %>%
@@ -153,14 +160,14 @@ AHAIT <- AHAIT %>%
   select(ID,YEAR,MCNTRL,documentation_index,decision_index)
 
 # Merge
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   mutate(AHAID=as.character(AHAID))
 
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   left_join(AHAIT,by=c("AHAID"="ID","year"="YEAR"), na_matches="never")
 
 
-#### Meaningful Use Data ####
+#### Meaningful Use Data ---------------------------------####
 
 
     # Read in Meaningful Use Data 
@@ -196,28 +203,34 @@ Final_Pairs <- Final_Pairs %>%
               #stage2=ifelse(is.na(stage2),0,stage2), stage3=ifelse(is.na(stage3),0,stage3))
 
 
+#skip for now, not using in analysis
+
 # Bring in Working variable from all hospital shared patient entities--------------------------------------------
 phys_working <- read_rds(paste0(created_data_path,"phys_working.rds"))
 
 # merge by year & DocNPI
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   mutate(DocNPI=as.character(DocNPI)) %>%
   left_join(phys_working, by=c("year","DocNPI"))
 
-# Create a labor market variable for just sum of hospital shared patients
-Final_Pairs <- Final_Pairs %>%
+# Create a labor market variable for just sum of hospital shared patients in a year
+data <- data %>%
   group_by(DocNPI, year) %>%
-  mutate(phys_working_hosp=sum(samedaycount)) %>%
+  mutate(hosp_count=sum(samedaycount)) %>%
+  rename(other_count=phys_working) %>%
   ungroup()
 
 # Create indicator for working, but not in hospitals
-Final_Pairs <- Final_Pairs %>%
+data <- data %>% 
   group_by(DocNPI, year) %>%
-  mutate(nonhosp_ind=ifelse(phys_working_hosp==0 & phys_working>0, 1, 0)) %>%
+  mutate(nonhosp_ind=ifelse(hosp_count==0 & other_count>0, 1, 0)) %>%
   ungroup()
 
 
-# Bring in SK&A -----------------------------------------------------------------------------------------
+
+
+
+# Bring in SK&A (FIX CODE NAMES BEFORE RUNNING) -----------------------------------------------------------------------------------------
 #ska2009 <- read_csv(paste0(raw_data_path,"SK&A/SKA2009.csv"))
 #ska2009 <- ska2009 %>%
   #mutate(year=2009) %>%
@@ -268,13 +281,14 @@ Final_Pairs <- Final_Pairs %>%
 
 # Create Extra Variables (Reading in data is complete) --------------------------------------------
 
+### EHR VARIABLES --------------------------------------------------------------------------------
 # Create indicator for hospital EHR use
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA)))
 
 # In some cases, 2009 or 2015 can be filled in to not have a missing value. 
 # Create dataset to fill in 2009 or 2015 conditionally
-fill_in <- Final_Pairs %>%
+fill_in <- data %>%
   filter((year==2010 & EHR==0) | (year==2014 & EHR==1)) %>%
   mutate(change2009=ifelse(year==2010,1,0),
          change2015=ifelse(year==2014,1,0)) %>%
@@ -289,33 +303,44 @@ fill_in <- fill_in %>%
   distinct(HospNPI,change2009,change2015)
 
 # Merge it back to original
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   left_join(fill_in,by="HospNPI")
 
 # Fill in the qualifying missing values
-Final_Pairs <- Final_Pairs %>%
+data <- data %>%
   mutate(EHR=ifelse(year==2009 & change2009==1 & is.na(EHR),0,EHR)) %>%
   mutate(EHR=ifelse(year==2015 & change2015==1 & is.na(EHR),1,EHR)) %>%
-  select(-change2009, -change2015) %>%
+  select(-change2009, -change2015, -EHLTH) %>%
   ungroup()
+
 
 # Create measure of number of hospitals a physician works with that use an EHR
 
 # Figure out if any hospitals only have NAs for all years
-always_missing_EHR <- Final_Pairs %>% ungroup() %>%
+always_missing_EHR <- data %>% ungroup() %>%
   distinct(HospNPI,year,EHR) %>% ungroup() %>%
-  group_by(HospNPI) %>%
   mutate(EHR=ifelse(is.na(EHR),-1,EHR)) %>%
+  group_by(HospNPI) %>%
   mutate(sum=sum(EHR,na.rm=T)) %>%
   filter(sum==-7) %>%
-  distinct(HospNPI,sum)
-  # 370 hospitals never answer the question about EHRs. I will drop these.
-  # This leaves 4113 unique hospitals in the data
-
-Final_Pairs <- Final_Pairs %>% ungroup() %>%
-  left_join(always_missing_EHR, by="HospNPI") %>%
-  filter(is.na(sum)) %>%
+  distinct(HospNPI,sum) %>%
+  mutate(alwaysmissingEHR=1) %>%
   select(-sum)
+  # 378 hospitals never answer the question about EHRs.
+  # I need to figure out whether these hospitals differ from the population of hospitals. 
+
+data <- data %>% ungroup() %>%
+  left_join(always_missing_EHR, by="HospNPI") 
+
+info_missing <- data %>% filter(alwaysmissingEHR==1) %>%
+  group_by(year) %>%
+  summarise_at(c("samedaycount", "beds"),
+  list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,n,m,sd,min,max)
 
 # Create total number of hospitals a physician works with
 count <- Final_Pairs %>%
