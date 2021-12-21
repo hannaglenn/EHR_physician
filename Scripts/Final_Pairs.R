@@ -524,5 +524,3 @@ balance_check <- Physician_Data %>%
 
 is.pbalanced(balance_check)
 
-
-
