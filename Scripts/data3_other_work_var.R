@@ -6,6 +6,8 @@ library(plm)
 #                         Hanna Glenn, Emory University
 #                         10/6/2021
 
+# ORDER::::: 3
+
 # This script takes each doctor's shared patients with many different entities and aggregates it into one variable
 # which is used as a dependent variable for my third year paper. The datasets used to create this are "phys_npidata.rds",
 # "other_npidata.rds", "hosp_npidata.rds" and the Shared Patient Data from 2009-2015, the former two created 
@@ -21,8 +23,8 @@ hosp_npidata <- read_rds(paste0(created_data_path,"hosp_npidata.rds"))
 temp_npidata <- rbind(phys_npidata, other_npidata, hosp_npidata)
 
 # Read in Shared Patient Data and merge to npi data
-for (t in 2015){
-  SP.year <- read_csv(paste0(raw_data_path,"/PSPP 2009-2015/pspp",t,"_90.csv"),
+for (t in 2009:2015){
+  SP.year <- read_csv(paste0(raw_data_path,"/PSPP/pspp",t,"_90.csv"),
                       col_types=cols(npi1=col_character(),
                                      npi2=col_character()
                       ))

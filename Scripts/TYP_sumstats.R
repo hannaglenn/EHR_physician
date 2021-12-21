@@ -56,7 +56,7 @@ sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
 ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
-  geom_line() +geom_point() + labs(x="\nYear", y="Percent\n", 
+  geom_line() +geom_point() + labs(x="\nYear", y="Proportion\n", 
                                    title="\nEHR Use Over Time\n") + 
   scale_colour_manual(values=cbbPalette) + ylim(.2,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
@@ -90,8 +90,8 @@ cont_treatment_graph <- cont_treatment_graph %>%
   filter(2009<year & year<2015)
 
 ggplot(cont_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
-  labs(x="\nYear", y="Hospital Patients\n", 
-       title="\nNumber of Hospitals Patients by Treatment\n") +
+  labs(x="\nYear", y="Avergae Number of Patients in Hospitals\n", 
+       title="\nHospital Patient Count by Treatment\n") +
   scale_colour_manual(values=cbbPalette) 
   
 ggsave("objects/cont_treatment_graph.pdf", width=8, height=5, units="in")
