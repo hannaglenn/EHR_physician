@@ -24,10 +24,10 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
 # Physician Level
 sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
-  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+  summarise_at(c("Number of Hospitals Worked With"="num_hosp_total",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Years since Graduating"="experience",
-                 "Total Patients Billed with Hospitals"="phys_working_hosp","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Number of Patients"="hosp_count","Fraction of Hospitals with EHR"="frac_EHR",
                  "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
                  "Average Hospital Operating Days"="avg_oper_days",
                  "Fraction of Hospital Patients at EHR Hospital"="frac_EHR_patients"), 
@@ -43,7 +43,7 @@ sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
 # AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% group_by(year) %>%
   summarise_at(c("Fraction of Hospitals using EHR"="frac_EHR", 
-                 "Fraction of Physicians Exposed to an EHR"="exposed"), list(m=mean), na.rm=T) %>%
+                 "Fraction of Physicians Exposed to an EHR"="anyEHR_exposed"), list(m=mean), na.rm=T) %>%
   dplyr::rename("Hospitals using EHR"="Fraction of Hospitals using EHR_m",
                 "Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")
 
@@ -63,13 +63,14 @@ ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) +
 ggsave("objects/sum_stats_year.pdf", width=8, height=5, units="in")
 
 # Graph continuous labor variable with lines for each year treated ------------------------------------
+# I don't think I want to include this graph in the paper
 cont_treatment_graph <- data.frame(year=double(), labor=double(), Treatment=character())
 for (i in 2010:2013){
 year <- Physician_Data %>%
-  filter(working_allyears_hosp==1) %>%
+  filter(working_allyears==1) %>%
   filter(minyr_EHR==i) %>%
   group_by(year) %>%
-  mutate(labor=mean(phys_working_hosp)) %>%
+  mutate(labor=mean(hosp_count)) %>%
   distinct(year,labor) %>%
   mutate(Treatment=paste0("Treatment Year: ",i))
 
@@ -77,10 +78,10 @@ cont_treatment_graph <- rbind(cont_treatment_graph, year)
 }
 
 never_treated <- Physician_Data %>%
-  filter(working_allyears_hosp==1) %>%
+  filter(working_allyears==1) %>%
   filter(minyr_EHR==0) %>%
   group_by(year) %>%
-  mutate(labor=mean(phys_working_hosp)) %>%
+  mutate(labor=mean(hosp_count)) %>%
   distinct(year,labor) %>%
   mutate(Treatment=paste0("Never Treated"))
 

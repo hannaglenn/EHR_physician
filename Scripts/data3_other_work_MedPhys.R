@@ -5,6 +5,7 @@ library(readr)
 #                                 Hanna Glenn, Emory University
 #                                 8/31/2021
 
+# ORDER :::::::::: 3a (Used in 4)
 
 # This script reads in the "Medicare Physician and Other Supplier PUF" data from 2012-2015.
 # The data will provide the dependent variable for my third year paper. 
