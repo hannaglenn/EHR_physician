@@ -102,11 +102,14 @@ For a clear look at the variation in treatment variables over time, \hyperref[fi
 
 An important aspect in the implementation of EHRs is whether or not they increase productivity in users. Productivity, in this case, has two key determinants: the choice of physicians to learn and utilize the technology, and the realized quality/innovation of electronic health records themselves. Regarding the first determinant, I will assume that when a physician continues to work in an electronic record utilizing-hospital, they utilize the electronic health record system fully. That is, there are no physicians who stay actively working in a hospital but choose not to partake in the electronic health record used by the hospital. To understand the second determinant, the value added of electronic health records themselves, the sample of physicians is limited to those who have patients in hospitals even after EHR exposure. 
 
-It is reasonable to believe that physicians are fully utilizing the EHRs in the hospital they work in, since by 2015 electronic health records were widely implemented and considered unavoidable. An objection to this assumption may be that older physicians stay in a hospital, but the hospital hires a data assistant to do technology work for the physician. In this cae, the productivity gain could be from having the data assistant instead of EHR use. I investigate this below.
+It is reasonable to believe that physicians are fully utilizing the EHRs in the hospital they work in, since by 2015 electronic health records were widely implemented and considered unavoidable. An objection to this assumption may be that older physicians stay in a hospital, but the hospital hires a data assistant to do technology work for the physician. In this case, the productivity gain could be from having the data assistant instead of EHR use. I investigate this below.
 
 \subsection{Data Assistants}
 
-\textcolor{red}{get data from AHA on data assistance. It may be that I just need to show a graph here of the number of data assistant jobs at hospitals. Need to see from there. }
+One concern with this measure of productivity is that an increase in the number of patients seen by a physician could be caused by an outside factor that is also correlated with EHR adoption in hospitals. A logical outside factor could be the existence of employees with the purpose of utilizing electronic health records on a physician's behalf. Employees of this type are assigned a medical tax ID when working in hospitals; they have the following titles: Coding Specialist (Hospital Based), Health Information Technologist and Registered Record Administrator. All of these employees are the equivalent of transcribers for health information technology. 
+
+Using NPPES data on all NPIs and their tax information, I analyze the existence of data assistants in hospitals. Figure \textcolor{red}{number} is a frequency plot of the year of activation for every tax code that falls in the categories listed above. The total number of these registered employees is 875. 
+
 
 \subsection{Event Study and Results}
 
@@ -142,6 +145,22 @@ For physicians at any experience level, EHR exposure yields no immediate affect 
 
 
 \textcolor{red}{I need to put somewhere that i dropped 2015 for this analysis since it cut off at a different point than the other years}
+
+\renewcommand*{\bibfont}{\footnotesize}
+
+\printbibliography
+
+\newpage
+
+\appendix
+
+\section{Tables and Figures}
+
+\begin{table}[ht]
+\import{Table Code}{split stats.tex}
+\end{table}
+
+
 
 
 \end{document}
