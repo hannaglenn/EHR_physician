@@ -42,3 +42,18 @@ Major Points Discussed:
 -   Limit to just hospital patients so I don't have double counts
 -   Also use part B 
 - Another potential outcome (instead of waiting for the SK&A data) is to look at hospital patients vs. nonhospital patients and see whether doctors are switching out of hospital settings
+
+
+## 1-14-2021
+Questions to ask:
+- MDPPAS data?
+
+Major Points Discussed:
+- First we discussed the progress I've made on my third year paper. In particular, the general motivation that would make anyone interested in my question. Along with the efficiency and quality arguments I've already been thinking of, Ian also brought up the possibility that access to care may be improving, which is why we don't see a decrease in costs but that is an improvement in a different capacity. The efficiency question is POLICY RELEVENT, the access question is PATIENT RELEVENT
+- The MDPPAS data should be coming in the next week or so, they approved exporting it as long as certain things are masked. Ian is working on the masking and then will get approval. 
+- It may be worth looking into whether there is physician level info regarding MACRA (changes in how physicians are paid that has meaningful EHR use in the requirements)
+- At the top of my to-do list should be speaking to a hospitalist about some of these institutional details to make sure I'm getting the story right
+
+Action Steps:
+- Talk to hospitalist
+- Write aspirational introduction and send it to Ian by the 20th
