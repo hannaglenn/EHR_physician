@@ -6,7 +6,7 @@ library(plm)
 #                         Hanna Glenn, Emory University
 #                         10/6/2021
 
-# ORDER::::: 3
+# # ORDER :::::::::: 3b (Used in 4)
 
 # This script takes each doctor's shared patients with many different entities and aggregates it into one variable
 # which is used as a dependent variable for my third year paper. The datasets used to create this are "phys_npidata.rds",

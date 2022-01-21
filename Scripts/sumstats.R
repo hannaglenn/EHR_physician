@@ -3,6 +3,8 @@ library(reshape)
 library(knitr)
 library(kableExtra)
 library(ggplot2)
+library(magick)
+library(webshot)
 
 options(knitr.kable.NA=" ")
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -24,52 +26,103 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
 # Physician Level
 sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
-  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+  summarise_at(c("Number of Hospitals Worked With"="num_hosp_total",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
-                 "Years since Graduating"="experience",
-                 "Total Patients Billed with Hospitals"="phys_working_hosp","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Medical School Grad. Year"="grad_year",
+                 "Number of Patients"="hosp_count","Fraction of Hospitals with EHR"="frac_EHR",
                  "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
                  "Average Hospital Operating Days"="avg_oper_days",
-                 "Fraction of Hospital Patients at EHR Hospital"="frac_EHR_patients"), 
+                 "Exposure to an EHR"="anyEHR_exposed"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
   relocate(variable,n,m,sd,min,max) %>%
-  mutate(n=round(n/7))
+  mutate(m=ifelse(variable=='Medical School Grad. Year',round(m,digits=0),m))
+
+
+
+
+knitr::kable(sum_stats_fullsample[c(1,2,4,6,7,9,3,5,8),],
+             format="latex",
+             table.envir="figure",
+             col.names=c("Variable","N","Mean","Std. Dev.", "Min", "Max"),
+             digits=2,
+             caption="Summary Stats",
+             booktabs=TRUE,
+             escape=F,
+             align=c("l","r","r","r","r","r"),
+             position="h") %>%
+  kable_styling(full_width=F) %>%
+  pack_rows(index = c("Static" = 6, "Dynamic" = 3)) 
+
+# Summary Stats broken down by age of physician and year ---------------------------------------------------------
+means_old <- Physician_Data %>% filter(experience>35) %>% ungroup() %>%
+  group_by(year) %>%
+  summarize_at(c("hosp_count",
+                 "frac_EHR",
+                 "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) %>%
+  filter(year >= 1986) %>%
+  select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
+  mutate(category="old")
+
+means_young <- Physician_Data %>% filter(experience<=35) %>% ungroup() %>%
+  group_by(year) %>%
+  summarize_at(c("hosp_count",
+                 "frac_EHR",
+                 "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) %>%
+  filter(year >= 1986) %>%
+  select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
+  mutate(category="young")
+
+means_bind <- rbind(means_old,means_young)
+
+knitr::kable(means_bind,
+             col.names=c("Year","Mean","Std. Dev.", "Mean","Std. Dev.", "Mean", "Std. Dev." ),
+             digits=2,
+             caption="Summary Stats",
+             booktabs=TRUE,
+             escape=F,
+             align=c("l","r","r","r","r","r","r","r","r"),
+             position="h") %>%
+  kable_styling(full_width=F) %>%
+  add_header_above(c(" "=1, "Number of Patients"=2, "Frac. of Hospitals with EHR" =2, "Exposure to EHR"=2)) %>%
 
 
 # AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% group_by(year) %>%
   summarise_at(c("Fraction of Hospitals using EHR"="frac_EHR", 
-                 "Fraction of Physicians Exposed to an EHR"="exposed"), list(m=mean), na.rm=T) %>%
-  dplyr::rename("Hospitals using EHR"="Fraction of Hospitals using EHR_m",
+                 "Fraction of Physicians Exposed to an EHR"="anyEHR_exposed"), list(m=mean), na.rm=T) %>%
+  dplyr::rename("Fraction of Hospitals using EHR"="Fraction of Hospitals using EHR_m",
                 "Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")
 
 
 # Create a dataframe out of the summary stats to put in a ggplot
 sum_stats_year <- as.data.frame(sum_stats_year)
-sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Hospitals using EHR",
+sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Fraction of Hospitals using EHR",
                                                                           "Physicians Exposed to an EHR"))
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
 ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
-  geom_line() +geom_point() + labs(x="\nYear", y="Proportion\n", 
-                                   title="\nEHR Use Over Time\n") + 
+  geom_line() +geom_point() + labs(x="\nYear", y=" " 
+                                   ) + 
   scale_colour_manual(values=cbbPalette) + ylim(.2,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
 
-ggsave("objects/sum_stats_year.pdf", width=8, height=5, units="in")
+ggsave("Objects/sum_stats_year.pdf", width=8, height=5, units="in")
 
 # Graph continuous labor variable with lines for each year treated ------------------------------------
+# I don't think I want to include this graph in the paper
 cont_treatment_graph <- data.frame(year=double(), labor=double(), Treatment=character())
 for (i in 2010:2013){
 year <- Physician_Data %>%
-  filter(working_allyears_hosp==1) %>%
+  filter(working_allyears==1) %>%
   filter(minyr_EHR==i) %>%
   group_by(year) %>%
-  mutate(labor=mean(phys_working_hosp)) %>%
+  mutate(labor=mean(hosp_count)) %>%
   distinct(year,labor) %>%
   mutate(Treatment=paste0("Treatment Year: ",i))
 
@@ -77,10 +130,10 @@ cont_treatment_graph <- rbind(cont_treatment_graph, year)
 }
 
 never_treated <- Physician_Data %>%
-  filter(working_allyears_hosp==1) %>%
+  filter(working_allyears==1) %>%
   filter(minyr_EHR==0) %>%
   group_by(year) %>%
-  mutate(labor=mean(phys_working_hosp)) %>%
+  mutate(labor=mean(hosp_count)) %>%
   distinct(year,labor) %>%
   mutate(Treatment=paste0("Never Treated"))
 
