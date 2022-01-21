@@ -335,7 +335,17 @@ data <- data %>% ungroup() %>%
 info_missing <- data %>% filter(alwaysmissingEHR==1) %>%
   group_by(year) %>%
   summarise_at(c("samedaycount", "beds"),
-  list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
+      list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,n,m,sd,min,max)
+
+info_nonmissing <- data %>% filter(is.na(alwaysmissingEHR)) %>%
+  group_by(year) %>%
+  summarise_at(c("samedaycount", "beds"),
+               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
