@@ -27,5 +27,5 @@ npi.taxcodes <- npi.taxcodes %>%
 
 
 ggplot(npi.taxcodes, aes(x=enum_year)) + 
-  geom_histogram(binwidth=1, colour="black", fill="white") + ylab("Count\n") + xlab("\n Enumeration Year")
+  geom_histogram(binwidth=1, colour="black", fill="white") + ylab("Count\n") + xlab("\n NPI Enumeration Year")
 ggsave("Objects/dataassistant_histogram.pdf", width=8, height=5 , units = "in")

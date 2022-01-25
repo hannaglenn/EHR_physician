@@ -26,7 +26,7 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
 # Physician Level
 sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
-  summarise_at(c("Number of Hospitals Worked With"="num_hosp_total",
+  summarise_at(c("Number of Hospitals Worked With"="num_hosp_constant",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Medical School Grad. Year"="grad_year",
                  "Number of Patients"="hosp_count","Fraction of Hospitals with EHR"="frac_EHR",
@@ -65,8 +65,7 @@ means_old <- Physician_Data %>% filter(experience>35) %>% ungroup() %>%
                  "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) %>%
   filter(year >= 1986) %>%
   select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
-  mutate(category="old")
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) 
 
 means_young <- Physician_Data %>% filter(experience<=35) %>% ungroup() %>%
   group_by(year) %>%
@@ -76,25 +75,28 @@ means_young <- Physician_Data %>% filter(experience<=35) %>% ungroup() %>%
   filter(year >= 1986) %>%
   select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
-  mutate(category="young")
+  select(-year)
 
-means_bind <- rbind(means_old,means_young)
+means_bind <- cbind(means_old,means_young)
 
-knitr::kable(means_bind,
-             col.names=c("Year","Mean","Std. Dev.", "Mean","Std. Dev.", "Mean", "Std. Dev." ),
+knitr::kable(means_bind, "latex",
+             col.names=c("Year","Mean","Std. Dev.", "Mean","Std. Dev.", "Mean", "Std. Dev." ,"Mean","Std. Dev.",
+                         "Mean","Std. Dev.","Mean","Std. Dev."),
              digits=2,
              caption="Summary Stats",
              booktabs=TRUE,
              escape=F,
-             align=c("l","r","r","r","r","r","r","r","r"),
+             align=c("l","c","c","c","c","c","c","c","c","c","c","c","c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
-  add_header_above(c(" "=1, "Number of Patients"=2, "Frac. of Hospitals with EHR" =2, "Exposure to EHR"=2)) %>%
+  add_header_above(c(" "=1, "Number of Patients"=2, "Frac. of Hospitals with EHR" =2, "Exposure to EHR"=2,
+                     "Number of Patients"=2, "Frac. of Hospitals with EHR" =2, "Exposure to EHR"=2)) %>%
+  add_header_above(c(" "=1, "Senior Physicians"=6, "Young Physicians"=6))
 
 
 # AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% group_by(year) %>%
-  summarise_at(c("Fraction of Hospitals using EHR"="frac_EHR", 
+  summarise_at(c("Fraction of Hospitals using EHR"="frac_EHR_constant", 
                  "Fraction of Physicians Exposed to an EHR"="anyEHR_exposed"), list(m=mean), na.rm=T) %>%
   dplyr::rename("Fraction of Hospitals using EHR"="Fraction of Hospitals using EHR_m",
                 "Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")

@@ -19,41 +19,25 @@ library(kableExtra)
 # Read in physician hospital pairs created in "phys_hosp_pairs.r"
 data <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
   # This data does not have any repeats of year, HospNPI, DocNPI
-  # 4 mill obs, 5 variables
+  # 830k obs, 5 variables
 
 data <- data %>%
   rename(pairID=ID)
 
-# Create Experience and Gender Variables ------------------------------------------------------------
+# Create Experience Variable ------------------------------------------------------------
 # Read in Physician Compare
 PhysCompare <- read_csv(paste0(raw_data_path,"DAC_NationalDownloadableFile.csv"))
 
 PhysCompare <- PhysCompare %>%
   dplyr::rename(gender=gndr,grad_year=Grd_yr) %>%
-  select(NPI,gender,grad_year) %>%
-  mutate(female=ifelse(gender=='F',1,ifelse(gender=='M',0,NA))) %>%
-  select(-gender)
+  select(NPI,grad_year) 
 
 # Merge, then drop any physicians that graduated after 2008
 data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
   filter(grad_year<2009)
-  # Now have 4.4 mill obs
-
-
-#### Create num_billings_partB Variable --------------------------------------------------------- ####
-#Read in MedPhys_PUF.R (created from Physician Compare in "MedPhys_PUF.R)
-#MedPhys_PUF <- read_rds(paste0(created_data_path,"MedPhys_PUF.rds"))
-
-#Final_Pairs <- Final_Pairs %>%
-#  left_join(MedPhys_PUF,by=c("DocNPI"="NPI","year")) %>%
-#  rename(num_billings_partB=total_services)
-
-
-
-
-#skip this, not using in my analysis for now since years are so limited
+  # Now have 656k obs
 
 
 #### Create EHR Variables ---------------------------------------------------------------------- ####
@@ -68,15 +52,15 @@ data <- data %>%
 num_hosp <- data %>% ungroup() %>%
   filter(!is.na(AHAID)) %>%
   distinct(HospNPI)
-  # There are 4418 unique hospitals in the data that are not missing AHAID (good)
+  # There are 4083 unique hospitals in the data that are not missing AHAID (good)
 
 # Only keep pairs with AHA hospitals since that is where EHR information comes from
 data <- data %>%
   filter(!is.na(AHAID))
-  #2.5 mill
+  #533k
 
 balance_check <- data %>% ungroup() %>%
-  distinct(year,pairID)
+  distinct(year,ID)
 
 # Check if still balanced
 is.pbalanced(balance_check)
@@ -101,7 +85,7 @@ num_missing_EHR <- data %>%
   filter(is.na(EHLTH)) %>%
   group_by(year) %>%
   distinct(HospNPI)
-  # 9585 missing out of 30,926 total hospital years
+  # 8466 missing 
 
 # Find out how many hospitals are missing an answer in every year
 num_always_missing_EHR <- data %>% ungroup() %>%
@@ -112,7 +96,7 @@ num_always_missing_EHR <- data %>% ungroup() %>%
   filter(always_missing==1) %>%
   ungroup() %>%
   distinct(HospNPI, .keep_all = T)
-  # There are only 57 hospitals that never answer this question, but they typically have answers to the other questions in the survey
+  # There are only 114 hospitals that never answer this question, but they typically have answers to the other questions in the survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
 data <- data %>% group_by(AHAID) %>%
@@ -132,7 +116,7 @@ data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
   mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
   ungroup()
-  # Now down to 8343 missing 
+  # Now down to 7354 missing 
 
 # Get rid of unneeded variables 
 data <- data %>% ungroup() %>%
@@ -209,79 +193,6 @@ data <- data %>%
 
 #skip for now, not using in analysis
 
-# Bring in Working variable from all hospital shared patient entities--------------------------------------------
-phys_working <- read_rds(paste0(created_data_path,"phys_working.rds"))
-
-# merge by year & DocNPI
-data <- data %>%
-  mutate(DocNPI=as.character(DocNPI)) %>%
-  left_join(phys_working, by=c("year","DocNPI"))
-
-# Create a labor market variable for just sum of hospital shared patients in a year for a doctor
-data <- data %>%
-  group_by(DocNPI, year) %>%
-  mutate(hosp_count=sum(samedaycount)) %>%
-  rename(other_count=phys_working) %>%
-  ungroup()
-
-# Create indicator for working, but not in hospitals
-data <- data %>% 
-  group_by(DocNPI, year) %>%
-  mutate(nonhosp_ind=ifelse(hosp_count==0 & other_count>0, 1, 0)) %>%
-  ungroup()
-
-
-
-
-
-# Bring in SK&A (FIX CODE NAMES BEFORE RUNNING) -----------------------------------------------------------------------------------------
-#ska2009 <- read_csv(paste0(raw_data_path,"SK&A/SKA2009.csv"))
-#ska2009 <- ska2009 %>%
-  #mutate(year=2009) %>%
-  #select(npi,year)
-
-#ska2010 <- read_csv(paste0(raw_data_path,"SK&A/SKA2010.csv"))
-#ska2010 <- ska2010 %>%
-  #mutate(year=2010) %>%
-  #select(npi,year)
-
-#ska2011 <- read_csv(paste0(raw_data_path,"SK&A/SKA2011.csv"))
-#ska2011 <- ska2011 %>%
-  #mutate(year=2011) %>%
-  #select(npi,year)
-
-#ska2012 <- read_csv(paste0(raw_data_path,"SK&A/SKA2012.csv"))
-#ska2012 <- ska2012 %>%
-  #mutate(year=2012) %>%
-  #select(npi,year)
-
-#ska2013 <- read_csv(paste0(raw_data_path,"SK&A/SKA2013.csv"))
-#ska2013 <- ska2013 %>%
-  #mutate(year=2013) %>%
-  #select(npi,year)
-
-#ska2014 <- read_csv(paste0(raw_data_path,"SK&A/SKA2014.csv"))
-#ska2014 <- ska2014 %>%
-  #mutate(year=2014) %>%
-  #select(npi,year)
-
-#ska2015 <- read_csv(paste0(raw_data_path,"SK&A/SKA2015.csv"))
-#ska2015 <- ska2015 %>%
-  #mutate(year=2015) %>%
-  #select(npi,year)
-
-#ska <- rbind(ska2009, ska2010, ska2011, ska2012, ska2013, ska2014, ska2015)
-
-#ska <- ska %>%
-  #mutate(ska=1, npi=as.character(npi))
-
-# Merge Final_Pairs and SKA
-#Final_Pairs <- Final_Pairs %>%
-  #left_join(ska, by=c("DocNPI"="npi","year")) %>%
-  #mutate(ska=if_else(is.na(ska),0,ska))
-
-  
-
 
 # Create/Clean Variables (Reading in data is complete) --------------------------------------------
 
@@ -293,39 +204,17 @@ low_beds <- data %>% ungroup() %>%
   filter(beds<10) %>%
   distinct(HospNPI) %>%
   mutate(low_beds=1)
-  # 72 hospitals
+  # 43 hospitals
 
 data <- data %>%
   left_join(low_beds, by="HospNPI") %>%
   filter(is.na(low_beds)) %>%
   select(-low_beds)
-  # 3.7 mill obs
+  # 531k obs
 
 data <- data %>%
   group_by(DocNPI,year) %>%
   mutate(avg_beds=mean(beds,na.rm=T))
-
-# Average Operating Days of Hospitals Worked With
-# Drop hospitals that ever have 0 days operating
-# (When looking at the data of these hospitals, they are missing most other characteristics)
-no_operating <- data %>% ungroup() %>%
-  filter(days_hosp_operating==0) %>%
-  distinct(HospNPI) %>%
-  mutate(drop=1)
-
-low_operating <- data %>% ungroup() %>%
-  filter(days_hosp_operating<360)
-
-data <-data %>% ungroup() %>%
-  left_join(no_operating, by="HospNPI") %>%
-  filter(is.na(drop)) %>%
-  select(-drop)
-  # 1.96 mill obs
-
-data <- data %>%
-  ungroup() %>%
-  group_by(DocNPI, year) %>%
-  mutate(avg_oper_days=mean(days_hosp_operating,na.rm=T))
 
 # Descriptive Variable: Years of Experience
 data <- data %>% ungroup() %>%
@@ -368,78 +257,40 @@ data <- data %>%
 
 # Create measure of number of hospitals a physician works with that use an EHR
 
-# Figure out if any hospitals only have NAs for all years
-always_missing_EHR <- data %>% ungroup() %>%
-  distinct(HospNPI,year,EHR) %>% ungroup() %>%
-  mutate(EHR=ifelse(is.na(EHR),-1,EHR)) %>%
-  group_by(HospNPI) %>%
-  mutate(sum=sum(EHR,na.rm=T)) %>%
-  filter(sum==-7) %>%
-  distinct(HospNPI,sum) %>%
-  mutate(alwaysmissingEHR=1) %>%
-  select(-sum)
-  # 35 hospitals never answer the question about EHRs.
-  # I need to figure out whether these hospitals differ from the population of hospitals. 
 
-data <- data %>% ungroup() %>%
-  left_join(always_missing_EHR, by="HospNPI") %>%
-  mutate(alwaysmissingEHR=ifelse(is.na(alwaysmissingEHR),0,alwaysmissingEHR))
+# Number of Hospital Variables -----------------------------------------------
 
-# Going to drop these hospitals
-
+# Create two different number of hospitals variables. (1) is the total number of hospitals ever worked with in the data. This is 
+# a time invariant physician level variable. (2) is the number of hospitals with positive share count in that year. This is a time varying 
+# physician level variable. 
 data <- data %>%
-  filter(alwaysmissingEHR==0) %>%
-  select(-alwaysmissingEHR)
+  mutate(pos_patients=ifelse(samedaycount>0,1,0),
+         count=1) %>%
+  group_by(DocNPI,year) %>%
+  mutate(num_hospitals_pos=sum(pos_patients),
+         num_hospitals_constant=sum(count)) %>%
+  select(-count)
 
 
-<<<<<<< HEAD:Scripts/Final_Pairs.R
-info_missing <- data %>% filter(alwaysmissingEHR==1) %>%
-  group_by(year) %>%
-  summarise_at(c("samedaycount", "beds"),
-      list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
-  gather(key=var,value=value) %>%
-  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
-  spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max)
-
-info_nonmissing <- data %>% filter(is.na(alwaysmissingEHR)) %>%
-  group_by(year) %>%
-  summarise_at(c("samedaycount", "beds"),
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
-  gather(key=var,value=value) %>%
-  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
-  spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max)
-=======
->>>>>>> 2e8fed26805c026dfdb9be60886366b019fe91e1:Scripts/data4_physician_level.R
-
-# Create total number of hospitals a physician works with
-count <- data %>%
-  ungroup() %>%
-  count(year,DocNPI,name="num_hosp_total")
-
-data <- data %>%
-  left_join(count,by=c("year","DocNPI"))
-
-# Create number hospitals with EHR
+# Create number hospitals with EHR (same thing, two different variables depending on positive patient counts)
 data <- data %>% ungroup() %>%
   group_by(DocNPI,year) %>%
-  mutate(num_hosp_EHR=sum(EHR,na.rm=T))
+  mutate(num_hosp_EHR_pos=sum(EHR[pos_patients==1],na.rm=T),
+         num_hosp_EHR_constant=sum(EHR,na.rm=T))
 
 
-# Variable: fraction of hospitals with EHR
-data <- data %>%
-  mutate(frac_EHR=num_hosp_EHR/num_hosp_total)
+# Variables: fraction of hospitals with EHR
+data <- data %>% ungroup() %>%
+  mutate(frac_EHR_pos=ifelse(num_hospitals_pos>0,num_hosp_EHR_pos/num_hospitals_pos,NA),
+         frac_EHR_constant=ifelse(num_hospitals_constant>0,num_hosp_EHR_constant/num_hospitals_constant,NA))
 
 
 
 # Treatment Variable: Indicator for Exposed to EHR in any hospital
 # Create variable for first year a doc was exposed to EHR
 minyr_EHR <- data %>% ungroup() %>%
-  distinct(DocNPI, year, frac_EHR) %>%
-  filter(frac_EHR>0) %>%
+  distinct(DocNPI, year, frac_EHR_pos) %>%
+  filter(frac_EHR_pos>0) %>%
   group_by(DocNPI) %>%
   mutate(minyr_EHR=min(year)) %>%
   ungroup() %>%
@@ -453,8 +304,6 @@ data <- data %>% ungroup() %>%
 data <- data %>%
   mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0))
 
-# Treatment Variable: "Main" hospital exposed to EHR
-
 
 # Treatment Variable: fraction of patients at EHR hospital
 data <- data %>% 
@@ -462,6 +311,7 @@ data <- data %>%
   mutate(hosp_count_EHR=sum(samedaycount[EHR==1],na.rm=T)) %>%
   ungroup() %>%
   mutate(frac_EHR_patients=ifelse(hosp_count>0,hosp_count_EHR/hosp_count,0))
+
 
 
 # More Descriptive Variables --------------------------------------------------------------
@@ -474,64 +324,40 @@ count_sys <- data %>%
 data <- data %>%
   left_join(count_sys,by=c("year","DocNPI"))
 
-
-
-# Treatment Variable: start office work
-# Create variable for first year a doc was in SKA data
-#minyr_ska <- Final_Pairs %>% ungroup() %>%
-  #distinct(DocNPI, year, ska) %>%
-  #filter(ska==1) %>%
-  #group_by(DocNPI) %>%
-  #mutate(minyr_ska=min(year)) %>%
-  #ungroup() %>%
-  #distinct(DocNPI,minyr_ska)
-
-#Final_Pairs <- Final_Pairs %>% ungroup() %>%
-  #left_join(minyr_ska, by="DocNPI") %>%
-  #mutate(minyr_ska=ifelse(is.na(minyr_ska),0,minyr_ska))
-
-# Create "to_office" indicator based on year and min year of ska
-#Final_Pairs <- Final_Pairs %>%
-  #mutate(to_office=ifelse(minyr_ska>0 & year>=minyr_ska,1,0))
+# Create physician level patient count with hospitals
+data <- data %>%
+  ungroup() %>%
+  group_by(DocNPI,year) %>%
+  mutate(hosp_patient_count=sum(samedaycount)) %>%
+  ungroup()
 
 
 
 # Aggregate the data to the physician level -------------------------------------------------------------
 
-Physician_Data <- data %>%
-  distinct(DocNPI,year,grad_year,female, hosp_count, hosp_count_EHR, other_count, nonhosp_ind,num_hosp_total, num_hosp_EHR, frac_EHR, avg_beds, 
-           avg_oper_days, experience, minyr_EHR, anyEHR_exposed, frac_EHR_patients,
+Aggregated_Pairs <- data %>%
+  distinct(DocNPI,year,grad_year, hosp_patient_count, num_hospitals_constant, num_hospitals_pos, num_hosp_EHR_pos, num_hosp_EHR_constant,
+           frac_EHR_pos, frac_EHR_constant, avg_beds, experience, minyr_EHR, anyEHR_exposed,
            num_systems)
-  #1 mill obs
+  #188k obs
 
-
-# Create an indicator for whether the physician stays working in all years (using hospital patients)
-# I use this variable when studying the productivity dependent variable
-Physician_Data <- Physician_Data %>%
-  group_by(DocNPI,year) %>%
-  mutate(working=ifelse(hosp_count>0,1,0)) %>%
-  group_by(DocNPI) %>%
-  mutate(n=sum(working)) %>%
-  ungroup() %>%
-  mutate(working_allyears=1*(n==7)) %>%
-  select(-n)
 
 # Create an indicator for exposed ever
-Physician_Data <- Physician_Data %>%
+Aggregated_Pairs <- Aggregated_Pairs %>%
   group_by(DocNPI) %>%
-  mutate(n=sum(exposed)) %>%
+  mutate(n=sum(anyEHR_exposed)) %>%
   ungroup() %>%
   mutate(exposed_ever=ifelse(n>0,1,0)) %>%
   select(-n)
 
 
 # Save the Data for Analysis -----------------------------------------------------------------
-saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
-write.csv(Physician_Data,file=paste0(created_data_path,"Physician_Data.csv"))
+saveRDS(Aggregated_Pairs,file=paste0(created_data_path,"Aggregated_Pairs.rds"))
+write.csv(Aggregated_Pairs,file=paste0(created_data_path,"Aggregated_Pairs.csv"))
 
 
 # Balance Check
-balance_check <- Physician_Data %>%
+balance_check <- Aggregated_Pairs %>%
   select(year,DocNPI)
 
 is.pbalanced(balance_check)

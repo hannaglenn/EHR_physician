@@ -10,10 +10,11 @@ library(janitor)
 #                                       Hanna Glenn, Emory University
 #                                       9/2/2021
 
-# ORDER:::::: 2
+# ORDER:::::: 3
 
 # This script reads in (1) the CMS Physician Shared Patient Data from 2009-2015, (2) phys_npidata and hosp_npidata that were
-# created in "data1_npidata.R". These data are all merged to end up with physician hospital pairs and their shared count. 
+# created in "data2_npidata.R" and (3) the npi list created in "data1_MDPPAS.R".
+# These data are all merged to end up with qualifying physician hospital pairs and their shared count. 
 # The resulting dataset, called "data2_pairs.rds" consists of a balanced dataset of physician hospital pairs 
 # from 2009-2015.
 # Note: preliminary filtering is done on these pairs to only save those with more than 30 shared patients total. 
@@ -24,9 +25,15 @@ hosp_npidata <- read_rds(paste0(created_data_path,"hosp_npidata.rds"))
 
 temp_npidata <- rbind(phys_npidata, hosp_npidata)
 
+# Read in MDPPAS NPI list ------------------------------------
+npi_list <- read_rds(paste0(created_data_path,"npi_list.rds"))
+
+npi_list <- npi_list %>%
+  dplyr::mutate(keep=1)
+
 ##### Read in Shared Patient Data, merge to temp_npi along the way -------------------------------------######
 for (t in 2009:2015){
-  SP.year <- read_csv(paste0(raw_data_path,"/PSPP/pspp",t,"_90.csv"),
+  SP.year <- read_csv(paste0(raw_data_path,"/PSPP/pspp",t,"_30.csv"),
                       col_types=cols(npi1=col_character(),
                                      npi2=col_character()
                       ))
@@ -77,26 +84,35 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   select(year,HospNPI,DocNPI,samedaycount_combine) %>%
   distinct() %>%
   rename(samedaycount=samedaycount_combine)
-  # 9.5 million obs. 
+  # 7 million obs. 
 
-# Filter out any hospital-physician pairs that have sum less than 30 shared patients in all years
+
+# Merge to NPI List of Hospitalists----------------
+phys_hosp_pairs <- phys_hosp_pairs %>%
+  mutate(DocNPI=as.numeric(DocNPI)) %>%
+  left_join(npi_list, by=c("DocNPI"="npi"))
+
+phys_hosp_pairs <- phys_hosp_pairs %>%
+  filter(keep==1)
+  # 1 mill obs.
+
+# Filter out any hospital-physician pairs that have sum less than 20 shared patients in all years
 phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   group_by(DocNPI,HospNPI) %>%
   mutate(sum=sum(samedaycount,na.rm=T)) %>%
-  filter(sum>30) %>%
+  filter(sum>20) %>%
   select(-sum) %>%
   ungroup()
-    #4.4 mill obs
+  # 520k obs
 
-# Filter out any pairs for which all years have less than 30 shared patients
+# Filter out any pairs for which all years have less than 10 shared patients
 phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   group_by(DocNPI, HospNPI) %>%
   mutate(max=max(samedaycount,na.rm=T)) %>%
-  filter(max>30) %>%
+  filter(max>10) %>%
   select(-max) %>%
   ungroup()
-  # 2.9 mill obs
-
+  # 500k obs
 
 # Expand so that each doctor, hospital pair appears in each year (with samedaycount 0 if they were not previously in the data)
 phys_hosp_pairs <- phys_hosp_pairs %>%
@@ -105,7 +121,7 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   ungroup()
 
 phys_hosp_pairs <- complete(phys_hosp_pairs, expand(phys_hosp_pairs, nesting(HospNPI,DocNPI), year), fill=list(samedaycount=0))
-  # 4 mill obs.
+  # 860k obs.
 
 phys_hosp_pairs <- phys_hosp_pairs %>%
   ungroup() %>%
@@ -118,6 +134,7 @@ balance_check <- phys_hosp_pairs %>%
 
 is.pbalanced(balance_check)
   #TRUE
+
 
 saveRDS(phys_hosp_pairs,paste0(created_data_path,"phys_hosp_pairs.rds"))
 
