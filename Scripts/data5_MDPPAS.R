@@ -1,6 +1,7 @@
 library(readr)
 library(tidyr)
 library(plm)
+library(stringr)
 
 # ------------------------------------- INITIALIZING PHYSICIAN DATA WITH MDPPAS ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -42,6 +43,11 @@ Physician_Data <- Aggregated_Pairs %>%
   dplyr::mutate(female=ifelse(sex=='F',1,0)) 
 
 
+# Create age variable
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(birth_year=substr(birth_dt,start=6, stop=9)) %>%
+  dplyr::mutate(birth_year=as.numeric(birth_year)) %>%
+  dplyr::mutate(age=year-birth_year)
 
 
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
@@ -69,19 +75,42 @@ for (i in 2010:2017){
 
 # I only consider it retirement if all future patients AND claims are zero. Create this variable
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(retire=ifelse(future_claims==0 & future_patients==0,1,0)) 
+  dplyr::mutate(retire=ifelse(year<2015 & future_claims==0 & future_patients==0,1,0)) %>%
+  dplyr::mutate(retire_2014=ifelse(year==2014 & retire==1,1,NA)) %>%
+  dplyr::group_by(DocNPI) %>%
+  tidyr::fill(retire_2014,.direction="downup") %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(retire=ifelse(year==2015 & retire_2014==1,1,retire))
+
+# This variable creates the retirement indicator one year too early. I want the first year of retirement to be the first year showing zeros.
+# Fix this
+minyr_retire <- Physician_Data %>%
+  dplyr::filter(retire==1) %>%
+  dplyr::group_by(DocNPI) %>%
+  dplyr::mutate(minyr_retire=min(year)) %>%
+  dplyr::distinct(DocNPI, minyr_retire)
+
+Physician_Data <- Physician_Data %>%
+  dplyr::left_join(minyr_retire, by="DocNPI")
+
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(retire=ifelse(year==minyr_retire,0,retire))
 
 # Create variable for whether the physician ever retires
-Physician_Data <- Physician_Data %>%
-  dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(sum=sum(retire[year<2016])) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(ever_retire=ifelse(sum>0,1,0)) %>%
-  dplyr::select(-sum)
+Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
+  dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1)) 
+
+observe <- Physician_Data %>%
+  dplyr::filter(ever_retire==1) %>%
+  dplyr::select(DocNPI, year,age,retire,hosp_patient_count,claim_count_total)
 
 # Now that the retirement variable is created I no longer need 2016 and 2017 years
 Physician_Data <- Physician_Data %>%
-  dplyr::filter(year<2016)
+  dplyr::filter(year<2016) %>%
+  dplyr::select(-retire_2014)
+
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(retire=ifelse(is.na(retire),0,retire))
 
 
 # OFFICE ####
@@ -101,6 +130,13 @@ observe <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(claim_count_total=ifelse(is.na(claim_count_total) & hosp_patient_count==0,0,claim_count_total))
 
+# Replace with 10 if hosp count is positive
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(claim_count_total=ifelse(is.na(claim_count_total) & hosp_patient_count>0,10,claim_count_total))
+
+# Change office fraction to 0 if claim count is 0
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(pos_office=ifelse(is.na(pos_office) & claim_count_total==0,0,pos_office))
 
 # Since there is already a variable of fraction of claims in office setting, I don't need to do much. 
 # I'll create an indicator or have positive patients in office setting to capture different variation. 
@@ -127,8 +163,13 @@ saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
 write.csv(Physician_Data,file=paste0(created_data_path,"Physician_Data.csv"))
 
 
+balance_check <- Physician_Data %>%
+  dplyr::select(DocNPI,year)
 
+is.pbalanced(balance_check)
 
+observe <- Physician_Data %>%
+   dplyr::filter(DocNPI==1023000000)
 
   
   

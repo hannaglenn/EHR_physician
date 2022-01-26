@@ -19,7 +19,7 @@ library(kableExtra)
 # Read in physician hospital pairs created in "phys_hosp_pairs.r"
 data <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
   # This data does not have any repeats of year, HospNPI, DocNPI
-  # 830k obs, 5 variables
+  # 3.3 mill obs, 5 variables
 
 data <- data %>%
   rename(pairID=ID)
@@ -37,7 +37,7 @@ data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
   filter(grad_year<2009)
-  # Now have 656k obs
+  # Now have 2.3 mill obs
 
 
 #### Create EHR Variables ---------------------------------------------------------------------- ####
@@ -52,12 +52,12 @@ data <- data %>%
 num_hosp <- data %>% ungroup() %>%
   filter(!is.na(AHAID)) %>%
   distinct(HospNPI)
-  # There are 4083 unique hospitals in the data that are not missing AHAID (good)
+  # There are 4429 unique hospitals in the data that are not missing AHAID (good)
 
 # Only keep pairs with AHA hospitals since that is where EHR information comes from
 data <- data %>%
   filter(!is.na(AHAID))
-  #533k
+  #2 mill
 
 balance_check <- data %>% ungroup() %>%
   distinct(year,ID)
@@ -85,7 +85,7 @@ num_missing_EHR <- data %>%
   filter(is.na(EHLTH)) %>%
   group_by(year) %>%
   distinct(HospNPI)
-  # 8466 missing 
+  # 9686 missing 
 
 # Find out how many hospitals are missing an answer in every year
 num_always_missing_EHR <- data %>% ungroup() %>%
@@ -96,7 +96,7 @@ num_always_missing_EHR <- data %>% ungroup() %>%
   filter(always_missing==1) %>%
   ungroup() %>%
   distinct(HospNPI, .keep_all = T)
-  # There are only 114 hospitals that never answer this question, but they typically have answers to the other questions in the survey
+  # There are only 60 hospitals that never answer this question, but they typically have answers to the other questions in the survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
 data <- data %>% group_by(AHAID) %>%
@@ -116,7 +116,7 @@ data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
   mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
   ungroup()
-  # Now down to 7354 missing 
+  # Now down to 8440 missing 
 
 # Get rid of unneeded variables 
 data <- data %>% ungroup() %>%
@@ -204,13 +204,13 @@ low_beds <- data %>% ungroup() %>%
   filter(beds<10) %>%
   distinct(HospNPI) %>%
   mutate(low_beds=1)
-  # 43 hospitals
+  # 70 hospitals
 
 data <- data %>%
   left_join(low_beds, by="HospNPI") %>%
   filter(is.na(low_beds)) %>%
   select(-low_beds)
-  # 531k obs
+  # 1.95 mill obs
 
 data <- data %>%
   group_by(DocNPI,year) %>%
@@ -305,13 +305,6 @@ data <- data %>%
   mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0))
 
 
-# Treatment Variable: fraction of patients at EHR hospital
-data <- data %>% 
-  group_by(DocNPI,year) %>%
-  mutate(hosp_count_EHR=sum(samedaycount[EHR==1],na.rm=T)) %>%
-  ungroup() %>%
-  mutate(frac_EHR_patients=ifelse(hosp_count>0,hosp_count_EHR/hosp_count,0))
-
 
 
 # More Descriptive Variables --------------------------------------------------------------
@@ -339,7 +332,7 @@ Aggregated_Pairs <- data %>%
   distinct(DocNPI,year,grad_year, hosp_patient_count, num_hospitals_constant, num_hospitals_pos, num_hosp_EHR_pos, num_hosp_EHR_constant,
            frac_EHR_pos, frac_EHR_constant, avg_beds, experience, minyr_EHR, anyEHR_exposed,
            num_systems)
-  #188k obs
+  #774k obs
 
 
 # Create an indicator for exposed ever
