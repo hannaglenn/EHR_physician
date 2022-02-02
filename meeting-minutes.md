@@ -44,7 +44,7 @@ Major Points Discussed:
 - Another potential outcome (instead of waiting for the SK&A data) is to look at hospital patients vs. nonhospital patients and see whether doctors are switching out of hospital settings
 
 
-## 1-14-2021
+## 1-14-2022
 Questions to ask:
 - MDPPAS data?
 
@@ -57,3 +57,21 @@ Major Points Discussed:
 Action Steps:
 - Talk to hospitalist
 - Write aspirational introduction and send it to Ian by the 20th
+
+
+## 1-28-2022
+Major Points Discussed:
+- I received MDPPAS on 1-23 and gave an update to what I have done so far. I incorporated MDPPAS into the data I've been using by filtering physicians using the specialty coding and using the MDPPAS information for the dependent variables in my analysis. I had very preliminary results to show.
+- We first talked about my data process. The major notes here were to try to expand outcomes to 2016-2017 (which is in MDPPAS but not in shared patient) by assuming a control group. That is, there won't be any new treatment groups after 2015 but I can still analyze the previous control and treatments following 2015. Another note was to change the retirement variable to not considering the shared patient future claims, since MDPPAS is the more reliable data. 
+- Then we went over the preliminary results I have so far. Reitrement shows nothing meaningful. I see an increase in the probability of wokring in an office as a result of EHR implementation in hospitals. I also see an increase in total claims as a result of EHR implementation in hospitals. I need to dig deeper into how the last two results fit together. Specifically, I need to limit the sample of physicians for the productivity argument to see who is driving this result. (People who stay in hospitals vs. move to offices; quantile effects)
+- Other tips: 
+1. Look into Jonathen Roth's recent work on pretrends
+2. Use patient count instead of claim count (Ian will try to pull this from MDPPAS for me)
+3. Look into who has "data assistant" npi, like what their actual job is
+4. Potential other controls could be physician quality, hospital FTEs, physician network size (although physician network size could also be an interesting outcome to look at)
+
+Action steps: 
+- Clarifying what my results mean as a story. More specifically, talking to a physician
+- Expand outcomes to 2016-2017 if possible
+- look up npi with data assistant tax codes online
+- consider network size from shared patient data
