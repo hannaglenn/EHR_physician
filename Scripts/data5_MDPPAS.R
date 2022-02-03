@@ -15,16 +15,16 @@ library(stringr)
 # Read in MDPPAS data
 for (i in 2009:2017) {
   year <- read_csv(paste0(raw_data_path,"/MDPPAS/PhysicianData_",i,".csv"))
+  year <- year %>%
+    dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_1, -spec_prim_2,
+                  -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
+                  -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
+                  -claim_count12)
   assign(paste0("MDPPAS",i),year)
 }
 
 MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
 
-MDPPAS <- MDPPAS %>%
-  dplyr::select(-name_middle, -name_last, -name_first, -spec_broad, -spec_prim_1, -spec_prim_2,
-                -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
-                -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
-                -claim_count12, -tin1_legal_name, -tin2_legal_name)
 
 # Read in Aggregated Pairs data from "data4_physician_level.R"
 Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs.rds"))

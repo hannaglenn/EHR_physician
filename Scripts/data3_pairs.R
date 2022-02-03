@@ -87,7 +87,7 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   # 7 million obs. 
 
 
-# Merge to NPI List of Hospitalists----------------
+# Merge to NPI List of Physicians----------------
 phys_hosp_pairs <- phys_hosp_pairs %>%
   mutate(DocNPI=as.numeric(DocNPI)) %>%
   left_join(npi_list, by=c("DocNPI"="npi"))
@@ -96,7 +96,7 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   filter(keep==1)
   # 3.6 mill obs.
 
-# Filter out any hospital-physician pairs that have sum less than 20 shared patients in all years
+# Filter out any hospital-physician pairs that have sum less than 100(?) shared patients in all years
 phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   group_by(DocNPI,HospNPI) %>%
   mutate(sum=sum(samedaycount,na.rm=T)) %>%
@@ -105,7 +105,7 @@ phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   ungroup()
   # 2.4 mill obs
 
-# Filter out any pairs for which all years have less than 10 shared patients
+# Filter out any pairs for which all years have less than 50(?) shared patients
 phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   group_by(DocNPI, HospNPI) %>%
   mutate(max=max(samedaycount,na.rm=T)) %>%
