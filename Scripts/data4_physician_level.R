@@ -19,10 +19,11 @@ library(kableExtra)
 # Read in physician hospital pairs created in "phys_hosp_pairs.r"
 data <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
   # This data does not have any repeats of year, HospNPI, DocNPI
-  # 3.3 mill obs, 5 variables
+  # 1.75 mill obs, 6 variables
 
 data <- data %>%
-  rename(pairID=ID)
+  rename(pairID=ID) %>%
+  select(-keep)
 
 # Create Experience Variable ------------------------------------------------------------
 # Read in Physician Compare
@@ -37,7 +38,7 @@ data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
   filter(grad_year<2009)
-  # Now have 2.3 mill obs
+  # Now have 1.27 mill obs
 
 
 #### Create EHR Variables ---------------------------------------------------------------------- ####
@@ -52,15 +53,15 @@ data <- data %>%
 num_hosp <- data %>% ungroup() %>%
   filter(!is.na(AHAID)) %>%
   distinct(HospNPI)
-  # There are 4429 unique hospitals in the data that are not missing AHAID (good)
+  # There are 4225 unique hospitals in the data that are not missing AHAID (good)
 
 # Only keep pairs with AHA hospitals since that is where EHR information comes from
 data <- data %>%
   filter(!is.na(AHAID))
-  #2 mill
+  #1 mill
 
 balance_check <- data %>% ungroup() %>%
-  distinct(year,ID)
+  distinct(year,pairID)
 
 # Check if still balanced
 is.pbalanced(balance_check)
@@ -70,22 +71,28 @@ is.pbalanced(balance_check)
 # I need to think about adding more hospital characteristics to this dataset
 AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
 
+# I define low integration and high integration as in Madison (2004, HSR)
 AHAmainsurvey <- AHAmainsurvey %>%
-  mutate(ID=as.character(ID))
+  mutate(ID=as.character(ID)) %>%
+  mutate(low_integration=ifelse(IPAHOS==1 | OPHOHOS==1 | CPHOHOS==1,1,0),
+         high_integration=ifelse(GPWWHOS==1 | MSOHOS==1 | ISMHOS==1 | EQMODHOS==1,1,0)) %>%
+  rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
+         joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
+  select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
+  select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS)
 
 data <- data %>% ungroup() %>%
   mutate(AHAID=as.character(AHAID)) %>%
-  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never") %>%
-  rename(SystemID="SYSID","days_hosp_operating"=DCOV, beds=BDTOT) %>%
-  select(-REG)
+  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"),na_matches="never")
+
 
   
-# Find out how many hospital years have NA for this question (conditional on having an AHA ID)
+# Find out how many hospital years have NA for EHR question (conditional on having an AHA ID)
 num_missing_EHR <- data %>%
   filter(is.na(EHLTH)) %>%
   group_by(year) %>%
   distinct(HospNPI)
-  # 9686 missing 
+  # 8904 missing 
 
 # Find out how many hospitals are missing an answer in every year
 num_always_missing_EHR <- data %>% ungroup() %>%
@@ -96,7 +103,7 @@ num_always_missing_EHR <- data %>% ungroup() %>%
   filter(always_missing==1) %>%
   ungroup() %>%
   distinct(HospNPI, .keep_all = T)
-  # There are only 60 hospitals that never answer this question, but they typically have answers to the other questions in the survey
+  # There are only 91 hospitals that never answer this question, but they typically have answers to the other questions in the survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
 data <- data %>% group_by(AHAID) %>%
@@ -116,7 +123,7 @@ data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
   mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
   ungroup()
-  # Now down to 8440 missing 
+  # Now down to 7739 missing 
 
 # Get rid of unneeded variables 
 data <- data %>% ungroup() %>%
@@ -151,47 +158,8 @@ AHAIT <- AHAIT %>%
 # Merge
 data <- data %>%
   mutate(AHAID=as.character(AHAID)) %>%
-  left_join(AHAIT,by=c("AHAID"="ID","year"="YEAR"), na_matches="never")
-
-
-
-#### Meaningful Use Data ---------------------------------####
-
-
-    # Read in Meaningful Use Data 
-    #mean_use <- read_csv(paste0(raw_data_path,"HOSP_ProvidersPaidByEHR_06_2018.csv"))
-
-    # Clean up and create indicators for each stage
-    #mean_use <- mean_use %>%
-        #rename(NPI="PROVIDER NPI", EHRstage="STAGE NUMBER", year="PROGRAM YEAR") %>%
-        #select(NPI,EHRstage,year) %>%
-        #filter(!is.na(EHRstage)) %>%
-        #mutate(NPI=as.numeric(NPI)) %>%
-        #mutate(stage1=if_else(str_detect(EHRstage,"Stage 1"),1,0), stage2=if_else(str_detect(EHRstage,"Stage 2"),1,0),
-              #stage3=if_else(str_detect(EHRstage,"Stage 3"),1,0))
-
-    #  How many distinct hospitals are in the data?
-    #distinct <- mean_use %>%
-    #distinct(NPI)
-  # 4555 unique NPIs
-
-    # Drop multiples since appearing twice certainly implies appearing once (for same stage)
-        #mean_use <- mean_use %>%
-        #group_by(year) %>%
-        #distinct(NPI,.keep_all=T) %>%
-        #ungroup()
-  #14509 obs
-
-      # Merge
-      #Final_Pairs <- Final_Pairs %>%
-       # left_join(mean_use, by=c("HospNPI"="NPI","year"))
-
-      #Final_Pairs <- Final_Pairs %>%
-        #mutate(getsubsidy=ifelse(is.na(EHRstage),0,1), stage1=ifelse(is.na(stage1),0,stage1), 
-              #stage2=ifelse(is.na(stage2),0,stage2), stage3=ifelse(is.na(stage3),0,stage3))
-
-
-#skip for now, not using in analysis
+  left_join(AHAIT,by=c("AHAID"="ID","year"="YEAR"), na_matches="never") %>%
+  select(-Hospital_name, -decision_index,-documentation_index)
 
 
 # Create/Clean Variables (Reading in data is complete) --------------------------------------------
@@ -204,13 +172,13 @@ low_beds <- data %>% ungroup() %>%
   filter(beds<10) %>%
   distinct(HospNPI) %>%
   mutate(low_beds=1)
-  # 70 hospitals
+  # 60 hospitals
 
 data <- data %>%
   left_join(low_beds, by="HospNPI") %>%
   filter(is.na(low_beds)) %>%
   select(-low_beds)
-  # 1.95 mill obs
+  # 1.08 mill obs
 
 data <- data %>%
   group_by(DocNPI,year) %>%
@@ -220,7 +188,15 @@ data <- data %>%
 data <- data %>% ungroup() %>%
   mutate(experience=year-grad_year)
 
-
+# Summarize the integration variables into physician level
+data <- data %>%
+  group_by(DocNPI,year) %>%
+  mutate(sum_low=sum(low_integration,na.rm=T),
+         sum_high=sum(high_integration,na.rm=T)) %>%
+  ungroup() %>%
+  mutate(phys_lowintegration=ifelse(sum_low>0,1,0),
+         phys_highintegration=ifelse(sum_high>0,1,0)) %>%
+  select(-sum_low,-sum_high)
 
 ### EHR VARIABLES --------------------------------------------------------------------------------
 # Create indicator for hospital EHR use
@@ -311,11 +287,14 @@ data <- data %>%
 # Descriptive Variable: Number of systems worked with
 count_sys <- data %>%
   ungroup() %>%
-  distinct(DocNPI,year,SystemID) %>%
+  distinct(DocNPI,year,SYSID) %>%
   count(DocNPI,year,name="num_systems")
 
 data <- data %>%
   left_join(count_sys,by=c("year","DocNPI"))
+
+
+
 
 # Create physician level patient count with hospitals
 data <- data %>%
@@ -329,10 +308,10 @@ data <- data %>%
 # Aggregate the data to the physician level -------------------------------------------------------------
 
 Aggregated_Pairs <- data %>%
-  distinct(DocNPI,year,grad_year, hosp_patient_count, num_hospitals_constant, num_hospitals_pos, num_hosp_EHR_pos, num_hosp_EHR_constant,
+  distinct(DocNPI,year,phys_lowintegration,phys_highintegration,grad_year, hosp_patient_count, num_hospitals_constant, num_hospitals_pos, num_hosp_EHR_pos, num_hosp_EHR_constant,
            frac_EHR_pos, frac_EHR_constant, avg_beds, experience, minyr_EHR, anyEHR_exposed,
            num_systems)
-  #774k obs
+  #660k obs
 
 
 # Create an indicator for exposed ever

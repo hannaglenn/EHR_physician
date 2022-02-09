@@ -1,5 +1,6 @@
 library(did)
 library(dplyr)
+library(fixest)
 
 # ------------------------------------- ANALYSIS  ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -11,13 +12,55 @@ library(dplyr)
 
 # Retirement ---------------------------------------------------------------------------
 
+retire_es_all <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
+                                rel_p2+ rel_p3 + rel_p4 + age| DocNPI+year, 
+                              data=filter(Physician_Data,year<2017))
+retire_es_young <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
+                         rel_p2+ rel_p3 + rel_p4 + age| DocNPI+year, 
+                       cluster="DocNPI",
+                       data=filter(Physician_Data,age<50 & year<2017))
+retire_es_old <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
+                         rel_p2+ rel_p3 + rel_p4 + age| DocNPI+year, 
+                       cluster="DocNPI",
+                       data=filter(Physician_Data,age>=50 & year<2017))
+reference=4
+names(reference)<-"-1"
+
+coefplot(list(retire_es_all,retire_es_old), keep=c("-4","-3","-2","-1","0",
+                                                    "1", "2","3","4"),
+         ref=reference, dict=c("rel_m4"="-4", "rel_m3"="-3", "rel_m2"="-2", "rel_0"="0",
+                               "rel_p1"="1","rel_p2"="2","rel_p3"="3","rel_p4"="4"),
+         main="",
+         zero=TRUE,
+         col=1:2)
+
+wald_young<-wald(any_chronic_es_young, keep=c("rel_m4","rel_m3","rel_m2"), cluster="st_fips")
+p_young <- wald_young$p
+
+wald_old<-wald(any_chronic_es_old, keep=c("rel_m4","rel_m3","rel_m2"), cluster="st_fips")
+p_old <- wald_old$p
+
+legend("topright", col = 1:2, pch = 20, lwd = 1, lty = 1:2,
+       legend = c("< 35 Yrs.", "35-55 Yrs."))
+
+mtext(text=paste0("p-value for pre-trends (< 35 yrs): ",round(p_young,3)),side=1,line = 3, cex = 0.8, adj = 0)
+mtext(text=paste0("p-value for pre-trends (35-55 yrs): ",round(p_old,3)),side=1,line = 4, cex = 0.8, adj = 0)
+
+
+
+
+
+
+
+
+
 # Full sample (exclude 2017 because I cannot observe retirement. Also think about whether to exclude 2016)
-retire_es <- att_gt(yname = "retire_lowclaims",
+retire_es <- att_gt(yname = "retire",
               gname = "minyr_EHR",
               idname = "DocNPI",
               tname = "year",
               xformla = ~age,
-              data = dplyr::filter(Physician_Data,year<2017),
+              data = Physician_Data,
               est_method = "reg",
               control_group = "notyettreated"
 )

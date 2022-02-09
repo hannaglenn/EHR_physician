@@ -93,26 +93,27 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   left_join(npi_list, by=c("DocNPI"="npi"))
 
 phys_hosp_pairs <- phys_hosp_pairs %>%
-  filter(keep==1)
-  # 3.6 mill obs.
+  filter(keep==1) %>%
+  select(-keep)
+  # 3.7 mill obs.
 
 # Filter out any hospital-physician pairs that have sum less than 100(?) shared patients in all years
 phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   group_by(DocNPI,HospNPI) %>%
   mutate(sum=sum(samedaycount,na.rm=T)) %>%
-  filter(sum>20) %>%
+  filter(sum>100) %>%
   select(-sum) %>%
   ungroup()
-  # 2.4 mill obs
+  # 1.7 mill obs
 
 # Filter out any pairs for which all years have less than 50(?) shared patients
 phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   group_by(DocNPI, HospNPI) %>%
   mutate(max=max(samedaycount,na.rm=T)) %>%
-  filter(max>10) %>%
+  filter(max>50) %>%
   select(-max) %>%
   ungroup()
-  # 2.2 mill obs
+  # 1.3 mill mill obs
 
 # Expand so that each doctor, hospital pair appears in each year (with samedaycount 0 if they were not previously in the data)
 phys_hosp_pairs <- phys_hosp_pairs %>%
@@ -121,7 +122,7 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   ungroup()
 
 phys_hosp_pairs <- complete(phys_hosp_pairs, expand(phys_hosp_pairs, nesting(HospNPI,DocNPI), year), fill=list(samedaycount=0))
-  # 3.2 mill obs.
+  # 1.75 mill obs.
 
 phys_hosp_pairs <- phys_hosp_pairs %>%
   ungroup() %>%

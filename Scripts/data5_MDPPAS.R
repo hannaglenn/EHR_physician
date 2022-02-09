@@ -1,6 +1,5 @@
 library(readr)
 library(tidyr)
-library(plm)
 library(stringr)
 
 # ------------------------------------- INITIALIZING PHYSICIAN DATA WITH MDPPAS ------------------------------------
@@ -130,46 +129,6 @@ observe <- Physician_Data %>%
   dplyr::filter(ever_retire==1) %>%
   dplyr::select(DocNPI, year,age,retire,hosp_patient_count,claim_count_total)
 
-# Consider looking at those physicians who have low claim counts (barely working)
-Physician_Data <- Physician_Data %>%
-  dplyr::mutate(high_claim=ifelse(claim_count_total>200,1,0)) %>%
-  dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(future_high_claims=ifelse(year==2009,sum(high_claim[year>2009],na.rm=T),NA))
-
-for (i in 2010:2017){
-  Physician_Data <- Physician_Data %>%
-    dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(future_high_claims=ifelse(year==i,sum(high_claim[year>i],na.rm=T),future_high_claims)) 
-} 
-
-Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(retire_lowclaims=ifelse(future_high_claims==0,1,0)) %>%
-  dplyr::mutate(retire_low2016=ifelse(year==2016 & retire_lowclaims==1,1,NA)) %>%
-  dplyr::group_by(DocNPI) %>%
-  tidyr::fill(retire_low2016,.direction="downup") %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(retire_lowclaims=ifelse(year==2017 & retire_low2016==1,1,retire_lowclaims)) %>%
-  dplyr::mutate(retire_lowclaims=ifelse(year==2017 & is.na(retire_low2016),0,retire_lowclaims))
-
-minyr_retire_lowclaims <- Physician_Data %>%
-  dplyr::filter(retire_lowclaims==1) %>%
-  dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(minyr_retire_lowclaims=min(year)) %>%
-  dplyr::distinct(DocNPI, minyr_retire_lowclaims) %>%
-  dplyr::ungroup()
-
-Physician_Data <- Physician_Data %>%
-  dplyr::left_join(minyr_retire_lowclaims, by="DocNPI")
-
-Physician_Data <- Physician_Data %>%
-  dplyr::mutate(retire_lowclaims=ifelse(year==minyr_retire_lowclaims,0,retire_lowclaims)) %>%
-  dplyr::mutate(retire_lowclaims=ifelse(is.na(retire_lowclaims),0,retire_lowclaims))
-
-
-Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(ever_retire_lowclaims=ifelse(is.na(minyr_retire_lowclaims),0,1))
-
-
 
 # OFFICE ####
 
@@ -217,6 +176,22 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
   dplyr::mutate(multiple_zip=ifelse(is.na(phy_zip2),0,1))
 
+
+# Create relative year variables
+Physician_Data <- Physician_Data %>%
+  mutate(rel_expandyear=ifelse(minyr_EHR==0,-1,
+                               ifelse(minyr_EHR>0,year-minyr_EHR,NA)))
+
+Physician_Data <- Physician_Data %>%
+  mutate(rel_m4=1*(rel_expandyear==-4),
+         rel_m3=1*(rel_expandyear==-3),
+         rel_m2=1*(rel_expandyear==-2),
+         rel_m1=1*(rel_expandyear==-1),
+         rel_0=1*(rel_expandyear==0),
+         rel_p1=1*(rel_expandyear==1),
+         rel_p2=1*(rel_expandyear==2),
+         rel_p3=1*(rel_expandyear==3),
+         rel_p4=1*(rel_expandyear==4))
 
 
 
