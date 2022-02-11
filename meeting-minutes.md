@@ -1,6 +1,68 @@
 # Meeting Minutes 
 ### This document serves as a log to record what is discussed in meetings with Ian regarding my third year paper.
 
+## 2-11-2022
+Major Points Discussed:
+- I'm struggling to move past data cleaning into actually settling on some results and what they mean. I need to keep a list of judgemental calls I've made along the way, but otherwise start to dig into a set of results and write the paper. 
+- Some facets I can be thinking about: look into physicians changing locations to capture maybe moving from hospital to hospital (maybe it's not the decision to avoid EHRs that we care about, but actually avoiding using EHRs a certain way and gaining back some autonomy), an interesting point later on might be to try to quantify what we can gain from policies that try to eliminate variation in practice style (if physicians make decisions to try to avoid it then we may not gain much)
+
+Action Items For Me:
+- Before next meeting: have data section and institutional details section, along with defendable set of results
+- Continue compiling discussion topics to bring up with a physician
+- Really dig into the estimators in the diff in diff literature to decide which one works best for my setting and why
+
+Action Items for Ian:
+- Get number of patients variable from MDPPAS
+- Read aspirational introduction
+
+## 1-28-2022
+Major Points Discussed:
+- I received MDPPAS on 1-23 and gave an update to what I have done so far. I incorporated MDPPAS into the data I've been using by filtering physicians using the specialty coding and using the MDPPAS information for the dependent variables in my analysis. I had very preliminary results to show.
+- We first talked about my data process. The major notes here were to try to expand outcomes to 2016-2017 (which is in MDPPAS but not in shared patient) by assuming a control group. That is, there won't be any new treatment groups after 2015 but I can still analyze the previous control and treatments following 2015. Another note was to change the retirement variable to not considering the shared patient future claims, since MDPPAS is the more reliable data. 
+- Then we went over the preliminary results I have so far. Reitrement shows nothing meaningful. I see an increase in the probability of wokring in an office as a result of EHR implementation in hospitals. I also see an increase in total claims as a result of EHR implementation in hospitals. I need to dig deeper into how the last two results fit together. Specifically, I need to limit the sample of physicians for the productivity argument to see who is driving this result. (People who stay in hospitals vs. move to offices; quantile effects)
+- Other tips: 
+1. Look into Jonathen Roth's recent work on pretrends
+2. Use patient count instead of claim count (Ian will try to pull this from MDPPAS for me)
+3. Look into who has "data assistant" npi, like what their actual job is
+4. Potential other controls could be physician quality, hospital FTEs, physician network size (although physician network size could also be an interesting outcome to look at)
+
+Action steps: 
+- Clarifying what my results mean as a story. More specifically, talking to a physician
+- Expand outcomes to 2016-2017 if possible
+- look up npi with data assistant tax codes online
+- consider network size from shared patient data
+
+## 1-14-2022
+Questions to ask:
+- MDPPAS data?
+
+Major Points Discussed:
+- First we discussed the progress I've made on my third year paper. In particular, the general motivation that would make anyone interested in my question. Along with the efficiency and quality arguments I've already been thinking of, Ian also brought up the possibility that access to care may be improving, which is why we don't see a decrease in costs but that is an improvement in a different capacity. The efficiency question is POLICY RELEVENT, the access question is PATIENT RELEVENT
+- The MDPPAS data should be coming in the next week or so, they approved exporting it as long as certain things are masked. Ian is working on the masking and then will get approval. 
+- It may be worth looking into whether there is physician level info regarding MACRA (changes in how physicians are paid that has meaningful EHR use in the requirements)
+- At the top of my to-do list should be speaking to a hospitalist about some of these institutional details to make sure I'm getting the story right
+
+Action Steps:
+- Talk to hospitalist
+- Write aspirational introduction and send it to Ian by the 20th
+
+## 10-21-2021
+Questions to ask:
+- Show the tables with diff in diffs for each year 
+
+Major Points Discussed:
+- Before I present results on the extensive margin, I need to think a lot more about the billing relationship between physicians and hospitals. Since I'm seeing younger physicians drop out of the data, it may be that once they become employees of the hospital they no longer bill individually. I need to do some detective work to see if physicians who drop out are truly dropping out or not (do they leave for one year? look up their NPI and see if they are still practicing, etc. )
+- Instead of year diff in diffs, create event studies for each year. That way I can see the effect in the years after treatment. Think about manually deciding the control groups: it may be that those who are never exposed to EHRs are just totally different. Think about making the control group those who adopt at least a couple years after. Also use Callaway and Sat'Anna's package and compare. 
+- For the intensive margin:
+-   Be very clear about the population of physicians. 
+-   Limit to just hospital patients so I don't have double counts
+-   Also use part B 
+- Another potential outcome (instead of waiting for the SK&A data) is to look at hospital patients vs. nonhospital patients and see whether doctors are switching out of hospital settings
+
+
+## 10-7-2021 (I cancelled this meeting to have more time to make progress)
+
+
 ## 09-30-2021
 Questions to ask at the meeting:
 - Should I limit the sample to AHA hospitals from the beginning? Capturing only physicians relationships with AHA hospitals?
@@ -19,59 +81,9 @@ Points of Confusion:
 - none 
 
 
-## 10-7-2021 (I cancelled this meeting to have more time to make progress)
-Questions to ask at the meeting:
-
-Major Points Discussed:
 
 
-Action Items:
 
 
-Points of Confusion:
-
-## 10-21-2021
-Questions to ask:
-- Show the tables with diff in diffs for each year 
-
-Major Points Discussed:
-- Before I present results on the extensive margin, I need to think a lot more about the billing relationship between physicians and hospitals. Since I'm seeing younger physicians drop out of the data, it may be that once they become employees of the hospital they no longer bill individually. I need to do some detective work to see if physicians who drop out are truly dropping out or not (do they leave for one year? look up their NPI and see if they are still practicing, etc. )
-- Instead of year diff in diffs, create event studies for each year. That way I can see the effect in the years after treatment. Think about manually deciding the control groups: it may be that those who are never exposed to EHRs are just totally different. Think about making the control group those who adopt at least a couple years after. Also use Callaway and Sat'Anna's package and compare. 
-- For the intensive margin:
--   Be very clear about the population of physicians. 
--   Limit to just hospital patients so I don't have double counts
--   Also use part B 
-- Another potential outcome (instead of waiting for the SK&A data) is to look at hospital patients vs. nonhospital patients and see whether doctors are switching out of hospital settings
 
 
-## 1-14-2022
-Questions to ask:
-- MDPPAS data?
-
-Major Points Discussed:
-- First we discussed the progress I've made on my third year paper. In particular, the general motivation that would make anyone interested in my question. Along with the efficiency and quality arguments I've already been thinking of, Ian also brought up the possibility that access to care may be improving, which is why we don't see a decrease in costs but that is an improvement in a different capacity. The efficiency question is POLICY RELEVENT, the access question is PATIENT RELEVENT
-- The MDPPAS data should be coming in the next week or so, they approved exporting it as long as certain things are masked. Ian is working on the masking and then will get approval. 
-- It may be worth looking into whether there is physician level info regarding MACRA (changes in how physicians are paid that has meaningful EHR use in the requirements)
-- At the top of my to-do list should be speaking to a hospitalist about some of these institutional details to make sure I'm getting the story right
-
-Action Steps:
-- Talk to hospitalist
-- Write aspirational introduction and send it to Ian by the 20th
-
-
-## 1-28-2022
-Major Points Discussed:
-- I received MDPPAS on 1-23 and gave an update to what I have done so far. I incorporated MDPPAS into the data I've been using by filtering physicians using the specialty coding and using the MDPPAS information for the dependent variables in my analysis. I had very preliminary results to show.
-- We first talked about my data process. The major notes here were to try to expand outcomes to 2016-2017 (which is in MDPPAS but not in shared patient) by assuming a control group. That is, there won't be any new treatment groups after 2015 but I can still analyze the previous control and treatments following 2015. Another note was to change the retirement variable to not considering the shared patient future claims, since MDPPAS is the more reliable data. 
-- Then we went over the preliminary results I have so far. Reitrement shows nothing meaningful. I see an increase in the probability of wokring in an office as a result of EHR implementation in hospitals. I also see an increase in total claims as a result of EHR implementation in hospitals. I need to dig deeper into how the last two results fit together. Specifically, I need to limit the sample of physicians for the productivity argument to see who is driving this result. (People who stay in hospitals vs. move to offices; quantile effects)
-- Other tips: 
-1. Look into Jonathen Roth's recent work on pretrends
-2. Use patient count instead of claim count (Ian will try to pull this from MDPPAS for me)
-3. Look into who has "data assistant" npi, like what their actual job is
-4. Potential other controls could be physician quality, hospital FTEs, physician network size (although physician network size could also be an interesting outcome to look at)
-
-Action steps: 
-- Clarifying what my results mean as a story. More specifically, talking to a physician
-- Expand outcomes to 2016-2017 if possible
-- look up npi with data assistant tax codes online
-- consider network size from shared patient data
