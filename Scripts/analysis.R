@@ -10,6 +10,8 @@ library(fixest)
 # The analysis in this script focuses mainly on Pedro Sant'Anna and Brent Callaway's difference in
 # difference methodologies. 
 
+Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
+
 # Retirement ---------------------------------------------------------------------------
 
 retire_es_all <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+

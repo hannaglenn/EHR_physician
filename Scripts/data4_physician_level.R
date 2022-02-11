@@ -60,13 +60,6 @@ data <- data %>%
   filter(!is.na(AHAID))
   #1 mill
 
-balance_check <- data %>% ungroup() %>%
-  distinct(year,pairID)
-
-# Check if still balanced
-is.pbalanced(balance_check)
-  #TRUE
-
 # Read in main AHA survey data
 # I need to think about adding more hospital characteristics to this dataset
 AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))

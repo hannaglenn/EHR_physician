@@ -113,9 +113,10 @@ phys_hosp_pairs <- phys_hosp_pairs %>% ungroup() %>%
   filter(max>50) %>%
   select(-max) %>%
   ungroup()
-  # 1.3 mill mill obs
+  # 1.3 mill obs
 
 # Expand so that each doctor, hospital pair appears in each year (with samedaycount 0 if they were not previously in the data)
+# I think I want to actually not expand...
 phys_hosp_pairs <- phys_hosp_pairs %>%
   mutate(HospNPI=as.numeric(HospNPI),
          DocNPI=as.numeric(DocNPI)) %>%
@@ -135,6 +136,12 @@ balance_check <- phys_hosp_pairs %>%
 
 is.pbalanced(balance_check)
   #TRUE
+
+# Undo completing by dropping any 0 samedaycount
+phys_hosp_pairs <- readRDS(paste0(created_data_path,"phys_hosp_pairs.rds"))
+
+phys_hosp_pairs <- phys_hosp_pairs %>%
+  filter(samedaycount>0)
 
 
 saveRDS(phys_hosp_pairs,paste0(created_data_path,"phys_hosp_pairs.rds"))
