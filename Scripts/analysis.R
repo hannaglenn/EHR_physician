@@ -24,7 +24,7 @@ retire_es <- att_gt(yname = "retire",
               data = filter(Physician_Data, minyr_EHR>0),
               est_method = "dr",
               control_group = "notyettreated",
-              anticipation=0
+              anticipation=0,
 )
 # Save p-value to put in footnote
 p<-retire_es$Wpval
@@ -33,9 +33,10 @@ p<-retire_es$Wpval
 retire_es_dyn <- aggte(retire_es, type = "dynamic")
 
 # Create a plot
-ggdid(retire_es_dyn, title="Average Effect of EHR Exposure on Retirement by Length of Exposure") + 
-  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+ggdid(retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure") + 
+  labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"))
 
 # Save the plot
 ggsave(file="ggdid_retire_allEHR.pdf",path="Objects")
@@ -60,9 +61,10 @@ p<-old_retire_es$Wpval
 old_retire_es_dyn <- aggte(old_retire_es, type = "dynamic")
 
 # Create a plot
-ggdid(old_retire_es_dyn, title="Average Effect of EHR Exposure on Retirement for Physicians > 50 by Length of Exposure") + 
-  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+ggdid(old_retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure \n In Physicians > 50") + 
+  labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"))
 
 # Save the plot
 ggsave(file="ggdid_retire_allEHR_old.pdf",path="Objects")
@@ -87,9 +89,10 @@ p<-retire_es_li$Wpval
 retire_es_dyn_li <- aggte(retire_es_li, type = "dynamic")
 
 # Create a plot
-ggdid(retire_es_dyn_li, title="Average Effect of EHR Exposure in Low-Integration Hospitals on Retirement by Length of Exposure") + 
-  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+ggdid(retire_es_dyn_li, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure in Low- Integration Hospitals on Retirement by Length of Exposure") + 
+  labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"))
 
 # Save the plot
 ggsave(file="ggdid_retire_allEHR_li.pdf",path="Objects")
@@ -114,9 +117,10 @@ p<-old_retire_es_li$Wpval
 old_retire_es_dyn_li <- aggte(old_retire_es_li, type = "dynamic")
 
 # Create a plot
-ggdid(old_retire_es_dyn_li, title="Average Effect of EHR Exposure in Low-Integration Hospitals on Retirement for Physicians > 50 by Length of Exposure") + 
-  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+ggdid(old_retire_es_dyn_li, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure in Low-Integration Hospitals on Retirement by Length of Exposure \n In Physicians > 50") + 
+  labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"))
 
 # Save the plot
 ggsave(file="ggdid_retire_allEHR_old_li.pdf",path="Objects")
