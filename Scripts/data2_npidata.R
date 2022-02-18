@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+library(stringr)
 
 # ------------------  Building NPI Taxonomy Dataset ------------------------------------- 
 #                     Hanna Glenn, Emory University
@@ -42,7 +43,8 @@ npidata_type <- npidata %>%
   mutate(PCP=ifelse(str_detect(t_class,"Internal Medicine") |
                       str_detect(t_class,"Hospitalist") | 
                       str_detect(t_class,"Family Medicine") |
-                      str_detect(t_class,"General Practice"),1,0),
+                      str_detect(t_class,"General Practice") |
+                      str_detect(t_class,"Pediatrics"),1,0),
          hospital=ifelse(str_detect(t_group,fixed("hospital", ignore_case=TRUE)),1,0))
 
 # Create specialist indicator

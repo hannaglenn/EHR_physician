@@ -1,6 +1,8 @@
 library(readr)
 library(tidyr)
 library(stringr)
+library(dplyr)
+library(stringi)
 
 # ------------------------------------- INITIALIZING PHYSICIAN DATA WITH MDPPAS ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -18,7 +20,8 @@ for (i in 2009:2017) {
     dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_1, -spec_prim_2,
                   -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
                   -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
-                  -claim_count12)
+                  -claim_count12, -spec_prim_2_name, -tin1_legal_name, -tin2_legal_name,
+                  -group1, -group2)
   assign(paste0("MDPPAS",i),year)
 }
 
@@ -28,20 +31,6 @@ MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPP
 # Read in Aggregated Pairs data from "data4_physician_level.R"
 Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs.rds"))
 
-Aggregated_Pairs <- complete(Aggregated_Pairs,DocNPI,year=2009:2017)
-
-# fill time invariant variables 
-Aggregated_Pairs <- Aggregated_Pairs %>%
-  dplyr::group_by(DocNPI) %>%
-  tidyr::fill(grad_year,.direction="downup") %>%
-  tidyr::fill(minyr_EHR,.direction="downup") %>%
-  tidyr::fill(anyEHR_exposed,.direction="down") %>%
-  tidyr::fill(num_hospitals_constant,.direction="downup") %>%
-  tidyr::fill(num_systems,.direction="downup") %>%
-  tidyr::fill(exposed_ever,.direction="downup") %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(experience=ifelse(is.na(experience),year-grad_year,experience))
-  
 
 # Merge MDPPAS to main dataset and fill time invariant variables
 Physician_Data <- Aggregated_Pairs %>%
@@ -59,11 +48,12 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(birth_year=as.numeric(birth_year)) %>%
   dplyr::mutate(age=year-birth_year)
 
-# Drop any physicians with less than 30% of patients in hospitals
+# Drop any physicians with less than 20% of patients in hospitals
 Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
-  dplyr::filter(max>.3)
+  dplyr::filter(max>.2)
+  # 484k obs
 
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
 
@@ -73,9 +63,10 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   dplyr::rowwise() %>%
   dplyr::mutate(claim_count_total=ifelse(is.na(claim_count1),NA,sum(dplyr::c_across(tidyr::starts_with("claim_count")),na.rm=T))) %>%
-  dplyr::ungroup()
+  dplyr::ungroup() 
 
-# Remove those who only appear in the data for one year 
+# Remove those who only appear in the data for one year (maybe they are a visiting doctor?)
+# Maybe I shouldn't do this?
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(pos=ifelse(is.na(claim_count_total),0,1)) %>%
   dplyr::group_by(DocNPI) %>%
@@ -87,23 +78,33 @@ Physician_Data <- Physician_Data %>%
 # Create a variable that sums up the claim count in all future years
 Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(future_claims=ifelse(year==2009,sum(claim_count_total[year>2009],na.rm=T),NA))
+  dplyr::mutate(future_claims=ifelse(year==2009,sum(claim_count_total[year>2009],na.rm=T),NA)) %>%
+  dplyr::mutate(future_claims_hosp=ifelse(year==2009,sum(hosp_patient_count[year>2009],na.rm=T),NA))
+
 
 for (i in 2010:2017){
   Physician_Data <- Physician_Data %>%
     dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(future_claims=ifelse(year==i,sum(claim_count_total[year>i],na.rm=T),future_claims)) 
+    dplyr::mutate(future_claims=ifelse(year==i,sum(claim_count_total[year>i],na.rm=T),future_claims)) %>%
+    dplyr::mutate(future_claims_hosp=ifelse(year==i,sum(hosp_patient_count[year>i],na.rm=T),future_claims_hosp))
+  
 } 
 
-# I only consider it retirement if all future claims are zero. Create this variable
+# I only consider it retirement if all future claims are zero.
+# Create one retirement variable that only consider MDPPAS future claims and one that considers both hosp and MDPPAS future claims
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(retire=ifelse(future_claims==0,1,0)) %>%
-  dplyr::mutate(retire_2016=ifelse(year==2016 & retire==1,1,NA)) %>%
+  dplyr::mutate(retire=ifelse(future_claims==0,1,0),
+                retire_both=ifelse(future_claims==0 & future_claims_hosp==0,1,0)) %>%
+  dplyr::mutate(retire_2016=ifelse(year==2016 & retire==1,1,NA),
+                retire_2016_both=ifelse(year==2016 & retire_both==1,1,NA)) %>%
   dplyr::group_by(DocNPI) %>%
   tidyr::fill(retire_2016,.direction="downup") %>%
+  tidyr::fill(retire_2016_both,.direction="downup") %>%
   dplyr::ungroup() %>%
-  dplyr::mutate(retire=ifelse(year==2017 & retire_2016==1,1,retire)) %>%
-  dplyr::mutate(retire=ifelse(year==2017 & is.na(retire_2016),0,retire))
+  dplyr::mutate(retire=ifelse(year==2017 & retire_2016==1,1,retire),
+                retire_both=ifelse(year==2017 & retire_2016_both==1,1,retire_both)) %>%
+  dplyr::mutate(retire=ifelse(year==2017 & is.na(retire_2016),0,retire),
+                retire_both=ifelse(year==2017 & is.na(retire_2016_both),0,retire_both))
 
 # This variable creates the retirement indicator one year too early. I want the first year of retirement to be the first year showing zeros.
 # Fix this
@@ -114,16 +115,28 @@ minyr_retire <- Physician_Data %>%
   dplyr::distinct(DocNPI, minyr_retire) %>%
   dplyr::ungroup()
 
-Physician_Data <- Physician_Data %>%
-  dplyr::left_join(minyr_retire, by="DocNPI")
+minyr_retire_both <- Physician_Data %>%
+  dplyr::filter(retire_both==1) %>%
+  dplyr::group_by(DocNPI) %>%
+  dplyr::mutate(minyr_retire_both=min(year)) %>%
+  dplyr::distinct(DocNPI, minyr_retire_both) %>%
+  dplyr::ungroup()
 
 Physician_Data <- Physician_Data %>%
-  dplyr::mutate(retire=ifelse(year==minyr_retire,0,retire)) %>%
-  dplyr::mutate(retire=ifelse(is.na(retire),0,retire))
+  dplyr::left_join(minyr_retire, by="DocNPI") %>%
+  dplyr::left_join(minyr_retire_both, by="DocNPI")
+
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(retire=ifelse(year==minyr_retire,0,retire),
+                retire_both=ifelse(year==minyr_retire_both,0,retire_both)) %>%
+  dplyr::mutate(retire=ifelse(is.na(retire),0,retire),
+                retire_both=ifelse(is.na(retire_both),0,retire_both))
 
 # Create variable for whether the physician ever retires
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1)) 
+  dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1),
+                ever_retire_both=ifelse(is.na(minyr_retire_both),0,1)) %>%
+  dplyr::select(-retire_2016, -retire_2016_both)
 
 observe <- Physician_Data %>%
   dplyr::filter(ever_retire==1) %>%
@@ -174,7 +187,67 @@ Physician_Data <- Physician_Data %>%
 
 # ZIP CODES ####
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(multiple_zip=ifelse(is.na(phy_zip2),0,1))
+  dplyr::mutate(multiple_zip=ifelse(is.na(phy_zip2),0,1),
+                claim_count1=ifelse(is.na(claim_count1),0,claim_count1)) 
+
+for (i in 1:9){
+zipyear <- Physician_Data %>%
+  dplyr::filter(year==2008+i) %>%
+  dplyr::mutate(zip_list=ifelse(year==2008+i & is.na(phy_zip2),phy_zip1,NA),
+                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip3),
+                                    str_c(phy_zip1,phy_zip2,sep = ),zip_list),
+                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip4),
+                                    str_c(phy_zip1,phy_zip2,phy_zip3),zip_list),
+                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip5),
+                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4),zip_list),
+                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip6),
+                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4,phy_zip5),zip_list),
+                zip_list=ifelse(is.na(zip_list) & year==2008+i,
+                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4,phy_zip5,phy_zip6),zip_list)) %>%
+  dplyr::select(DocNPI,zip_list)
+
+assign(paste0("zip",i+2008),zipyear)
+
+}
+
+zip2009 <- zip2009 %>%
+  dplyr::rename(zip_list2009=zip_list)
+zip2010 <- zip2010 %>%
+  dplyr::rename(zip_list2010=zip_list)
+zip2011 <- zip2011 %>%
+  dplyr::rename(zip_list2011=zip_list)
+zip2012 <- zip2012 %>%
+  dplyr::rename(zip_list2012=zip_list)
+zip2013 <- zip2013 %>%
+  dplyr::rename(zip_list2013=zip_list)
+zip2014 <- zip2014 %>%
+  dplyr::rename(zip_list2014=zip_list)
+zip2015 <- zip2015 %>%
+  dplyr::rename(zip_list2015=zip_list)
+zip2016 <- zip2016 %>%
+  dplyr::rename(zip_list2016=zip_list)
+zip2017 <- zip2017 %>%
+  dplyr::rename(zip_list2017=zip_list)
+
+Physician_Data <- Physician_Data %>%
+  dplyr::left_join(zip2009,by="DocNPI") %>%
+  dplyr::left_join(zip2010,by="DocNPI") %>%
+  dplyr::left_join(zip2011,by="DocNPI") %>%
+  dplyr::left_join(zip2012,by="DocNPI") %>%
+  dplyr::left_join(zip2013,by="DocNPI") %>%
+  dplyr::left_join(zip2014,by="DocNPI") %>%
+  dplyr::left_join(zip2015,by="DocNPI") %>%
+  dplyr::left_join(zip2016,by="DocNPI") %>%
+  dplyr::left_join(zip2017,by="DocNPI")
+
+Physician_Data <- Physician_Data %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(change_zip=ifelse(year==2010 & !(str_detect(zip_list2009,zip_list2010) | str_detect(zip_list2010,zip_list2009)) ,1,NA)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2010 & is.na(change_zip),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2010 & change_zip==1 & sort(unlist(strsplit(zip_list2009, "")))==sort(unlist(strsplit(zip_list2010, ""))),0,change_zip))
+
+observe <- Physician_Data %>%
+  filter(change_zip==1)
 
 
 # Create relative year variables
@@ -202,17 +275,9 @@ saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
 write.csv(Physician_Data,file=paste0(created_data_path,"Physician_Data.csv"))
 
 
-balance_check <- Physician_Data %>%
-  dplyr::select(DocNPI,year)
+observe <- Physician_Data %>%
+  filter(minyr_EHR>0)
 
-is.pbalanced(balance_check)
-
-data <- Physician_Data %>%
-  dplyr::select(-future_patients, -spec_prim_1_name, -spec_prim_2_name, -name_last,-name_first, -sex, -birth_dt)
-  
-  
-  
-  
   
   
   

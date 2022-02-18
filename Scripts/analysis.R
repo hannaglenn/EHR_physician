@@ -1,6 +1,6 @@
 library(did)
 library(dplyr)
-library(fixest)
+library(ggplot2)
 
 # ------------------------------------- ANALYSIS  ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -12,81 +12,115 @@ library(fixest)
 
 Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
+
 # Retirement ---------------------------------------------------------------------------
 
-retire_es_all <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-                                rel_p2+ rel_p3 + rel_p4 + age| DocNPI+year, 
-                              data=filter(Physician_Data,year<2017))
-retire_es_young <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-                         rel_p2+ rel_p3 + rel_p4 + age| DocNPI+year, 
-                       cluster="DocNPI",
-                       data=filter(Physician_Data,age<50 & year<2017))
-retire_es_old <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-                         rel_p2+ rel_p3 + rel_p4 + age| DocNPI+year, 
-                       cluster="DocNPI",
-                       data=filter(Physician_Data,age>=50 & year<2017))
-reference=4
-names(reference)<-"-1"
-
-coefplot(list(retire_es_all,retire_es_old), keep=c("-4","-3","-2","-1","0",
-                                                    "1", "2","3","4"),
-         ref=reference, dict=c("rel_m4"="-4", "rel_m3"="-3", "rel_m2"="-2", "rel_0"="0",
-                               "rel_p1"="1","rel_p2"="2","rel_p3"="3","rel_p4"="4"),
-         main="",
-         zero=TRUE,
-         col=1:2)
-
-wald_young<-wald(any_chronic_es_young, keep=c("rel_m4","rel_m3","rel_m2"), cluster="st_fips")
-p_young <- wald_young$p
-
-wald_old<-wald(any_chronic_es_old, keep=c("rel_m4","rel_m3","rel_m2"), cluster="st_fips")
-p_old <- wald_old$p
-
-legend("topright", col = 1:2, pch = 20, lwd = 1, lty = 1:2,
-       legend = c("< 35 Yrs.", "35-55 Yrs."))
-
-mtext(text=paste0("p-value for pre-trends (< 35 yrs): ",round(p_young,3)),side=1,line = 3, cex = 0.8, adj = 0)
-mtext(text=paste0("p-value for pre-trends (35-55 yrs): ",round(p_old,3)),side=1,line = 4, cex = 0.8, adj = 0)
-
-
-
-
-
-
-
-
-
-# Full sample (exclude 2017 because I cannot observe retirement. Also think about whether to exclude 2016)
+# Full sample (exclude 2017 because I cannot observe retirement)
 retire_es <- att_gt(yname = "retire",
               gname = "minyr_EHR",
               idname = "DocNPI",
               tname = "year",
-              xformla = ~age,
-              data = Physician_Data,
-              est_method = "reg",
-              control_group = "notyettreated"
+              xformla = ~grad_year,
+              data = filter(Physician_Data, minyr_EHR>0),
+              est_method = "dr",
+              control_group = "notyettreated",
+              anticipation=0
 )
-ggdid(retire_es)
+# Save p-value to put in footnote
+p<-retire_es$Wpval
 
+# Aggregate the effects
 retire_es_dyn <- aggte(retire_es, type = "dynamic")
-ggdid(retire_es_dyn)
+
+# Create a plot
+ggdid(retire_es_dyn, title="Average Effect of EHR Exposure on Retirement by Length of Exposure") + 
+  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+
+# Save the plot
+ggsave(file="ggdid_retire_allEHR.pdf",path="Objects")
 
 
 
 # Older Physicians
-old_retire_es <- att_gt(yname = "retire_lowclaims",
+old_retire_es <- att_gt(yname = "retire",
                     gname = "minyr_EHR",
                     idname = "DocNPI",
                     tname = "year",
-                    xformla = ~age,
-                    data = dplyr::filter(Physician_Data,year<2017 & age>50),
-                    est_method = "reg",
-                    control_group = "notyettreated"
+                    xformla = ~grad_year,
+                    data = dplyr::filter(Physician_Data,age>50 & minyr_EHR>0),
+                    est_method = "dr",
+                    control_group = "notyettreated",
+                    anticipation=0
 )
-ggdid(old_retire_es)
+# Save p-value to put in footnote
+p<-old_retire_es$Wpval
 
+# Aggregate the effects
 old_retire_es_dyn <- aggte(old_retire_es, type = "dynamic")
-ggdid(old_retire_es_dyn)
+
+# Create a plot
+ggdid(old_retire_es_dyn, title="Average Effect of EHR Exposure on Retirement for Physicians > 50 by Length of Exposure") + 
+  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+
+# Save the plot
+ggsave(file="ggdid_retire_allEHR_old.pdf",path="Objects")
+
+
+# Do the same thing but with low-integrated hospitals -----------------------------------------------
+
+retire_es_li <- att_gt(yname = "retire",
+                    gname = "minyr_EHR_int",
+                    idname = "DocNPI",
+                    tname = "year",
+                    xformla = ~grad_year,
+                    data = filter(Physician_Data, minyr_EHR_int>0),
+                    est_method = "dr",
+                    control_group = "notyettreated",
+                    anticipation=0
+)
+# Save p-value to put in footnote
+p<-retire_es_li$Wpval
+
+# Aggregate the effects
+retire_es_dyn_li <- aggte(retire_es_li, type = "dynamic")
+
+# Create a plot
+ggdid(retire_es_dyn_li, title="Average Effect of EHR Exposure in Low-Integration Hospitals on Retirement by Length of Exposure") + 
+  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+
+# Save the plot
+ggsave(file="ggdid_retire_allEHR_li.pdf",path="Objects")
+
+
+
+# Older Physicians
+old_retire_es_li <- att_gt(yname = "retire",
+                        gname = "minyr_EHR_int",
+                        idname = "DocNPI",
+                        tname = "year",
+                        xformla = ~grad_year,
+                        data = dplyr::filter(Physician_Data,age>50 & minyr_EHR>0),
+                        est_method = "dr",
+                        control_group = "notyettreated",
+                        anticipation=0
+)
+# Save p-value to put in footnote
+p<-old_retire_es_li$Wpval
+
+# Aggregate the effects
+old_retire_es_dyn_li <- aggte(old_retire_es_li, type = "dynamic")
+
+# Create a plot
+ggdid(old_retire_es_dyn_li, title="Average Effect of EHR Exposure in Low-Integration Hospitals on Retirement for Physicians > 50 by Length of Exposure") + 
+  labs(caption=paste0("Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic"))
+
+# Save the plot
+ggsave(file="ggdid_retire_allEHR_old_li.pdf",path="Objects")
+
 
 # Office- based outcomes -------------------------------------------------------------
 

@@ -36,10 +36,29 @@ MDPPAS <- MDPPAS %>%
 MDPPAS <- MDPPAS %>%
   dplyr::filter(sum>0) 
 
-# Create a list of npi numbers to use when creating the shared patient data
+# Figure out what to do with doctors who switch specialties
+switchers <- MDPPAS %>%
+  dplyr::filter(sum==1) %>%
+  dplyr::group_by(npi) %>%
+  dplyr::mutate(n=1) %>%
+  dplyr::mutate(yrs=sum(n)) %>%
+  dplyr::ungroup() %>%
+  dplyr::filter(yrs>1) %>%
+  dplyr::mutate(drop=1)
+
+switchers <- switchers %>%
+  dplyr::distinct(npi,drop)
+
 npi_list <- MDPPAS %>%
+  dplyr::left_join(switchers,by="npi") %>%
+  dplyr::filter(is.na(drop))
+
+# Create a list of npi numbers to use when creating the shared patient data
+npi_list <- npi_list %>%
   dplyr::distinct(npi)
-  # 245k obs
+  # 243k obs
+
+
 
 saveRDS(npi_list,file=paste0(created_data_path,"npi_list.rds"))
 
