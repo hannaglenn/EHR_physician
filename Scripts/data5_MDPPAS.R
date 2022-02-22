@@ -46,7 +46,10 @@ Physician_Data <- Aggregated_Pairs %>%
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(birth_year=substr(birth_dt,start=6, stop=9)) %>%
   dplyr::mutate(birth_year=as.numeric(birth_year)) %>%
-  dplyr::mutate(age=year-birth_year)
+  dplyr::mutate(age=year-birth_year) %>%
+  dplyr::group_by(DocNPI) %>%
+  dplyr::mutate(max_age=max(age)) %>%
+  dplyr::ungroup()
 
 # Drop any physicians with less than 20% of patients in hospitals
 Physician_Data <- Physician_Data %>%
@@ -90,57 +93,37 @@ for (i in 2010:2017){
   
 } 
 
-# I only consider it retirement if all future claims are zero.
-# Create one retirement variable that only consider MDPPAS future claims and one that considers both hosp and MDPPAS future claims
-Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(retire=ifelse(future_claims==0,1,0),
-                retire_both=ifelse(future_claims==0 & future_claims_hosp==0,1,0)) %>%
-  dplyr::mutate(retire_2016=ifelse(year==2016 & retire==1,1,NA),
-                retire_2016_both=ifelse(year==2016 & retire_both==1,1,NA)) %>%
-  dplyr::group_by(DocNPI) %>%
-  tidyr::fill(retire_2016,.direction="downup") %>%
-  tidyr::fill(retire_2016_both,.direction="downup") %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(retire=ifelse(year==2017 & retire_2016==1,1,retire),
-                retire_both=ifelse(year==2017 & retire_2016_both==1,1,retire_both)) %>%
-  dplyr::mutate(retire=ifelse(year==2017 & is.na(retire_2016),0,retire),
-                retire_both=ifelse(year==2017 & is.na(retire_2016_both),0,retire_both))
-
-# This variable creates the retirement indicator one year too early. I want the first year of retirement to be the first year showing zeros.
-# Fix this
+# Create retirement variable
 minyr_retire <- Physician_Data %>%
-  dplyr::filter(retire==1) %>%
+  dplyr::filter(future_claims==0 & year<2017) %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(minyr_retire=min(year)) %>%
   dplyr::distinct(DocNPI, minyr_retire) %>%
   dplyr::ungroup()
 
-minyr_retire_both <- Physician_Data %>%
-  dplyr::filter(retire_both==1) %>%
-  dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(minyr_retire_both=min(year)) %>%
-  dplyr::distinct(DocNPI, minyr_retire_both) %>%
-  dplyr::ungroup()
 
 Physician_Data <- Physician_Data %>%
   dplyr::left_join(minyr_retire, by="DocNPI") %>%
-  dplyr::left_join(minyr_retire_both, by="DocNPI")
+  dplyr::mutate(minyr_retire=ifelse(!is.na(minyr_retire),minyr_retire+1,minyr_retire)) %>%
+  dplyr::mutate(minyr_retire=ifelse(minyr_retire==2017,NA,minyr_retire))
 
 Physician_Data <- Physician_Data %>%
-  dplyr::mutate(retire=ifelse(year==minyr_retire,0,retire),
-                retire_both=ifelse(year==minyr_retire_both,0,retire_both)) %>%
-  dplyr::mutate(retire=ifelse(is.na(retire),0,retire),
-                retire_both=ifelse(is.na(retire_both),0,retire_both))
+  dplyr::mutate(missingbefore=ifelse(!is.na(minyr_retire) & year<minyr_retire & is.na(claim_count_total),1,NA)) %>%
+  dplyr::group_by(DocNPI) %>%
+  tidyr::fill(missingbefore,.direction="downup") %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(minyr_retire=ifelse(is.na(missingbefore),minyr_retire,NA))
+
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(retire=ifelse(is.na(minyr_retire),0,ifelse(year==minyr_retire,1,0)))
 
 # Create variable for whether the physician ever retires
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1),
-                ever_retire_both=ifelse(is.na(minyr_retire_both),0,1)) %>%
-  dplyr::select(-retire_2016, -retire_2016_both)
+  dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1)) 
 
 observe <- Physician_Data %>%
   dplyr::filter(ever_retire==1) %>%
-  dplyr::select(DocNPI, year,age,retire,hosp_patient_count,claim_count_total)
+  dplyr::select(DocNPI, year,age,retire,hosp_patient_count,claim_count_total,missingbefore)
 
 
 # OFFICE ####

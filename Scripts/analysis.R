@@ -1,6 +1,7 @@
 library(did)
 library(dplyr)
 library(ggplot2)
+library(readr)
 
 # ------------------------------------- ANALYSIS  ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -15,13 +16,17 @@ Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
 # Retirement ---------------------------------------------------------------------------
 
-# Full sample (exclude 2017 because I cannot observe retirement)
+meanage_retire <- Physician_Data %>% ungroup() %>%
+  dplyr::filter(ever_retire==1) %>%
+  dplyr::summarise_at(c("max_age"), list(mean),na.rm=TRUE)
+
+# Full sample 
 retire_es <- att_gt(yname = "retire",
               gname = "minyr_EHR",
               idname = "DocNPI",
               tname = "year",
-              xformla = ~grad_year,
-              data = filter(Physician_Data, minyr_EHR>0),
+              xformla = ~max_age,
+              data = filter(Physician_Data, minyr_EHR>0 & minyr_retire!=2016),
               est_method = "dr",
               control_group = "notyettreated",
               anticipation=0,
@@ -49,7 +54,7 @@ old_retire_es <- att_gt(yname = "retire",
                     idname = "DocNPI",
                     tname = "year",
                     xformla = ~grad_year,
-                    data = dplyr::filter(Physician_Data,age>50 & minyr_EHR>0),
+                    data = dplyr::filter(Physician_Data,max_age>45 & minyr_EHR>0),
                     est_method = "dr",
                     control_group = "notyettreated",
                     anticipation=0
@@ -105,7 +110,7 @@ old_retire_es_li <- att_gt(yname = "retire",
                         idname = "DocNPI",
                         tname = "year",
                         xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,age>50 & minyr_EHR>0),
+                        data = dplyr::filter(Physician_Data,age>50 & minyr_EHR_int>0),
                         est_method = "dr",
                         control_group = "notyettreated",
                         anticipation=0
@@ -126,7 +131,7 @@ ggdid(old_retire_es_dyn_li, xlab="\n Relative Year", theming=FALSE, legend=FALSE
 ggsave(file="ggdid_retire_allEHR_old_li.pdf",path="Objects")
 
 
-# Office- based outcomes -------------------------------------------------------------
+# OFFICE BASED OUTCOMES -------------------------------------------------------------
 
 # Full Sample using fraction of patients in office
 office_frac_es <- att_gt(yname = "pos_office",
