@@ -17,7 +17,7 @@ Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 # Retirement ---------------------------------------------------------------------------
 
 meanage_retire <- Physician_Data %>% ungroup() %>%
-  dplyr::filter(ever_retire==1) %>%
+  dplyr::filter(ever_retire==0) %>%
   dplyr::summarise_at(c("max_age"), list(mean),na.rm=TRUE)
 
 # Full sample 
@@ -66,7 +66,7 @@ p<-old_retire_es$Wpval
 old_retire_es_dyn <- aggte(old_retire_es, type = "dynamic")
 
 # Create a plot
-ggdid(old_retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure \n In Physicians > 50") + 
+ggdid(old_retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure \n In Physicians > 45") + 
   labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
   theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"))
@@ -110,7 +110,7 @@ old_retire_es_li <- att_gt(yname = "retire",
                         idname = "DocNPI",
                         tname = "year",
                         xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,age>50 & minyr_EHR_int>0),
+                        data = dplyr::filter(Physician_Data,max_age>45 & minyr_EHR_int>0),
                         est_method = "dr",
                         control_group = "notyettreated",
                         anticipation=0

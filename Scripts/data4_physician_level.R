@@ -32,11 +32,11 @@ PhysCompare <- PhysCompare %>%
   dplyr::rename(gender=gndr,grad_year=Grd_yr) %>%
   select(NPI,grad_year) 
 
-# Merge, then drop any physicians that graduated after 2008
+# Merge, then drop any physicians that graduated after 2005
 data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
-  filter(grad_year<2009)
+  filter(grad_year<2005)
   # Now have 1 mill obs
 
 
@@ -391,7 +391,7 @@ Aggregated_Pairs <- data %>%
            num_hospitals,
            frac_EHR, frac_EHR_dec, frac_EHR_doc, minyr_EHR, minyr_EHR_dec, minyr_EHR_int, minyr_EHR_dec_int,
            num_systems, hosp_patient_count)
-  #588k obs
+  #528k obs
 
 # Now complete the data
 Aggregated_Pairs <- complete(Aggregated_Pairs,DocNPI,year=2009:2017)
