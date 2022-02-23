@@ -60,65 +60,77 @@ knitr::kable(sum_stats_fullsample[c(3,8,12,2,10,4,5,7,1,6,9,11),],
   pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
 
 
-# Summary Stats broken down by age of physician and year ---------------------------------------------------------
-means_old <- Physician_Data %>% 
-  filter(max_age>45) %>% 
-  group_by(year) %>%
-  summarize_at(c("hosp_count",
-                 "frac_EHR",
-                 "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) 
-  filter(year >= 1986) %>%
-  select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) 
-
-means_young <- Physician_Data %>% filter(experience<=35) %>% ungroup() %>%
-  group_by(year) %>%
-  summarize_at(c("hosp_count",
-                 "frac_EHR",
-                 "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) %>%
-  filter(year >= 1986) %>%
-  select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
+# Summary Stats of all variables by odl vs. young ---------------------------------------------------------
+means_old <- Physician_Data %>% ungroup() %>%
+  filter(max_age>45) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Number of Patients"="claim_count_total","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Exposure to an EHR"="anyEHR_exposed",
+                 "Exposure to an EHR (Low Integration)"="anyEHR_LI_exposed",
+                 "Fraction Patients in Office"="pos_office",
+                 "Ever Retire"="ever_retire",
+                 "Work in an Office"="work_in_office",
+                 "Change Zip Codes"="change_zip"), list(mean), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
-  select(-year)
+  gather(key=var,value=value) %>%
+  dplyr::rename(value_old=value)
 
-means_bind <- cbind(means_old,means_young)
+means_young <- Physician_Data %>% ungroup() %>%
+  filter(max_age<=45) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Number of Patients"="claim_count_total","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Exposure to an EHR"="anyEHR_exposed",
+                 "Exposure to an EHR (Low Integration)"="anyEHR_LI_exposed",
+                 "Fraction Patients in Office"="pos_office",
+                 "Ever Retire"="ever_retire",
+                 "Work in an Office"="work_in_office",
+                 "Change Zip Codes"="change_zip"), list(mean), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
+  gather(key=var,value=value) %>%
+  dplyr::rename(value_young=value)
 
-knitr::kable(means_bind, "latex",
-             col.names=c("Year","Mean","Std. Dev.", "Mean","Std. Dev.", "Mean", "Std. Dev." ,"Mean","Std. Dev.",
-                         "Mean","Std. Dev.","Mean","Std. Dev."),
+means_bind <- means_old %>%
+  left_join(means_young,by="var")
+
+knitr::kable(means_bind[c(10,9,11,12,5,7,8,6,4,2,1,3),], "latex",
+             col.names=c("Variable","Age > 45", "Age <= 45"),
              digits=2,
-             caption="Summary Stats",
+             caption="Means by Age Sample",
              booktabs=TRUE,
              escape=F,
-             align=c("l","c","c","c","c","c","c","c","c","c","c","c","c"),
+             align=c("l","c","c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
-  add_header_above(c(" "=1, "Number of Patients"=2, "Frac. of Hospitals with EHR" =2, "Exposure to EHR"=2,
-                     "Number of Patients"=2, "Frac. of Hospitals with EHR" =2, "Exposure to EHR"=2)) %>%
-  add_header_above(c(" "=1, "Senior Physicians"=6, "Young Physicians"=6))
+  pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
 
 
 # AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% group_by(year) %>%
-  summarise_at(c("Fraction of Hospitals using EHR"="frac_EHR_constant", 
-                 "Fraction of Physicians Exposed to an EHR"="anyEHR_exposed"), list(m=mean), na.rm=T) %>%
-  dplyr::rename("Fraction of Hospitals using EHR"="Fraction of Hospitals using EHR_m",
-                "Physicians Exposed to an EHR"="Fraction of Physicians Exposed to an EHR_m")
+  summarise_at(c("Frac. Hospitals using EHR"="frac_EHR", 
+                 "Perc. Physicians Exposed to EHR"="anyEHR_exposed",
+                 "Perc. Physicians Exposed to EHR (Low Integration)"="anyEHR_LI_exposed"), list(mean), na.rm=T) 
 
 
 # Create a dataframe out of the summary stats to put in a ggplot
 sum_stats_year <- as.data.frame(sum_stats_year)
-sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Fraction of Hospitals using EHR",
-                                                                          "Physicians Exposed to an EHR"))
+sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Frac. Hospitals using EHR",
+                                                                          "Perc. Physicians Exposed to EHR",
+                                                                          "Perc. Physicians Exposed to EHR (Low Integration)"))
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
 ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
-  geom_line() +geom_point() + labs(x="\nYear", y=" " 
-                                   ) + 
-  scale_colour_manual(values=cbbPalette) + ylim(.2,1)  + theme(legend.key.size=unit(.3,'cm'),legend.key.height = unit(.4, 'cm'),legend.key.width = unit(.3, 'cm'))
+  geom_line() + geom_point() + labs(x="\nYear", y=" ") + 
+  scale_colour_manual(values=cbbPalette) + ylim(0,1)  + xlim(2009,2015) +
+  theme(legend.key.size=unit(.3,'cm'),
+        legend.key.height = unit(.4, 'cm'),
+        legend.key.width = unit(.3, 'cm'))
 
-ggsave("Objects/sum_stats_year.pdf", width=8, height=5, units="in")
+ggsave("Objects/sum_stats_year.pdf", width=10, height=5, units="in")
 
 # Graph continuous labor variable with lines for each year treated ------------------------------------
 # I don't think I want to include this graph in the paper
