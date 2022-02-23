@@ -7,7 +7,7 @@
 \usepackage{import}
 \usepackage{adjustbox}
 \usepackage{booktabs}
-%\usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage[font=footnotesize,labelfont=bf]{caption}
 %\captionsetup{justification=raggedright,singlelinecheck=false}
 
 
@@ -85,24 +85,21 @@ For those physicians who do not retire, I analyze whether there is evidence of s
 
 \subsection{Shared Patient}
 
-CMS Shared Patient data records the number of patients who bill two entities under Medicaid in the same day. For example, if a Medicaid patient is referred to a specialist by a primary care physician and the specialist is seen the same day, then those two physicians have a shared patient in common. I utilize this data to find physicians' EHR exposure based on the hospitals they work with, which defines treatment variables for the analysis. I limit the entities by NPI tax-code to only include shared patients for physician-hospital pairs. I care specifically about physicians who have a close working relationship with hospitals, preferably those who do rounds within at least one hospital. The types of physicians are already limited to primary care physicians, but there still may be some office-based primary care physicians in the shared patient data. Therefore, I limit the sample of pairs based on a threshold of same day patients which depends on the number of years the physician appears in the data. A physician is dropped if their total number of same day billings with a hospital is less than 30 times the number of years the pair appears in the data. The reason for this is to avoid dropping physicians who drop out of the data for many years, as this may indicate retirement. \textcolor{red}{I explore other thresholds in the appendix.} 
+CMS Shared Patient data is from 2009 to 2015, and records the number of patients who bill two entities under Medicaid in the same day. For example, if a Medicaid patient is referred to a specialist by a primary care physician and the specialist is seen the same day, then those two physicians have a shared patient in common. I utilize this data to find physicians' EHR exposure based on the hospitals they share sufficient patients with, which defines treatment variables for the analysis. I limit the entities by NPI tax-code to only include shared patients for physician-hospital pairs, where the physicians in these pairs match the physicians from MD-PPAS. I care specifically about primary care physicians who have a close working relationship with hospitals, preferably those who do rounds within at least one hospital. The types of physicians are already limited to primary care physicians, but there still may be some office-based primary care physicians in the shared patient data. Therefore, I limit the sample of pairs based on a threshold of same day patients which depends on the number of years the physician appears in the data. A physician-hospital pair is dropped if their total number of same day billings with the hospital is less than 30 times the number of years the pair appears in the data. The reason for this is to avoid dropping physicians who drop out of the data for many years, as this may indicate retirement. \textcolor{red}{I explore other thresholds in the appendix.} 
 
-Using hospital NPI, I link the physician-hospital pairs to the American Hospital Association survey, which contains information on hospital-level EHR use and other characteristics. Then I record the first year a physician is exposed to an EHR based on the hospitals they share patients with. I create two measures of EHR exposure. The first is exposure to any EHR in any hospital, and the second is exposure to EHR at a "low-integration" hospital (a hospital where physicians have a low measure of vertical integration, as defined in \textcolor{red}{add cite}). I then aggregate to the physician level. 
+Using hospital NPI in each pair, I link the pairs to the American Hospital Association survey, which contains information on hospital-level EHR use and other characteristics. I record the first year a physician is exposed to an EHR based on implementation in the hospitals they share patients with. I create two measures of EHR exposure. The first is exposure to any EHR in any hospital, and the second is exposure to EHR at a "low-integration" hospital (a hospital where physicians have a low measure of vertical integration, as defined in \textcolor{red}{add cite}). I then aggregate to the physician level. Since this data does not extend to 2017 as the MD-PPAS data does, in the analysis I drop physicians who are not treated by 2015 as I do not observe whether they become treated in 2016 or 2017. 
 
-\textcolor{red}{write about the discrepancy in years}
+Finally, I include a physician's graduation year from Physician Compare. I limit to physicians who graduated before 2005, as anyone who graduated medical school after that will be finishing residency during the span of the data and will exhibit labor market changing behavior. 
 
 \subsection{Summary Statistics}
 
-Overall summary statistics of the variables are shown in \hyperref[fig:summarystatistics]{Table 1}. Average hospital operating days is a physician-level variable that averages the number of operating days for that physicians hospital network. While there are some low outliers with a low value, on average physicians are working in hospitals open year round. Similarly, the average size of the hospital worked with averages the number of beds of each hospital in a physician's network. While these two average variables can technically vary by year, they tend to stay constant across the data, which is why they are included in the static category. Approximately 30\% of the sample of physicians are female and the average physician graduated medical school in 1993. Note that there are no physicians in the data who graduated after 2005, since they would be entering the labor force after residency during the span of the data. On average, a physician works with between 1 and 2 hospitals as well as hospital systems. While the number of hospitals that a physician cares for patients in varies by year, the number of hospitals in their network is constant. The physician level variables that vary over time deal are the treatment variables regarding EHR exposure and the number of Medicaid patients seen. For all physician-years, physicians were exposed to an EHR in 56\% of the hospitals they work in and 70\% of the sample is exposed to any EHR. Once a physician becomes exposed to an EHR, they cannot go back to being unexposed. Finally, physicians are seeing an average of 620 Medicaid patients in hospitals per year.
+Overall summary statistics of the variables are shown in \hyperref[tab:sumstats1]{Table \ref{tab:sumstats1}}. \textcolor{red}{add commentary on Table 1}
 
 \vspace{5mm}
 \import{Table Code}{overall stats.tex}
 \vspace{5mm}
 
-I also include summary statistics by year and physician experience for comparison in Table \textcolor{red}{number}. In all years, senior physicians see more patients on average than younger physicians. Note that in 2015 the number of Medicaid patients drops drastically. This is due to the data collection in 2015 cutting off earlier than previous years since it was the last year collected for the data set. Because of this limitation, I drop 2015 in the productivity analysis, where number of patients is the dependent variable. 
-
-\textcolor{red}{I need to think about why senior physicians are more exposed than younger physicians}
-
+I include means of these variables in physicians either younger than or older than 45 in \hyperref[tab:sumstats2]{Table \ref{tab:sumstats2}}. Senior physicians see more patients and work in more hospitals on average than younger physicians. Physicians over 45 are slightly more likely to be exposed to EHRs in both general hospitals and low integration hospitals, but a smaller fraction of their hospitals utilize EHRs. These older physicians also see a larger fraction of patients in an office setting and are more likely to work in an office in general. Finally, physicians in the higher age bracket are less likely to switch zip codes. 
 
 
 \vspace{5mm}
@@ -112,12 +109,12 @@ I also include summary statistics by year and physician experience for compariso
 
 
 
-For a clear look at the variation in treatment variables over time, \hyperref[fig:figure1]{Figure 1} shows the average of these variables over time. In 2009, 42\% of the sample of physicians were exposed to an EHR. That is, over half of the sample had no affiliation with EHRs at the beginning of the sample period. By 2015, 92\% of physicians had exposure to an EHR in at least one hospital in their network. Similarly, the fraction of hospitals in a physician's network which were using an EHR was 30\% in 2009 and grew to 82\% in 2015. These statistics are consistent with the surge in incentives to implement EHRs in hospitals. 
+To examine variation in treatment variables, \hyperref[fig:figure1]{Figure \ref{fig:figure1}} shows the averages over time. In 2009, 26\% of the sample of physicians were exposed to an EHR. That is, three quarters of the sample had no affiliation with EHRs at the beginning of the sample period. By 2015, 84\% of physicians had exposure to an EHR in at least one hospital in their network. Exposure to EHRs only in low integrated hospitals follows a similar trend with lower percentages in each year. 
 
 \vspace{5mm}
 \begin{figure}[ht]
+\centering
     \caption{Treatment Variables Over Time}
-    \vspace{-2mm}
     \includegraphics[scale=.5]{Objects/sum_stats_year.pdf}
     \label{fig:figure1}
 \end{figure}
@@ -136,7 +133,8 @@ This implies that an exogenous shock to work setting could, if it outweighs the 
 Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects of being exposed to an EHR in a hospital. The left panel of the figure includes all physicians and shows a clear increase in the probability of retiring after exposure to an EHR. On the right panel, only physicians over the age of 45 in 2017 are included. 
 
 \begin{figure}[ht]
-\caption{}
+\caption{Event Study Graphs}
+\vspace{2mm}
         \begin{minipage}[b]{0.47\linewidth}
             \centering
             \includegraphics[width=\textwidth]{Objects/ggdid_retire_allEHR.pdf}
@@ -150,10 +148,12 @@ Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects o
 \end{figure}
 
 
-
+\newpage
 
 
 \section{Work Setting}
+
+\newpage
 
 \section{Physician Productivity}
 
