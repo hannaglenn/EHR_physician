@@ -7,8 +7,8 @@
 \usepackage{import}
 \usepackage{adjustbox}
 \usepackage{booktabs}
-\usepackage[font=footnotesize,labelfont=bf]{caption}
-\captionsetup{justification=raggedright,singlelinecheck=false}
+%\usepackage[font=footnotesize,labelfont=bf]{caption}
+%\captionsetup{justification=raggedright,singlelinecheck=false}
 
 
 \usepackage[backend=biber,style=authoryear,
@@ -76,12 +76,12 @@ Using various linked datasets, I construct a physician-level panel spanning from
 
 \subsection{MD-PPAS}
 
-Medicare Data on Provider Practice and Specialty is a database of physicians designed to record information about claim counts and specialty from 2009-2017. The relevant information included is physician NPI, primary and secondary specialties, patient counts in up to 12 different zip codes, and fraction of patients in different settings such as office, inpatient or emergency room. First, I make limitations to the sample of physicians based on specialty type. Primary care physicians are the most likely to be exposed to the administrative burden of EHRs in hospitals. Thus, I only include physicians whose primary specialty is hospitalist, internal medicine, pediatrics, general practice or family practice in at least one year (excluding physicians who have specialist listed for all other years). Since the focus of the analysis is physicians working in hospitals, I also drop physicians with less than 20\% of patients in a hospital setting in all years. 
-The dependent variables are constructed using MD-PPAS claim and patient count information. Retirement is an indicator variable that is equal to 1 in the first year that all future claims in all zip codes are equal to 0. I do not observe retirement in 2017, and drop those who "retire" in 2016 since one year of zero claims does not necessarily mean retirement. The average age of the sample is 51.5, indicating a large number of older physicians, where the average age of those who retire at some point in the sample is 52.5. This indicates a large older population in the sample. \textcolor{red}{maybe show the distribution of ages by those who retire and those who don't.}
+Medicare Data on Provider Practice and Specialty is a database of physicians which details claim counts and specialty from 2009-2017. The relevant information included is physician NPI, primary and secondary specialties, patient counts in up to 12 different zip codes, and fraction of patients in different settings such as office, inpatient or emergency room. First, I make limitations to the sample of physicians based on specialty type. Primary care physicians are the most likely to be exposed to the administrative burden of EHRs in hospitals. Thus, I only include physicians whose primary specialty is hospitalist, internal medicine, pediatrics, general practice or family practice in at least one year (excluding physicians who have specialist listed in all years but one). Since the focus of the analysis is physicians working in hospitals, I also drop physicians with less than 20\% of patients in a hospital setting in all years.
 
-\textcolor{red}{paragraph about switching setting variables}
+The dependent variables in the analysis have to do with physician labor market outcomes, and are constructed using claim and patient count variables. Retirement is an indicator variable that is equal to 1 in the first year that all future claims in all zip codes are equal to 0. I do not observe retirement in 2017, and drop those who "retire" in 2016 since one year of zero claims does not necessarily mean retirement. \textcolor{red}{maybe show the distribution of ages by those who retire and those who don't.} 
 
-\textcolor{red}{paragraph about patient count variable}
+For those physicians who do not retire, I analyze whether there is evidence of switching to different places of work. Two outcome variables capture moving towards office based settings, one is the fraction of patients seen in an office setting and the other is an indicator for whether the physician works in an office at all. While I do not observe different hospitals in the data, I also attempt to capture any type of switching (to office or from hospital to hospital) by measuring if a physician changes zip codes from one year to the next. Finally, for physicians who do not exhibit switching settings, I utilize number of patients as an outcome variable. 
+
 
 \subsection{Shared Patient}
 
@@ -93,15 +93,10 @@ Using hospital NPI, I link the physician-hospital pairs to the American Hospital
 
 \subsection{Summary Statistics}
 
-Overall summary statistics of the variables are shown in \hyperref[fig:summarystatistics]{Table 1}. Average hospital operating days is a physician-level variable that averages the number of operating days for that physicians hospital network. While there are some low outliers with a low value, on average physicians are working in hospitals open year round. Similarly, the average size of the hospital worked with averages the number of beds of each hospital in a physician's network. While these two average variables can technically vary by year, they tend to stay constant across the data, which is why they are included in the static category. Approximately 30\% of the sample of physicians are female and the average physician graduated medical school in 1993. Note that there are no physicians in the data who graduated after 2009, since they would be entering the labor force during the span of the data. On average, a physician works with between 1 and 2 hospitals as well as hospital systems. While the number of hospitals that a physician cares for patients in varies by year, the number of hospitals in their network is constant. The physician level variables that vary over time deal are the treatment variables regarding EHR exposure and the number of Medicaid patients seen. For all physician-years, physicians were exposed to an EHR in 56\% of the hospitals they work in and 70\% of the sample is exposed to any EHR. Once a physician becomes exposed to an EHR, they cannot go back to being unexposed. Finally, physicians are seeing an average of 620 Medicaid patients in hospitals per year.
+Overall summary statistics of the variables are shown in \hyperref[fig:summarystatistics]{Table 1}. Average hospital operating days is a physician-level variable that averages the number of operating days for that physicians hospital network. While there are some low outliers with a low value, on average physicians are working in hospitals open year round. Similarly, the average size of the hospital worked with averages the number of beds of each hospital in a physician's network. While these two average variables can technically vary by year, they tend to stay constant across the data, which is why they are included in the static category. Approximately 30\% of the sample of physicians are female and the average physician graduated medical school in 1993. Note that there are no physicians in the data who graduated after 2005, since they would be entering the labor force after residency during the span of the data. On average, a physician works with between 1 and 2 hospitals as well as hospital systems. While the number of hospitals that a physician cares for patients in varies by year, the number of hospitals in their network is constant. The physician level variables that vary over time deal are the treatment variables regarding EHR exposure and the number of Medicaid patients seen. For all physician-years, physicians were exposed to an EHR in 56\% of the hospitals they work in and 70\% of the sample is exposed to any EHR. Once a physician becomes exposed to an EHR, they cannot go back to being unexposed. Finally, physicians are seeing an average of 620 Medicaid patients in hospitals per year.
 
 \vspace{5mm}
-\begin{table}[ht]
-    \import{Table Code}{overall stats.tex}
-    \label{fig:summarystatistics}
-    \vspace{1mm}
-    \caption*{\footnotesize Obs: 1,044,001}
-\end{table}
+\import{Table Code}{overall stats.tex}
 \vspace{5mm}
 
 I also include summary statistics by year and physician experience for comparison in Table \textcolor{red}{number}. In all years, senior physicians see more patients on average than younger physicians. Note that in 2015 the number of Medicaid patients drops drastically. This is due to the data collection in 2015 cutting off earlier than previous years since it was the last year collected for the data set. Because of this limitation, I drop 2015 in the productivity analysis, where number of patients is the dependent variable. 
@@ -111,10 +106,7 @@ I also include summary statistics by year and physician experience for compariso
 
 
 \vspace{5mm}
-\begin{table}[ht]
-\caption{Summary Statistics by Year and Experience Level}
 \import{Table Code}{split stats.tex}
-\end{table}
 \vspace{5mm}
 
 
@@ -141,7 +133,7 @@ This implies that an exogenous shock to work setting could, if it outweighs the 
 
 \subsection{Event Study and Results}
 
-Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects of being exposed to an EHR in a hospital. The left panel of the figure includes all physicians and shows a clear increase in the probability of retiring after exposure to an EHR. On the right panel, only physicians over the age of 50 are included. These results are puzzling, as they show that young physicians are the ones "retiring", or leaving the labor force. \textcolor{red}{However, this may just reflect that in later years taking a one or two year break looks like retiring whereas in early years it doesn't. What would cause a physician to drop out of the data for one or two years? Add to the appendix the same analysis but dropping physicians who "retired" after 2014. }
+Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects of being exposed to an EHR in a hospital. The left panel of the figure includes all physicians and shows a clear increase in the probability of retiring after exposure to an EHR. On the right panel, only physicians over the age of 45 in 2017 are included. 
 
 \begin{figure}[ht]
 \caption{}
@@ -157,21 +149,7 @@ Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects o
         \label{fig:retirefirst}
 \end{figure}
 
-I also repeat this analysis with a more strict version of exposure to EHRs. A physician is only considered exposed if they worked in a low-integration status hospital that implemented an EHR. These results are shown in Figure \ref{fig:retiresecond}. 
 
-\begin{figure}[ht]
-\caption{}
-        \begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/ggdid_retire_allEHR_li.pdf}
-        \end{minipage}
-        \hspace{0.2cm}
-        \begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/ggdid_retire_allEHR_old_li.pdf}
-        \end{minipage}
-        \label{fig:retiresecond}
-\end{figure}
 
 
 
