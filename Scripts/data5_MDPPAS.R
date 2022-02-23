@@ -38,6 +38,7 @@ Physician_Data <- Aggregated_Pairs %>%
   dplyr::group_by(DocNPI) %>%
   tidyr::fill(sex, .direction="downup") %>%
   tidyr::fill(birth_dt, .direction="downup") %>%
+  tidyr::fill(frac_EHR,.direction = "downup") %>%
   dplyr::ungroup() %>%
   dplyr::mutate(female=ifelse(sex=='F',1,0)) 
 
@@ -68,15 +69,6 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(claim_count_total=ifelse(is.na(claim_count1),NA,sum(dplyr::c_across(tidyr::starts_with("claim_count")),na.rm=T))) %>%
   dplyr::ungroup() 
 
-# Remove those who only appear in the data for one year (maybe they are a visiting doctor?)
-# Maybe I shouldn't do this?
-Physician_Data <- Physician_Data %>%
-  dplyr::mutate(pos=ifelse(is.na(claim_count_total),0,1)) %>%
-  dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(sum=sum(pos)) %>%
-  dplyr::ungroup() %>%
-  dplyr::filter(sum>1) %>%
-  dplyr::select(-pos,-sum)
 
 # Create a variable that sums up the claim count in all future years
 Physician_Data <- Physician_Data %>%
@@ -225,29 +217,44 @@ Physician_Data <- Physician_Data %>%
 
 Physician_Data <- Physician_Data %>%
   dplyr::rowwise() %>%
-  dplyr::mutate(change_zip=ifelse(year==2010 & !(str_detect(zip_list2009,zip_list2010) | str_detect(zip_list2010,zip_list2009)) ,1,NA)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2010 & is.na(change_zip),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2010 & change_zip==1 & sort(unlist(strsplit(zip_list2009, "")))==sort(unlist(strsplit(zip_list2010, ""))),0,change_zip))
+  dplyr::mutate(change_zip=ifelse(year==2010 & !(str_detect(zip_list2009,zip_list2010)[1] |
+                                                   str_detect(zip_list2010,zip_list2009)[1]) ,1,NA)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2010 & is.na(change_zip) & !(is.na(zip_list2009) | 
+                                                                       is.na(zip_list2010)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2011 & !(str_detect(zip_list2010,zip_list2011)[1] |
+                                                   str_detect(zip_list2011,zip_list2010)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2011 & is.na(change_zip) & !(is.na(zip_list2010) |
+                                                                       is.na(zip_list2011)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2012 & !(str_detect(zip_list2011,zip_list2012)[1] |
+                                                   str_detect(zip_list2012,zip_list2011)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2012 & is.na(change_zip) & !(is.na(zip_list2011) | 
+                                                                       is.na(zip_list2012)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2013 & !(str_detect(zip_list2012,zip_list2013)[1] |
+                                                   str_detect(zip_list2013,zip_list2012)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2013 & is.na(change_zip) & !(is.na(zip_list2012) | 
+                                                                       is.na(zip_list2013)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2014 & !(str_detect(zip_list2013,zip_list2014)[1] |
+                                                   str_detect(zip_list2014,zip_list2013)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2014 & is.na(change_zip) & !(is.na(zip_list2013) |
+                                                                       is.na(zip_list2014)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2015 & !(str_detect(zip_list2014,zip_list2015)[1] |
+                                                   str_detect(zip_list2015,zip_list2014)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2015 & is.na(change_zip) & !(is.na(zip_list2014) | 
+                                                                       is.na(zip_list2015)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2016 & !(str_detect(zip_list2015,zip_list2016)[1] |
+                                                   str_detect(zip_list2016,zip_list2015)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2016 & is.na(change_zip) & !(is.na(zip_list2015) | 
+                                                                       is.na(zip_list2016)),0,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2017 & !(str_detect(zip_list2016,zip_list2017)[1] |
+                                                   str_detect(zip_list2017,zip_list2016)[1]) ,1,change_zip)) %>%
+  dplyr::mutate(change_zip=ifelse(year==2017 & is.na(change_zip) & !(is.na(zip_list2016) | is.na(zip_list2017)),0,change_zip))
+
+
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(change_zip=ifelse(year==2009,0,change_zip)) 
 
 observe <- Physician_Data %>%
-  filter(change_zip==1)
-
-
-# Create relative year variables
-Physician_Data <- Physician_Data %>%
-  mutate(rel_expandyear=ifelse(minyr_EHR==0,-1,
-                               ifelse(minyr_EHR>0,year-minyr_EHR,NA)))
-
-Physician_Data <- Physician_Data %>%
-  mutate(rel_m4=1*(rel_expandyear==-4),
-         rel_m3=1*(rel_expandyear==-3),
-         rel_m2=1*(rel_expandyear==-2),
-         rel_m1=1*(rel_expandyear==-1),
-         rel_0=1*(rel_expandyear==0),
-         rel_p1=1*(rel_expandyear==1),
-         rel_p2=1*(rel_expandyear==2),
-         rel_p3=1*(rel_expandyear==3),
-         rel_p4=1*(rel_expandyear==4))
+  filter(is.na(frac_EHR))
 
 
 
@@ -258,8 +265,7 @@ saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
 write.csv(Physician_Data,file=paste0(created_data_path,"Physician_Data.csv"))
 
 
-observe <- Physician_Data %>%
-  filter(minyr_EHR>0)
+
 
   
   

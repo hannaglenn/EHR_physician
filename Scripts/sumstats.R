@@ -26,43 +26,47 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
 # Physician Level
 sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
-  summarise_at(c("Number of Hospitals Worked With"="num_hosp_constant",
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
-                 "Medical School Grad. Year"="grad_year",
-                 "Number of Patients"="hosp_count","Fraction of Hospitals with EHR"="frac_EHR",
-                 "Average Size of Hospitals Worked With (Beds)"="avg_beds", 
-                 "Average Hospital Operating Days"="avg_oper_days",
-                 "Exposure to an EHR"="anyEHR_exposed"), 
+                 "Age"="age",
+                 "Number of Patients"="claim_count_total","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Exposure to an EHR"="anyEHR_exposed",
+                 "Exposure to an EHR (Low Integration)"="anyEHR_LI_exposed",
+                 "Fraction Patients in Office"="pos_office",
+                 "Ever Retire"="ever_retire",
+                 "Work in an Office"="work_in_office",
+                 "Change Zip Codes"="change_zip"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) %>%
-  mutate(m=ifelse(variable=='Medical School Grad. Year',round(m,digits=0),m))
+  relocate(variable,n,m,sd,min,max) 
 
 
 
 
-knitr::kable(sum_stats_fullsample[c(1,2,4,6,7,9,3,5,8),],
+knitr::kable(sum_stats_fullsample[c(3,8,12,2,10,4,5,7,1,6,9,11),],
              format="latex",
-             table.envir="figure",
+             table.envir="table",
              col.names=c("Variable","N","Mean","Std. Dev.", "Min", "Max"),
              digits=2,
-             caption="Summary Stats",
+             caption="Summary Statistics",
              booktabs=TRUE,
              escape=F,
              align=c("l","r","r","r","r","r"),
              position="h") %>%
   kable_styling(full_width=F) %>%
-  pack_rows(index = c("Static" = 6, "Dynamic" = 3)) 
+  pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
+
 
 # Summary Stats broken down by age of physician and year ---------------------------------------------------------
-means_old <- Physician_Data %>% filter(experience>35) %>% ungroup() %>%
+means_old <- Physician_Data %>% 
+  filter(max_age>45) %>% 
   group_by(year) %>%
   summarize_at(c("hosp_count",
                  "frac_EHR",
-                 "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) %>%
+                 "anyEHR_exposed"), list(mean,sd), na.rm=TRUE) 
   filter(year >= 1986) %>%
   select(year,hosp_count_fn1,hosp_count_fn2,frac_EHR_fn1,frac_EHR_fn2,anyEHR_exposed_fn1,anyEHR_exposed_fn2) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) 
