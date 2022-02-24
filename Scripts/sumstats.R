@@ -60,9 +60,10 @@ knitr::kable(sum_stats_fullsample[c(3,8,12,2,10,4,5,7,1,6,9,11),],
   pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
 
 
-# Summary Stats of all variables by odl vs. young ---------------------------------------------------------
+# Summary Stats of all variables by old vs. young ---------------------------------------------------------
 means_old <- Physician_Data %>% ungroup() %>%
-  filter(max_age>45) %>%
+  filter(minyr_EHR>0 & (minyr_retire<2015 | is.na(minyr_retire))) %>%
+  filter(max_age>59) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
@@ -78,7 +79,8 @@ means_old <- Physician_Data %>% ungroup() %>%
   dplyr::rename(value_old=value)
 
 means_young <- Physician_Data %>% ungroup() %>%
-  filter(max_age<=45) %>%
+  filter(minyr_EHR>0 & (minyr_retire<2015 | is.na(minyr_retire))) %>%
+  filter(max_age<=59) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
