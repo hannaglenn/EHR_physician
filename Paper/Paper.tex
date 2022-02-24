@@ -87,7 +87,7 @@ For those physicians who do not retire, I analyze whether there is evidence of s
 
 CMS Shared Patient data is from 2009 to 2015, and records the number of patients who bill two entities under Medicaid in the same day. For example, if a Medicaid patient is referred to a specialist by a primary care physician and the specialist is seen the same day, then those two physicians have a shared patient in common. I utilize this data to find physicians' EHR exposure based on the hospitals they share sufficient patients with, which defines treatment variables for the analysis. I limit the entities by NPI tax-code to only include shared patients for physician-hospital pairs, where the physicians in these pairs match the physicians from MD-PPAS. I care specifically about primary care physicians who have a close working relationship with hospitals, preferably those who do rounds within at least one hospital. The types of physicians are already limited to primary care physicians, but there still may be some office-based primary care physicians in the shared patient data. Therefore, I limit the sample of pairs based on a threshold of same day patients which depends on the number of years the physician appears in the data. A physician-hospital pair is dropped if their total number of same day billings with the hospital is less than 30 times the number of years the pair appears in the data. The reason for this is to avoid dropping physicians who drop out of the data for many years, as this may indicate retirement. \textcolor{red}{I explore other thresholds in the appendix.} 
 
-Using hospital NPI in each pair, I link the pairs to the American Hospital Association survey, which contains information on hospital-level EHR use and other characteristics. I record the first year a physician is exposed to an EHR based on implementation in the hospitals they share patients with. I create two measures of EHR exposure. The first is exposure to any EHR in any hospital, and the second is exposure to EHR at a "low-integration" hospital (a hospital where physicians have a low measure of vertical integration, as defined in \textcolor{red}{add cite}). I then aggregate to the physician level. Since this data does not extend to 2017 as the MD-PPAS data does, in the analysis I drop physicians who are not treated by 2015 as I do not observe whether they become treated in 2016 or 2017. 
+Using hospital NPI in each pair, I link the pairs to the American Hospital Association survey, which contains information on hospital-level EHR use and other characteristics. I record the first year a physician is exposed to an EHR based on implementation in the hospitals they share patients with. I create two measures of EHR exposure. The first is exposure to any EHR in any hospital, and the second is exposure to EHR at a "low integration" hospital (a hospital where physicians have a low measure of vertical integration with the hospital (\cite{madison2004hospital})). I then aggregate to the physician level. Since this data does not extend to 2017 as the MD-PPAS data does, in the analysis I drop physicians who are not treated by 2015 as I do not observe whether they become treated in 2016 or 2017. 
 
 Finally, I include a physician's graduation year from Physician Compare. I limit to physicians who graduated before 2005, as anyone who graduated medical school after that will be finishing residency during the span of the data and will exhibit labor market changing behavior. 
 
@@ -99,7 +99,7 @@ Overall summary statistics of the variables are shown in \hyperref[tab:sumstats1
 \import{Table Code}{overall stats.tex}
 \vspace{5mm}
 
-I include means of these variables in physicians either younger than or older than 45 in \hyperref[tab:sumstats2]{Table \ref{tab:sumstats2}}. Senior physicians see more patients and work in more hospitals on average than younger physicians. Physicians over 45 are slightly more likely to be exposed to EHRs in both general hospitals and low integration hospitals, but a smaller fraction of their hospitals utilize EHRs. These older physicians also see a larger fraction of patients in an office setting and are more likely to work in an office in general. Finally, physicians in the higher age bracket are less likely to switch zip codes. 
+I include means of these variables in physicians either younger than or older than 45 in \hyperref[tab:sumstats2]{Table \ref{tab:sumstats2}}. Senior physicians see more patients and work in more hospitals on average than younger physicians. Physicians over 45 are slightly more likely to be exposed to EHRs in both general hospitals and low integration hospitals, but a smaller fraction of their hospitals utilize EHRs. These older physicians also see a larger fraction of patients in an office setting and are more likely to work in an office in general. Finally, physicians in the higher age bracket are less likely to switch zip codes. \textcolor{red}{why is there equal retirement between young and old?}
 
 
 \vspace{5mm}
@@ -122,15 +122,21 @@ To examine variation in treatment variables, \hyperref[fig:figure1]{Figure \ref{
 
 \newpage
 
+\section{Empirical Strategy}
+
+In this setting, treatment effects likely vary across physicians who are exposed in different years since the underlying hospitals who implement likely vary. Therefore, to avoid negative weighting issues that would arise in a two way fixed effects specification, I utilize \citeauthor{callaway2021difference} (\citeyear{callaway2021difference}) to estimate average group time treatment effects. 
+
+\textcolor{red}{outline assumptions necessary for identification and talk about doubly robust estimator}
+
 \section{Retirement}
 
-It is not uncommon in developed countries for workers to plan for retirement well in advance. Many workers have a retirement age set and spend their working life saving to get to that point. An exogenous shock typically will not change this retirement age because of the large sum of money necessary to formally leave the labor force. However, physicians typically make this decision differently than the majority of workers. Most physicians plan to retire at age 60, but do not actually retire until age 69 (\cite{collier2017challenges}). The reason being that the type of person who selects into being a physician will, on average, have a high regard for helping people. When it comes time to retire, they hesitate to abandon patients they have seen over the course of their career. This decision to delay retirement is not financial. Thus, retiring may be in a physician's choice set years before the realized decision to leave the labor force. 
+It is not uncommon in developed countries for workers to plan for retirement well in advance. Many workers have a retirement age set and spend their working life saving to get to that point. An exogenous shock to the worker is not expected to change retirement age because of the large sum of money necessary to formally leave the labor force. However, physicians typically make this decision differently than most other workers. Most physicians plan to retire at age 60, but do not actually retire until age 69 (\cite{collier2017challenges}). The reason being that the type of person who selects into being a physician will, on average, have a high regard for helping people. When it comes time to retire, they hesitate to abandon patients they have seen over the course of their career. This decision to delay retirement is not financial. Thus, retiring may be in a physician's choice set years before the realized decision to leave the labor force. 
 
-This implies that an exogenous shock to work setting could, if it outweighs the concern for patients, cause an earlier exit. Medical articles suggest that the implementation of EHRs did lead to retirement in older physicians. \textcolor{red}{cite articles}. 
+An exogenous shock to work setting could, if it outweighs the reasons for staying, cause an earlier exit than would have occured without the shock. Medical articles suggest through interaction with physicians that the implementation of EHRs did lead to retirement in older physicians. \textcolor{red}{cite articles}. The aim of this section is to test that hypothesis and explore its implications. 
 
-\subsection{Event Study and Results}
+\subsection{Event Study Results}
 
-Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects of being exposed to an EHR in a hospital. The left panel of the figure includes all physicians and shows a clear increase in the probability of retiring after exposure to an EHR. On the right panel, only physicians over the age of 45 in 2017 are included. 
+Figure \ref{fig:retirefirst} shows the aggregated group time treatment effects of being exposed to an EHR in any hospital. The left panel of the figure includes all physicians and shows a clear increase in the probability of retiring after exposure to an EHR. On the right panel, only physicians over the age of 45 in 2017 are included. 
 
 \begin{figure}[ht]
 \caption{Event Study Graphs}
@@ -178,35 +184,12 @@ Using NPPES data on all NPIs and their tax information, I analyze the existence 
 The total number of registered data assistants may not equal the true number of people doing a data assistant job in hospitals. However, under the assumption that the number of registered data assistants is proportional to the number of actual data assistants, the claim of no correlation still holds. 
 
 
-\subsection{Event Study and Results}
-
-The analysis in this section focuses on the effects of hospital EHR implementation on physician productivity within hospitals, measured by the total number of Medicaid patients billed in hospitals in a given year. The estimating equation is given as follows: 
-
-\begin{equation*}
-    y_{it}=\alpha_i+\delta_t+q_{it}'\lambda+\sum_{k=-5}^5 \beta_kz_{i,t-k} + \varepsilon_{it},
-\end{equation*}
-
-where $y_{it}$ is the number of patients, $\alpha_i$ and $\delta_i$ are physician and time fixed effects, $q_{it}$ are hospital characteristics such as number of beds and days open during the year, $z_{i,t-k}$ is an indicator for whether the physician was exposed to an EHR in any hospital in time $t-k$, and $\epsilon_{it}$ is a random error term. 
-
-The identifying assumption is that physicians are exposed endogenously to electronic health records. That is, hospital management decides and implements EHRs, and this decision is not correlated with physician productivity or labor market decisions. This is not unreasonable for large hospitals with ample resources and many physicians. However, a small hospital may give experienced physicians some level of voice in the decision to implement new technologies. Results under this assumption are shown below, and  \textcolor{red}{the strength of this assumption is considered in the next section. } 
-
-An event study plot containing estimates and confidence intervals of  $\{\beta_k\}_{k=-5}^5$  is given in in Figure \textcolor{red}{number}. The left hand side is the full sample of physicians at any experience level. As is standard in event studies, the identification of the coefficients depends on the assumption that there are no pre-trends. The p-value of a Wald test for pre-trends in both event studies indicate no observable pre-trends in the data.
-
-For physicians at any experience level, EHR exposure yields no immediate affect on physician productivity, but leads to a clear increase in the number of patients seen beginning 2 years after exposure. After 5 years of exposure, physicians are seeing, on average, 93.67 more Medicaid patients per year. Relative to the mean in the year before exposure, 796.95, this is an 11.75\% increase in the number of patients seen. When the sample of physicians is limited to senior physicians (at least 35 years of experience), this effect disappears. In fact, the results show a slight decrease of \textcolor{red}{put the exact number here} in the number of patients seen in the year after exposure, and no effect following that year. This graph limits event time from -4 to 4 due to restricted sample size in year 2010 and 2014. 
+\subsection{Event Study Results}
 
 
-\begin{figure}[ht]
-\caption{}
-        \begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/prod_eventstudy_fullsample.pdf}
-        \end{minipage}
-        \hspace{0.2cm}
-        \begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/prod_eventstudy_oldsample.pdf}
-        \end{minipage}
-\end{figure}
+
+
+
 
 \subsection{Relaxing Exogeneity of Implementation}
 
