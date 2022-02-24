@@ -62,6 +62,9 @@ Physician_Data <- Physician_Data %>%
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
 
 # RETIREMENT ####
+# Now I have two ways to define retirement. One using all claim counts and the other
+# using unique beneficiaries. Theoretically, they should result in the same retirement variable.
+
 
 # For retirement, I can combine all claim counts into one
 Physician_Data <- Physician_Data %>%
@@ -73,16 +76,12 @@ Physician_Data <- Physician_Data %>%
 # Create a variable that sums up the claim count in all future years
 Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
-  dplyr::mutate(future_claims=ifelse(year==2009,sum(claim_count_total[year>2009],na.rm=T),NA)) %>%
-  dplyr::mutate(future_claims_hosp=ifelse(year==2009,sum(hosp_patient_count[year>2009],na.rm=T),NA))
-
+  dplyr::mutate(future_claims=ifelse(year==2009,sum(claim_count_total[year>2009],na.rm=T),NA))
 
 for (i in 2010:2017){
   Physician_Data <- Physician_Data %>%
     dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(future_claims=ifelse(year==i,sum(claim_count_total[year>i],na.rm=T),future_claims)) %>%
-    dplyr::mutate(future_claims_hosp=ifelse(year==i,sum(hosp_patient_count[year>i],na.rm=T),future_claims_hosp))
-  
+    dplyr::mutate(future_claims=ifelse(year==i,sum(claim_count_total[year>i],na.rm=T),future_claims))
 } 
 
 # Create retirement variable
@@ -93,6 +92,12 @@ minyr_retire <- Physician_Data %>%
   dplyr::distinct(DocNPI, minyr_retire) %>%
   dplyr::ungroup()
 
+
+
+Physician_Data <- Physician_Data %>%
+  dplyr::left_join(minyr_retire, by="DocNPI") %>%
+  dplyr::mutate(minyr_retire=ifelse(!is.na(minyr_retire),minyr_retire+1,minyr_retire)) %>%
+  dplyr::mutate(minyr_retire=ifelse(minyr_retire==2017,NA,minyr_retire))
 
 Physician_Data <- Physician_Data %>%
   dplyr::left_join(minyr_retire, by="DocNPI") %>%
@@ -151,13 +156,6 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(sum=sum(work_in_office)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(ever_work_in_office=ifelse(sum>0,1,0)) 
-
-
-
-# PRODUCTIVITY ####
-
-# For productivity, I will simply use claim count and patient count as the dependent variable.
-# The key for this variable is to limit the sample appropriately. 
 
 
 # ZIP CODES ####
@@ -256,8 +254,13 @@ Physician_Data <- Physician_Data %>%
 observe <- Physician_Data %>%
   filter(is.na(frac_EHR))
 
+# PRODUCTIVITY ####
 
+# For productivity, I will simply use claim count and  patient count as the dependent variable.
+# The key for this variable is to limit the sample appropriately. 
 
+Physician_Data <- Physician_Data %>%
+  mutate(npi_unq_benes=ifelse(is.na(npi_unq_benes),0,npi_unq_benes))
 
 
 # Save the data
