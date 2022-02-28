@@ -1,9 +1,20 @@
 # Meeting Minutes 
 ### This document serves as a log to record what is discussed in meetings with Ian regarding my third year paper.
 
+## 2-25-2021
+Major Points Discussed:
+- Why do I see younger physicians "retiring" in the data? There are just as many younger physicians dropping out of the data as older physicians. The reason for this is that people could be moving into more administrative rolls. I need to be careful to define retirement as no longer seeing patients, not retiring in the literal sense. In the future, it may be an extension to see if these physicians are actually moving into adminstrative roles by scraping LinkedIn profiles. 
+- Institutional Background section of paper should include more discussion of the day-to-day life of physician EHR use
+- The problem with Callaway and Sant'Anna estimator is that it does not allow for the inclusion of physician fixed effects. There are a couple other things I can try: stacked regression or two stage diff in diff may be promising. For a first step I'll try normal event study with and withoutfixed effects and see how much of a difference they make. 
+
+Action Items For Me:
+- update institutional details section
+- work on narrowing down the estimator
+- move on to work setting section of analysis
+
 ## 2-11-2022
 Major Points Discussed:
-- I'm struggling to move past data cleaning into actually settling on some results and what they mean. I need to keep a list of judgemental calls I've made along the way, but otherwise start to dig into a set of results and write the paper. 
+- I'm struggling to move past data cleaning into actually settling on some results and what they mean. I need to keep a list of judgement calls I've made along the way, but otherwise start to dig into a set of results and write the paper. 
 - Some facets I can be thinking about: look into physicians changing locations to capture maybe moving from hospital to hospital (maybe it's not the decision to avoid EHRs that we care about, but actually avoiding using EHRs a certain way and gaining back some autonomy), an interesting point later on might be to try to quantify what we can gain from policies that try to eliminate variation in practice style (if physicians make decisions to try to avoid it then we may not gain much)
 
 Action Items For Me:
