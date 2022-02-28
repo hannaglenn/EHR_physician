@@ -263,6 +263,23 @@ Physician_Data <- Physician_Data %>%
   mutate(npi_unq_benes=ifelse(is.na(npi_unq_benes),0,npi_unq_benes))
 
 
+# Create relative year variables
+Physician_Data <- Physician_Data %>%
+  mutate(rel_expandyear=ifelse(minyr_EHR==0,-1,
+                               ifelse(minyr_EHR>0,year-minyr_EHR,NA)))
+
+Physician_Data <- Physician_Data %>%
+  mutate(rel_m4=1*(rel_expandyear==-4),
+         rel_m3=1*(rel_expandyear==-3),
+         rel_m2=1*(rel_expandyear==-2),
+         rel_m1=1*(rel_expandyear==-1),
+         rel_0=1*(rel_expandyear==0),
+         rel_p1=1*(rel_expandyear==1),
+         rel_p2=1*(rel_expandyear==2),
+         rel_p3=1*(rel_expandyear==3),
+         rel_p4=1*(rel_expandyear==4))
+
+
 # Save the data
 saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
 write.csv(Physician_Data,file=paste0(created_data_path,"Physician_Data.csv"))
