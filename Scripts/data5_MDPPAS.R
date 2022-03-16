@@ -62,8 +62,7 @@ Physician_Data <- Physician_Data %>%
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
 
 # RETIREMENT ####
-# Now I have two ways to define retirement. One using all claim counts and the other
-# using unique beneficiaries. Theoretically, they should result in the same retirement variable.
+
 
 
 # For retirement, I can combine all claim counts into one
@@ -93,17 +92,14 @@ minyr_retire <- Physician_Data %>%
   dplyr::ungroup()
 
 
-
+# This creates minimum year one year too early. Fix this
 Physician_Data <- Physician_Data %>%
   dplyr::left_join(minyr_retire, by="DocNPI") %>%
   dplyr::mutate(minyr_retire=ifelse(!is.na(minyr_retire),minyr_retire+1,minyr_retire)) %>%
   dplyr::mutate(minyr_retire=ifelse(minyr_retire==2017,NA,minyr_retire))
 
-Physician_Data <- Physician_Data %>%
-  dplyr::left_join(minyr_retire, by="DocNPI") %>%
-  dplyr::mutate(minyr_retire=ifelse(!is.na(minyr_retire),minyr_retire+1,minyr_retire)) %>%
-  dplyr::mutate(minyr_retire=ifelse(minyr_retire==2017,NA,minyr_retire))
-
+# Don't count those who retire who are missing in the data beforehand
+# Maybe I shouldn't remove these people?
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(missingbefore=ifelse(!is.na(minyr_retire) & year<minyr_retire & is.na(claim_count_total),1,NA)) %>%
   dplyr::group_by(DocNPI) %>%
@@ -265,7 +261,7 @@ Physician_Data <- Physician_Data %>%
 
 # Create relative year variables
 Physician_Data <- Physician_Data %>%
-  mutate(rel_expandyear=ifelse(minyr_EHR==0,-1,
+  mutate(rel_expandyear=ifelse(minyr_EHR==0,NA,
                                ifelse(minyr_EHR>0,year-minyr_EHR,NA)))
 
 Physician_Data <- Physician_Data %>%

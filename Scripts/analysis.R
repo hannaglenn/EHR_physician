@@ -3,6 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(fixest)
+library(did2s)
 
 # ------------------------------------- ANALYSIS  ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -14,19 +15,38 @@ library(fixest)
 
 Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
+observe <- Physician_Data %>%
+  dplyr::filter(ever_retire==1) %>%
+  select(DocNPI, year,minyr_retire,age, npi_unq_benes,claim_count_total)
 
 # Retirement ---------------------------------------------------------------------------
 
+# TWO STAGE DID (Retire) -------------------------------------------------------------------------------
+es <- did2s(filter(Physician_Data,minyr_EHR>0 & max_age<59),
+            yname = "retire", first_stage = ~ max_age | year, 
+            second_stage = ~rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
+              rel_p2+ rel_p3 + rel_p4, treatment = "anyEHR_exposed",
+            cluster_var="DocNPI")
+coefplot(es, keep=c("-4","-3","-2","-1","0",
+                                                     "1", "2","3","4"),
+         ref=reference, dict=c("rel_m4"="-4", "rel_m3"="-3", "rel_m2"="-2", "rel_0"="0",
+                               "rel_p1"="1","rel_p2"="2","rel_p3"="3","rel_p4"="4"),
+         main="",
+         zero=TRUE,
+         col=1:2)
+
+
+
 # Try event study with and without fixed effects to see how much results differ
 retire_es_all <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-                         rel_p2+ rel_p3 + rel_p4 + max_age| year, 
-                       data=filter(Physician_Data,minyr_EHR>0 & minyr_retire!=2016))
+                         rel_p2+ rel_p3 + rel_p4 + max_age| DocNPI + year, 
+                       data=filter(Physician_Data,minyr_EHR>0))
 retire_es_young <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-                           rel_p2+ rel_p3 + rel_p4 + max_age| year,
-                         data=filter(Physician_Data,age<50 & minyr_EHR>0 & minyr_retire!=2016))
+                           rel_p2+ rel_p3 + rel_p4 + max_age| DocNPI + year,
+                         data=filter(Physician_Data,age<60 & minyr_EHR>0))
 retire_es_old <- feols(retire~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-                         rel_p2+ rel_p3 + rel_p4 + max_age| year,
-                       data=filter(Physician_Data,age>=50 & minyr_EHR>0 & minyr_retire!=2016))
+                         rel_p2+ rel_p3 + rel_p4 + max_age| DocNPI + year,
+                       data=filter(Physician_Data,age>=60 & minyr_EHR>0))
 reference=4
 names(reference)<-"-1"
 
@@ -53,27 +73,27 @@ mtext(text=paste0("p-value for pre-trends (old): ",round(p_old,3)),side=1,line =
 
 # CALLAWAY AND SANTANNA ESTIMATES (Retire) ------------------------------------------
 # Full sample 
-young_retire_es <- att_gt(yname = "retire",
+retire_es <- att_gt(yname = "retire",
               gname = "minyr_EHR",
               idname = "DocNPI",
               tname = "year",
               xformla = ~grad_year,
-              data = dplyr::filter(Physician_Data,max_age<51 & minyr_EHR>0 & minyr_retire!=2016),
+              data = dplyr::filter(Physician_Data,minyr_EHR>0),
               est_method = "dr",
               control_group = "notyettreated",
               anticipation=0
 )
 # Save p-value to put in footnote
-p<-young_retire_es$Wpval
+p<-retire_es$Wpval
 
 # Aggregate the effects
-retire_es_young_dyn <- aggte(young_retire_es, type = "dynamic", na.rm=T)
+retire_es_dyn <- aggte(retire_es, type = "dynamic", na.rm=T)
 
 # Create a plot
-ggdid(retire_es_young_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure") + 
+ggdid(retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure") + 
   labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
   theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00")) + ylim(-1,1)
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00")) + ylim(-.01,.01)
 
 # Save the plot
 ggsave(file="ggdid_retire_allEHR.pdf",path="Objects")
@@ -86,7 +106,7 @@ old_retire_es <- att_gt(yname = "retire",
                     idname = "DocNPI",
                     tname = "year",
                     xformla = ~grad_year,
-                    data = dplyr::filter(Physician_Data,max_age>50 & minyr_EHR>0 & minyr_retire!=2016),
+                    data = dplyr::filter(Physician_Data,max_age>59 & minyr_EHR>0),
                     est_method = "dr",
                     control_group = "notyettreated",
                     anticipation=0
@@ -100,10 +120,10 @@ ggdid(old_retire_es)
 old_retire_es_dyn <- aggte(old_retire_es, type = "dynamic")
 
 # Create a plot
-ggdid(old_retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure \n In Physicians >= 60") + 
+ggdid(old_retire_es_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of EHR Exposure on Retirement by Length of Exposure \n In Physicians >= 50") + 
   labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
   theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00")) + ylim(-1,1)
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00")) + ylim(-.01,.01)
 
 # Save the plot
 ggsave(file="ggdid_retire_allEHR_old.pdf",path="Objects")
