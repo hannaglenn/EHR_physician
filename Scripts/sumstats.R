@@ -60,7 +60,7 @@ knitr::kable(sum_stats_fullsample[c(3,8,12,2,10,4,5,7,1,6,9,11),],
   pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
 
 
-# Summary Stats of all variables by old vs. young ---------------------------------------------------------
+# Summary Stats of all variables by old vs. young vs. those who retire ---------------------------------------------------------
 means_old <- Physician_Data %>% ungroup() %>%
   filter(minyr_EHR>0 & (minyr_retire<2015 | is.na(minyr_retire))) %>%
   filter(max_age>59) %>%
@@ -95,16 +95,34 @@ means_young <- Physician_Data %>% ungroup() %>%
   gather(key=var,value=value) %>%
   dplyr::rename(value_young=value)
 
+means_retire <- Physician_Data %>% ungroup() %>%
+  filter(minyr_EHR>0) %>%
+  filter(ever_retire==1) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Number of Patients"="claim_count_total","Fraction of Hospitals with EHR"="frac_EHR",
+                 "Exposure to an EHR"="anyEHR_exposed",
+                 "Exposure to an EHR (Low Integration)"="anyEHR_LI_exposed",
+                 "Fraction Patients in Office"="pos_office",
+                 "Ever Retire"="ever_retire",
+                 "Work in an Office"="work_in_office",
+                 "Change Zip Codes"="change_zip"), list(mean), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
+  gather(key=var,value=value) %>%
+  dplyr::rename(value_retire=value)
+
 means_bind <- means_old %>%
-  left_join(means_young,by="var")
+  left_join(means_young,by="var") %>%
+  left_join(means_retire,by="var")
 
 knitr::kable(means_bind[c(10,9,11,12,5,7,8,6,4,2,1,3),], "latex",
-             col.names=c("Variable","Age > 45", "Age <= 45"),
+             col.names=c("Variable","Age > 60", "Age <= 60", "Any Who Retire"),
              digits=2,
              caption="Means by Age Sample",
              booktabs=TRUE,
              escape=F,
-             align=c("l","c","c"),
+             align=c("l","c","c","c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
   pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))

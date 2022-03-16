@@ -15,9 +15,31 @@ library(did2s)
 
 Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
-observe <- Physician_Data %>%
-  dplyr::filter(ever_retire==1) %>%
-  select(DocNPI, year,minyr_retire,age, npi_unq_benes,claim_count_total)
+# Create stacked regression data ------------------------------------------------------
+for (d in 2011:2014){
+  subgroup <- Physician_Data %>%
+    mutate(treated_unit=ifelse(minyr_EHR==d,1,0),
+           clean_control=ifelse(minyr_EHR>d,1,0),
+           years_included=ifelse(year>=d-2 & year<=d+3,1,0)) %>%
+    mutate(inclusion=years_included*(treated_unit+clean_control)) %>%
+    filter(inclusion==1)
+  
+  assign(paste0("subgroup_",d),subgroup)
+}
+
+stacked_data <- rbind(subgroup_2011,subgroup_2012,subgroup_2013,subgroup_2014,subgroup_2015)
+
+stacked_reg <- feols(retire ~ rel_m2 + rel_m1 + rel_0 + rel_p1 + rel_p2 + rel_p3 +
+                       treated_unit:rel_m2 + treated_unit:rel_m1 + 
+                       treated_unit:rel_p1 + treated_unit:rel_p2 +
+                       treated_unit:rel_p3 |
+                       DocNPI:minyr_EHR,
+                     cluster="DocNPI",
+                     data=stacked_data)
+
+coefplot(stacked_reg, keep="treated_unit")
+
+>>>>>>> 293384dc4cb083edf62bdb67b6fb24622e2c3f44
 
 # Retirement ---------------------------------------------------------------------------
 
