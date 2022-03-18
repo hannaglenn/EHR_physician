@@ -217,7 +217,7 @@ retireold_cs <- att_gt(
   # xformla = NULL                 # No covariates
   xformla = ~grad_year,            # Time-invariant controls
   data = dplyr::filter(
-    Physician_Data,minyr_EHR>0 & max_age>=55),   # Remove never-treated units and young physicians
+    Physician_Data,minyr_EHR>0 & max_age>=60),   # Remove never-treated units and young physicians
   # data = Physician_Data
   est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
   control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
@@ -248,7 +248,7 @@ retireyoung_cs <- att_gt(
   # xformla = NULL                 # No covariates
   xformla = ~grad_year,            # Time-invariant controls
   data = dplyr::filter(
-  Physician_Data,minyr_EHR>0 & max_age<55),   # Remove never-treated units and young physicians
+  Physician_Data,minyr_EHR>0 & max_age<60),   # Remove never-treated units and young physicians
   # data = Physician_Data
   est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
   control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
@@ -310,7 +310,7 @@ office_fracold_cs <- att_gt(yname = "pos_office",
                          idname = "DocNPI",
                          tname = "year",
                          xformla = ~grad_year,
-                         data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=55),
+                         data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60),
                          est_method = "dr",
                          control_group = "notyettreated"
 )
@@ -336,7 +336,7 @@ office_fracyoung_cs <- att_gt(yname = "pos_office",
                             idname = "DocNPI",
                             tname = "year",
                             xformla = ~grad_year,
-                            data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<55),
+                            data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60),
                             est_method = "dr",
                             control_group = "notyettreated"
 )
@@ -386,7 +386,7 @@ office_indold_cs <- att_gt(yname = "work_in_office",
                         idname = "DocNPI",
                         tname = "year",
                         xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=55),
+                        data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60),
                         est_method = "dr",
                         control_group = "notyettreated"
 )
@@ -411,7 +411,7 @@ office_indyoung_cs <- att_gt(yname = "work_in_office",
                         idname = "DocNPI",
                         tname = "year",
                         xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<55),
+                        data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60),
                         est_method = "dr",
                         control_group = "notyettreated"
 )
