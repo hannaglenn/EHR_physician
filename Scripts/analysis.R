@@ -204,8 +204,6 @@ ggdid(retire_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title
 ggsave(file="CS_retire_allEHR.pdf",path="Objects")
 
 
-
-
 # OTHER RETIREMENT OUTCOMES --------------------------------------------------------------------------------
 
 # Senior Physicians
@@ -269,6 +267,38 @@ ggdid(retireyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, 
 
 # Save the plot
 ggsave(file="CS_retireyoung_allEHR.pdf",path="Objects")
+
+
+# DO PHYSICIANS WHO RETIRE REUCE PATIENT COUNT FIRST?
+retirepatientcount_cs <- att_gt(
+  yname = "npi_unq_benes",                # LHS Variable
+  gname = "minyr_retire",             # First year a unit is treated. (set to 0 if never treated)
+  idname = "DocNPI",               # ID
+  tname = "year",                  # Time Variable
+  # xformla = NULL                 # No covariates
+  xformla = ~grad_year,            # Time-invariant controls
+  data = dplyr::filter(
+    Physician_Data,minyr_EHR>0 & ever_retire==1 & minyr_retire<2016 & minyr_retire>2010),   # Remove never-treated units and young physicians
+  # data = Physician_Data
+  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
+  clustervars = "DocNPI",          # Cluster Variables          
+  anticipation=0                   # can set a number of years to account for anticipation effects
+)
+# Save p-value for pre-trends to put in footnote of table
+p<-retirepatientcount_cs$Wpval
+
+# Aggregate the effects
+retirepatientcount_cs_dyn <- aggte(retirepatientcount_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+ggdid(retirepatientcount_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Average Effect of Retirement on Patient Count by Length of Exposure \nSenior Physicians") + 
+  labs(caption=paste0("\n Note: p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"))
+
+# Save the plot
+ggsave(file="CS_retirepatientcount_allEHR.pdf",path="Objects")
 
 
 

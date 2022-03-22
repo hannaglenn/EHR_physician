@@ -25,7 +25,7 @@ Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 # General Summary Stats Tables:  ----------------------------------------------------------------
 
 # Physician Level
-sum_stats_fullsample <- Physician_Data %>% ungroup() %>%
+sum_stats_fullsample <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
@@ -54,7 +54,7 @@ knitr::kable(sum_stats_fullsample[c(3,8,12,2,10,4,5,7,1,6,9,11),],
              caption="Summary Statistics",
              booktabs=TRUE,
              escape=F,
-             align=c("l","r","r","r","r","r"),
+             align=c("l","c","c","c","c","c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
   pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
@@ -62,7 +62,7 @@ knitr::kable(sum_stats_fullsample[c(3,8,12,2,10,4,5,7,1,6,9,11),],
 
 # Summary Stats of all variables by old vs. young vs. those who retire ---------------------------------------------------------
 means_old <- Physician_Data %>% ungroup() %>%
-  filter(minyr_EHR>0 & (minyr_retire<2015 | is.na(minyr_retire))) %>%
+  filter(minyr_EHR>0) %>%
   filter(max_age>59) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
@@ -79,7 +79,7 @@ means_old <- Physician_Data %>% ungroup() %>%
   dplyr::rename(value_old=value)
 
 means_young <- Physician_Data %>% ungroup() %>%
-  filter(minyr_EHR>0 & (minyr_retire<2015 | is.na(minyr_retire))) %>%
+  filter(minyr_EHR>0) %>%
   filter(max_age<=59) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
@@ -117,7 +117,7 @@ means_bind <- means_old %>%
   left_join(means_retire,by="var")
 
 knitr::kable(means_bind[c(10,9,11,12,5,7,8,6,4,2,1,3),], "latex",
-             col.names=c("Variable","Age > 60", "Age <= 60", "Any Who Retire"),
+             col.names=c("Variable","Age $>$ 60", "Age $<=$ 60", "Any Who Retire"),
              digits=2,
              caption="Means by Age Sample",
              booktabs=TRUE,
@@ -128,8 +128,8 @@ knitr::kable(means_bind[c(10,9,11,12,5,7,8,6,4,2,1,3),], "latex",
   pack_rows(index = c("Outcomes" = 5, "Treatment" = 3, "Characteristics" = 4))
 
 
-# AHA EHR Info at the Physician Level (by year) -----------------------------------------------------------------
-sum_stats_year <- Physician_Data %>% group_by(year) %>%
+# EHR Info at the Physician Level (by year) -----------------------------------------------------------------
+sum_stats_year <- Physician_Data %>% filter(minyr_EHR>0) %>% group_by(year) %>%
   summarise_at(c("Frac. Hospitals using EHR"="frac_EHR", 
                  "Perc. Physicians Exposed to EHR"="anyEHR_exposed",
                  "Perc. Physicians Exposed to EHR (Low Integration)"="anyEHR_LI_exposed"), list(mean), na.rm=T) 
