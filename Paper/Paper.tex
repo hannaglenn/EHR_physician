@@ -165,32 +165,13 @@ An exogenous shock such as EHR implementation in place of work may cause an earl
 
 In Figure \ref{fig:retirefirst}, I present the aggregated group time treatment effects of being exposed to an EHR in any hospital for the full sample of physicians, as well as split samples for those at least 60 and less than 60 years of age. The top graph suggests that for any age physician, being exposed to an EHR leads to an almost .002 ppt increase in the likelihood of retiring in both the first and second year after after implementation. While this result is numerically small, it is statistically and economically meaningful relative to the proportion of physicians who actually retire in the sample, which is only 2 out of every hundred. Thus, relative to the mean, this effect represents a 10\% increase in the likelihood of retirement due to EHR exposure. It would be alarming to see any huge effects on this outcome since retirement is a massive and one-time decision that is affected by many exogenous factors. These estimates are noisy, however, given the rarity of retirement in the sample the precision does indicate a positive effect occurring.
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
-    \includegraphics[scale=.8]{Objects/retire_plot.pdf}
-    \caption{Caption}
-    \label{fig:my_label}
+    \caption{Effect of EHR Exposure on Retirement}
+    \includegraphics[scale=.57]{Objects/retire_plot.pdf}
+    \label{fig:retirefirst}
 \end{figure}
 
-\begin{figure}[ht]
-\caption{Effect of any EHR Exposure on Retirement}
-\vspace{2mm}
-\centering
-\hspace{20mm}
-\includegraphics[scale=.45]{Objects/CS_retire_allEHR.pdf}
-\vspace{3mm}
-\newline
-        \fbox{\begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/CS_retireold_allEHR.pdf}
-        \end{minipage}}
-        \hspace{0.1cm}
-        \fbox{\begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/CS_retireyoung_allEHR.pdf}
-        \end{minipage}}
-        \label{fig:retirefirst}
-\end{figure}
 
 Now, I examine how these result differ when considering different age groups of physician. These results are shown in the bottom panels of Figure \ref{fig:retirefirst}, and suggest that senior physicians are driving the result in the first year after EHR exposure. That is, a physician who is at least 60 years old is .005 ppts more likely to retire after being exposed to an EHR, a 25\% increase relative to the mean, whereas younger physicians are far less likely, if at all, to retire due to EHR exposure. Physicians in the young category have a slightly increased likelihood of retiring in the second year after exposure relative to the first year. While I do not have data to test this, if young physicians are career switching then it may take an additional year to prepare for that decision relative to retirement.   
 
@@ -207,46 +188,12 @@ I first discuss the effect of EHR exposure on the probability of working in an o
 
 Then senior physicians may be more affected on an internal margin, the fraction of patients seen in an office relative to hospital or other settings. The estimates for this outcome are shown in Figure \ref{fig:officesecond}. There is no evidence of an effect on the fraction of patients seen in an office, neither positive nor negative. There only seems to be a downward trend in fraction of patients seen in an office over time. \textcolor{red}{make sure to try this without defining fraction of patients as 0}
 
-\begin{figure}[ht]
-\caption{Effect of any EHR Exposure on Likelihood of Working in Office}
-\vspace{2mm}
-\centering
-\hspace{20mm}
-\includegraphics[scale=.45]{Objects/CS_office_ind_allEHR.pdf}
-\vspace{3mm}
-\newline
-        \fbox{\begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/CS_office_indold_allEHR.pdf}
-        \end{minipage}}
-        \hspace{0.1cm}
-        \fbox{\begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/CS_office_indyoung_allEHR.pdf}
-        \end{minipage}}
-        \label{fig:officefirst}
+\begin{figure}
+    \centering
+    \includegraphics{obj}
+    \caption{Caption}
+    \label{fig:my_label}
 \end{figure}
-
-\begin{figure}[ht]
-\caption{Effect of any EHR Exposure on Fraction of Patients in Office}
-\vspace{2mm}
-\centering
-\hspace{20mm}
-\includegraphics[scale=.45]{Objects/CS_office_frac_allEHR.pdf}
-\vspace{3mm}
-\newline
-        \fbox{\begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/CS_office_fracold_allEHR.pdf}
-        \end{minipage}}
-        \hspace{0.1cm}
-        \fbox{\begin{minipage}[b]{0.47\linewidth}
-            \centering
-            \includegraphics[width=\textwidth]{Objects/CS_office_fracyoung_allEHR.pdf}
-        \end{minipage}}
-        \label{fig:officesecond}
-\end{figure}
-
 Another way to examine whether physicians are switching settings in a vague sense is to see whether the zip codes in which the physicians work is changing. Estimates for this outcome variable are shown in
 
 
