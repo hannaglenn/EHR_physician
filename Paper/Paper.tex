@@ -188,13 +188,28 @@ I first discuss the effect of EHR exposure on the probability of working in an o
 
 Then senior physicians may be more affected on an internal margin, the fraction of patients seen in an office relative to hospital or other settings. The estimates for this outcome are shown in Figure \ref{fig:officesecond}. There is no evidence of an effect on the fraction of patients seen in an office, neither positive nor negative. There only seems to be a downward trend in fraction of patients seen in an office over time. \textcolor{red}{make sure to try this without defining fraction of patients as 0}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
-    \includegraphics{obj}
-    \caption{Caption}
-    \label{fig:my_label}
+    \caption{Effect of EHR Exposure on Fraction of Patients Seen in Office}
+    \includegraphics[scale=.57]{Objects/officefrac_plot.pdf}
+    \label{fig:officefirst}
 \end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \caption{Effect of EHR Exposure on Likelihood of Working in Office}
+    \includegraphics[scale=.57]{Objects/officeind_plot.pdf}
+    \label{fig:officesecond}
+\end{figure}
+
 Another way to examine whether physicians are switching settings in a vague sense is to see whether the zip codes in which the physicians work is changing. Estimates for this outcome variable are shown in
+
+\begin{figure}[ht]
+    \centering
+    \caption{Effect of EHR Exposure on Likelihood of Changing Zip Codes}
+    \includegraphics[scale=.57]{Objects/zip_plot.pdf}
+    \label{fig:zip}
+\end{figure}
 
 
 
@@ -205,7 +220,21 @@ An important, and heavily debated, aspect of the implementation of EHRs is wheth
 
 It is reasonable to believe that physicians are fully utilizing the EHRs in the hospital they work in, since by 2015 electronic health records were widely implemented and considered unavoidable. An objection to this assumption may be that older physicians stay in a hospital, but the hospital hires a data assistant to do technology work for the physician. In this case, the productivity gain could be from having the data assistant instead of EHR use. I investigate this in the Sensitivity Analyses below.
 
+\begin{figure}[ht]
+    \centering
+    \caption{Effect of EHR Exposure on Patient Count}
+    \includegraphics{Objects/patient_plot.pdf}
+    \label{fig:patient}
+\end{figure}
+
 \subsection{Billing Activity}
+
+\begin{figure}[ht]
+    \centering
+    \caption{Effect of EHR Exposure on Claim Count}
+    \includegraphics{Objects/claim_plot.pdf}
+    \label{fig:claim}
+\end{figure}
 
 \section{Sensitivity Analyses}
 
