@@ -23,6 +23,8 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 # Read in Final_Pairs_Variables.rds
 Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
 
+
+
 # General Summary Stats Tables:  ----------------------------------------------------------------
 
 # Physician Level
@@ -267,3 +269,123 @@ ggplot(filter(Physician_Data, num_hospitals>1), aes(x=minyr_EHR)) + geom_histogr
 
 
 
+
+
+## Create hospital level implementation graph ---------------------------------------------------
+
+AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
+phys_hosp_pairs <- readRDS(paste0(created_data_path,"phys_hosp_pairs.rds"))
+AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
+
+AHAmainsurvey <- AHAmainsurvey %>%
+  mutate(ID=as.character(ID)) %>%
+  mutate(low_integration=ifelse(IPAHOS==1 | OPHOHOS==1 | CPHOHOS==1,1,0),
+         high_integration=ifelse(GPWWHOS==1 | MSOHOS==1 | ISMHOS==1 | EQMODHOS==1,1,0)) %>%
+  dplyr::rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
+         joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
+  select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
+  select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS,
+         -total_physicians, -joint_phys, -phys_owned)
+
+
+hosp_keep <- phys_hosp_pairs %>% ungroup() %>%
+  distinct(HospNPI) %>%
+  mutate(keep=1) 
+
+AHANPI_cw <- AHANPI_cw %>%
+  mutate(NPI=as.character(NPI))
+
+hosp_keep <- hosp_keep %>%
+  left_join(AHANPI_cw,by=c("HospNPI"="NPI")) %>%
+  mutate(AHAID=as.character(AHAID))
+
+AHAmainsurvey <- AHAmainsurvey %>%
+  left_join(hosp_keep,by=c("ID"="AHAID")) %>%
+  filter(keep==1) %>%
+  select(-keep)
+
+
+
+# Find out how many hospitals are missing an answer in every year
+num_always_missing_EHR <- AHAmainsurvey %>% ungroup() %>%
+  filter(is.na(EHLTH)) %>%
+  mutate(EHLTH=ifelse(is.na(EHLTH),10,EHLTH)) %>%
+  group_by(ID) %>%
+  mutate(always_missing=ifelse(sum(EHLTH)==60,1,0)) %>%
+  filter(always_missing==1) %>%
+  ungroup() %>%
+  distinct(ID,always_missing)
+
+# Fill in missing year for EHR if it's between two years that have the same answer for EHR question
+AHAmainsurvey <-AHAmainsurvey %>% group_by(ID) %>%
+  dplyr::mutate(firstyear_0=min(year[EHLTH==0],na.rm=T),lastyear_0=max(year[EHLTH==0],na.rm=T)) %>%
+  mutate(firstyear_0=ifelse(is.infinite(firstyear_0),NA,firstyear_0),lastyear_0=ifelse(is.infinite(lastyear_0),NA,lastyear_0)) %>%
+  mutate(EHLTH=ifelse(firstyear_0<year & year<lastyear_0 & is.na(EHLTH),0,EHLTH))
+
+
+AHAmainsurvey <- AHAmainsurvey %>% group_by(ID) %>%
+  mutate(firstyear_1=min(year[EHLTH==1],na.rm=T),lastyear_1=max(year[EHLTH==1],na.rm=T)) %>%
+  mutate(firstyear_1=ifelse(is.infinite(firstyear_1),NA,firstyear_1),lastyear_1=ifelse(is.infinite(lastyear_1),NA,lastyear_1)) %>%
+  mutate(EHLTH=ifelse(firstyear_1<year & year<lastyear_1 & is.na(EHLTH),1,EHLTH))
+
+
+AHAmainsurvey <- AHAmainsurvey %>% group_by(ID) %>%
+  mutate(firstyear_2=min(year[EHLTH==2],na.rm=T),lastyear_2=max(year[EHLTH==2],na.rm=T)) %>%
+  mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
+  mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
+  ungroup()
+
+# Get rid of unneeded variables 
+AHAmainsurvey <- AHAmainsurvey %>% ungroup() %>%
+  select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
+
+AHAmainsurvey <- AHAmainsurvey %>%
+  mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) %>%
+  select(-EHLTH)
+
+# In some cases, 2009 or 2015 can be filled in to not have a missing value. 
+# Create dataset to fill in 2009 or 2015 conditionally
+fill_in <- AHAmainsurvey %>%
+  filter((year==2010 & EHR==0) | (year==2014 & EHR==1)) %>%
+  mutate(change2009=ifelse(year==2010,1,0),
+         change2015=ifelse(year==2014,1,0)) %>%
+  select(ID,year,EHR,change2009,change2015) %>%
+  distinct(ID,year,EHR,change2009,change2015)
+
+fill_in <- fill_in %>%
+  group_by(ID) %>%
+  mutate(change2009=ifelse(sum(change2009)>0,1,0),
+         change2015=ifelse(sum(change2015)>0,1,0)) %>%
+  ungroup() %>%
+  distinct(ID,change2009,change2015)
+
+# Merge it back to original
+AHAmainsurvey <- AHAmainsurvey %>%
+  left_join(fill_in,by="ID")
+
+# Fill in the qualifying missing values
+AHAmainsurvey <- AHAmainsurvey %>%
+  mutate(EHR=ifelse(year==2009 & change2009==1 & is.na(EHR),0,EHR)) %>%
+  mutate(EHR=ifelse(year==2015 & change2015==1 & is.na(EHR),1,EHR)) %>%
+  select(-change2009, -change2015) %>%
+  ungroup()
+
+AHAmainsurvey <- AHAmainsurvey %>%
+  left_join(num_always_missing_EHR,by="ID") %>%
+  filter(is.na(always_missing)) %>%
+  select(-always_missing)
+
+sample <- AHAmainsurvey %>%
+  distinct(ID) %>%
+  sample_frac(.02) %>%
+  mutate(sample=1)
+
+AHA_sample <- AHAmainsurvey %>%
+  left_join(sample,by="ID") %>%
+  filter(sample==1) %>%
+  select(-sample)
+
+
+
+panel <- panelview(AHA_sample, Y=NULL, D="EHR", index=c("ID","year"), axis.lab = "time")
+ggsave("Objects/hosp_treat.png")

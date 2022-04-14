@@ -739,6 +739,586 @@ ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=9.08, height = 11.4, 
 
 
 
+##### APPENDIX: SECONDARY TREATMENT VARIABLE #####################################################################
+##################################################################################################################
+#################################################################################################################
+##################################################################################################################
+
+
+retire_cs <- att_gt(
+  yname = "retire",                # LHS Variable
+  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
+  idname = "DocNPI",               # ID
+  tname = "year",                  # Time Variable
+  # xformla = NULL                 # No covariates
+  xformla = ~grad_year,            # Time-invariant controls
+  data = dplyr::filter(
+    Physician_Data,minyr_EHR_int>0),   # Remove never-treated units
+  # data = Physician_Data
+  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
+  clustervars = "DocNPI",          # Cluster Variables          
+  anticipation=0                   # can set a number of years to account for anticipation effects
+)
+# Save p-value for pre-trends to put in footnote of table
+p<-retire_cs$Wpval
+
+# Aggregate the effects
+retire_cs_dyn <- aggte(retire_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_retire_allEHR <- ggdid(retire_cs_dyn, ylab = "Estimate and 95% CI", xlab="Relative Year", title="All Physicians") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + ylim(-.01,.01)
+
+
+
+# OTHER RETIREMENT OUTCOMES --------------------------------------------------------------------------------
+
+# Senior Physicians
+retireold_cs <- att_gt(
+  yname = "retire",                # LHS Variable
+  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
+  idname = "DocNPI",               # ID
+  tname = "year",                  # Time Variable
+  # xformla = NULL                 # No covariates
+  xformla = ~grad_year,            # Time-invariant controls
+  data = dplyr::filter(
+    Physician_Data,minyr_EHR_int>0 & max_age>=60),   # Remove never-treated units and young physicians
+  # data = Physician_Data
+  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
+  clustervars = "DocNPI",          # Cluster Variables          
+  anticipation=0                   # can set a number of years to account for anticipation effects
+)
+# Save p-value for pre-trends to put in footnote of table
+p<-retireold_cs$Wpval
+
+# Aggregate the effects
+retireold_cs_dyn <- aggte(retireold_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_retireold_allEHR <- ggdid(retireold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +ylim(-.015,.015) +
+  theme(legend.position = "none")
+
+
+# Young Physicians
+retireyoung_cs <- att_gt(
+  yname = "retire",                # LHS Variable
+  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
+  idname = "DocNPI",               # ID
+  tname = "year",                  # Time Variable
+  # xformla = NULL                 # No covariates
+  xformla = ~grad_year,            # Time-invariant controls
+  data = dplyr::filter(
+    Physician_Data,minyr_EHR_int>0 & max_age<60),   # Remove never-treated units and young physicians
+  # data = Physician_Data
+  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
+  clustervars = "DocNPI",          # Cluster Variables          
+  anticipation=0                   # can set a number of years to account for anticipation effects
+)
+# Save p-value for pre-trends to put in footnote of table
+p<-retireyoung_cs$Wpval
+
+# Aggregate the effects
+retireyoung_cs_dyn <- aggte(retireyoung_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_retireyoung_allEHR <- ggdid(retireyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, ref_line=0, 
+                               title="Physicians < 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"), name="") + ylim(-.015,.015) +
+  theme(legend.position = "none")
+
+
+
+# Combine all retire graphs
+retire_plot <- ggarrange(
+  cs_retire_allEHR,
+  ggarrange(cs_retireyoung_allEHR, cs_retireold_allEHR,
+            ncol=2),
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1.25,1)
+)
+
+retire_plot
+
+ggsave(retire_plot,filename="Objects/retire_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+
+
+
+
+
+# OFFICE BASED OUTCOMES -------------------------------------------------------------
+
+# Full Sample using fraction of patients in office
+office_frac_cs <- att_gt(yname = "pos_office",
+                         gname = "minyr_EHR_int",
+                         idname = "DocNPI",
+                         tname = "year",
+                         xformla = ~grad_year,
+                         data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
+                         est_method = "dr",
+                         control_group = "notyettreated"
+)
+
+p<-office_frac_cs$Wpval
+
+# Aggregate the effects
+office_frac_cs_dyn <- aggte(office_frac_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_officefrac_allEHR <- ggdid(office_frac_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept=0, size=.2, linetype="dashed") + ylim(-.075,.075)
+
+
+
+
+# Old Sample using fraction of patients in office
+office_fracold_cs <- att_gt(yname = "pos_office",
+                            gname = "minyr_EHR_int",
+                            idname = "DocNPI",
+                            tname = "year",
+                            xformla = ~grad_year,
+                            data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
+                            est_method = "dr",
+                            control_group = "notyettreated"
+)
+
+p<-office_fracold_cs$Wpval
+
+# Aggregate the effects
+office_fracold_cs_dyn <- aggte(office_fracold_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_officefracold_allEHR <- ggdid(office_fracold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0, size=.2, linetype="dashed") +ylim(-.075,.075) + theme(legend.position = "none")
+
+
+# Young Sample using fraction of patients in office
+office_fracyoung_cs <- att_gt(yname = "pos_office",
+                              gname = "minyr_EHR_int",
+                              idname = "DocNPI",
+                              tname = "year",
+                              xformla = ~grad_year,
+                              data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
+                              est_method = "dr",
+                              control_group = "notyettreated"
+)
+
+p<-office_fracyoung_cs$Wpval
+
+# Aggregate the effects
+office_fracyoung_cs_dyn <- aggte(office_fracyoung_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_officefracyoung_allEHR <- ggdid(office_fracyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="none") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed")+ylim(-.075,.075) + theme(legend.position ="none")
+
+# Plot office frac graphs
+officefrac_plot <- ggarrange(
+  cs_officefrac_allEHR,
+  ggarrange(cs_officefracyoung_allEHR, cs_officefracold_allEHR,
+            ncol=2),
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1.25,1)
+)
+
+officefrac_plot
+
+ggsave(officefrac_plot,filename="Objects/officefrac_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+
+
+
+# Full Sample using indicator for working in office
+office_ind_cs <- att_gt(yname = "work_in_office",
+                        gname = "minyr_EHR_int",
+                        idname = "DocNPI",
+                        tname = "year",
+                        xformla = ~grad_year,
+                        data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
+                        est_method = "dr",
+                        control_group = "notyettreated"
+)
+
+p<-office_ind_cs$Wpval
+
+# Aggregate the effects
+office_ind_cs_dyn <- aggte(office_ind_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_officeind_allEHR <- ggdid(office_ind_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-.08,.08)
+
+
+
+# Old Sample using indicator for working in office
+office_indold_cs <- att_gt(yname = "work_in_office",
+                           gname = "minyr_EHR_int",
+                           idname = "DocNPI",
+                           tname = "year",
+                           xformla = ~grad_year,
+                           data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
+                           est_method = "dr",
+                           control_group = "notyettreated"
+)
+
+p<-office_indold_cs$Wpval
+
+# Aggregate the effects
+office_indold_cs_dyn <- aggte(office_indold_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_officeindold_allEHR <- ggdid(office_indold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.08,.08)
+
+
+
+# Young Sample using indicator for working in office
+office_indyoung_cs <- att_gt(yname = "work_in_office",
+                             gname = "minyr_EHR_int",
+                             idname = "DocNPI",
+                             tname = "year",
+                             xformla = ~grad_year,
+                             data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
+                             est_method = "dr",
+                             control_group = "notyettreated"
+)
+
+p<-office_indyoung_cs$Wpval
+
+# Aggregate the effects
+office_indyoung_cs_dyn <- aggte(office_indyoung_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_officeindyoung_allEHR <- ggdid(office_indyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.08,.08)
+
+
+# Create office ind plot 
+officeind_plot <- ggarrange(
+  cs_officeind_allEHR,
+  ggarrange(cs_officeindyoung_allEHR, cs_officeindold_allEHR,
+            ncol=2),
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1.25,1)
+)
+
+officeind_plot
+
+ggsave(officeind_plot,filename="Objects/officeind_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+
+
+
+
+## CHANGE ZIP CODE ###
+# Full Sample using indicator for working in office
+zip_cs <- att_gt(yname = "change_zip",
+                 gname = "minyr_EHR_int",
+                 idname = "DocNPI",
+                 tname = "year",
+                 xformla = ~grad_year,
+                 data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
+                 est_method = "dr",
+                 control_group = "notyettreated"
+)
+
+p<-zip_cs$Wpval
+
+# Aggregate the effects
+zip_cs_dyn <- aggte(zip_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_zip_allEHR <- ggdid(zip_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-.08,.08)
+
+
+
+# Old Sample using indicator for working in office
+zipold_cs <- att_gt(yname = "change_zip",
+                    gname = "minyr_EHR_int",
+                    idname = "DocNPI",
+                    tname = "year",
+                    xformla = ~grad_year,
+                    data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
+                    est_method = "dr",
+                    control_group = "notyettreated"
+)
+
+p<-zipold_cs$Wpval
+
+# Aggregate the effects
+zipold_cs_dyn <- aggte(zipold_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_zipold_allEHR <- ggdid(zipold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.1,.1)
+
+
+
+# Young Sample using indicator for working in office
+zipyoung_cs <- att_gt(yname = "change_zip",
+                      gname = "minyr_EHR_int",
+                      idname = "DocNPI",
+                      tname = "year",
+                      xformla = ~grad_year,
+                      data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
+                      est_method = "dr",
+                      control_group = "notyettreated"
+)
+
+p<-zipyoung_cs$Wpval
+
+# Aggregate the effects
+zipyoung_cs_dyn <- aggte(zipyoung_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_zipyoung_allEHR <- ggdid(zipyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.1,.1)
+
+
+# Create office ind plot 
+zip_plot <- ggarrange(
+  cs_zip_allEHR,
+  ggarrange(cs_zipyoung_allEHR, cs_zipold_allEHR,
+            ncol=2),
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1.25,1)
+)
+
+zip_plot
+
+ggsave(zip_plot,filename="Objects/zip_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+
+
+
+
+
+
+## PRODUCTIVITY ####
+
+# Full Sample using indicator for working in office
+patient_cs <- att_gt(yname = "npi_unq_benes",
+                     gname = "minyr_EHR_int",
+                     idname = "DocNPI",
+                     tname = "year",
+                     xformla = ~grad_year,
+                     data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
+                     est_method = "dr",
+                     control_group = "notyettreated"
+)
+
+p<-patient_cs$Wpval
+
+# Aggregate the effects
+patient_cs_dyn <- aggte(patient_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_patient_allEHR <- ggdid(patient_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") +ylim(-50,50)
+
+
+
+# Old Sample using indicator for working in office
+patientold_cs <- att_gt(yname = "npi_unq_benes",
+                        gname = "minyr_EHR_int",
+                        idname = "DocNPI",
+                        tname = "year",
+                        xformla = ~grad_year,
+                        data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
+                        est_method = "dr",
+                        control_group = "notyettreated"
+)
+
+p<-patientold_cs$Wpval
+
+# Aggregate the effects
+patientold_cs_dyn <- aggte(patientold_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_patientold_allEHR <- ggdid(patientold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") +ylim(-50,50)
+
+
+
+# Young Sample using indicator for working in office
+patientyoung_cs <- att_gt(yname = "npi_unq_benes",
+                          gname = "minyr_EHR_int",
+                          idname = "DocNPI",
+                          tname = "year",
+                          xformla = ~grad_year,
+                          data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
+                          est_method = "dr",
+                          control_group = "notyettreated"
+)
+
+p<-patientyoung_cs$Wpval
+
+# Aggregate the effects
+patientyoung_cs_dyn <- aggte(patientyoung_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_patientyoung_allEHR <- ggdid(patientyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") +ylim(-50,50)
+
+
+# Create office ind plot 
+patient_plot <- ggarrange(
+  cs_patient_allEHR,
+  ggarrange(cs_patientyoung_allEHR, cs_patientold_allEHR,
+            ncol=2),
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1.25,1)
+)
+
+patient_plot
+
+ggsave(patient_plot,filename="Objects/patient_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+
+
+## CLAIM COUNT
+# Full Sample 
+claim_cs <- att_gt(yname = "claim_count_total",
+                   gname = "minyr_EHR_int",
+                   idname = "DocNPI",
+                   tname = "year",
+                   xformla = ~grad_year,
+                   data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
+                   est_method = "dr",
+                   control_group = "notyettreated"
+)
+
+p<-claim_cs$Wpval
+
+# Aggregate the effects
+claim_cs_dyn <- aggte(claim_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_claim_allEHR <- ggdid(claim_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-550,550)
+
+
+
+# Old Sample using indicator for working in office
+claimold_cs <- att_gt(yname = "claim_count_total",
+                      gname = "minyr_EHR_int",
+                      idname = "DocNPI",
+                      tname = "year",
+                      xformla = ~grad_year,
+                      data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
+                      est_method = "dr",
+                      control_group = "notyettreated"
+)
+
+p<-claimold_cs$Wpval
+
+# Aggregate the effects
+claimold_cs_dyn <- aggte(claimold_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_claimold_allEHR <- ggdid(claimold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-550,550)
+
+
+
+# Young Sample using indicator for working in office
+claimyoung_cs <- att_gt(yname = "claim_count_total",
+                        gname = "minyr_EHR_int",
+                        idname = "DocNPI",
+                        tname = "year",
+                        xformla = ~grad_year,
+                        data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
+                        est_method = "dr",
+                        control_group = "notyettreated"
+)
+
+p<-claimyoung_cs$Wpval
+
+# Aggregate the effects
+claimyoung_cs_dyn <- aggte(claimyoung_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_claimyoung_allEHR <- ggdid(claimyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
+  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") +ylim(-550,550)
+
+
+# Create  plot 
+claim_plot <- ggarrange(
+  cs_claim_allEHR,
+  ggarrange(cs_claimyoung_allEHR, cs_claimold_allEHR,
+            ncol=2),
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1.25,1)
+)
+
+claim_plot
+
+ggsave(claim_plot,filename="Objects/claim_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+
+
 
 
 
