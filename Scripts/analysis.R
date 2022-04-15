@@ -10,6 +10,13 @@ library(ggpubr)
 #                                       Hanna Glenn, Emory University
 #                                       1/31/2022
 
+font_add_google("Cormorant Garamond", "corm")
+
+font_add("lm","C:/Users/hkagele/Downloads/Latin-Modern-Roman/lmroman10-regular.otf")
+
+## Automatically use showtext to render text
+showtext_auto()
+
 # This script reads in "Physician_Data.rds" from data5, the final dataset used in my third year paper. 
 # The first portion of the script considers different potential estimators to use as the main specification for the paper.
 # In this portion, I only consider "retire" as the dependent outcome and I compare estimators. 
@@ -196,10 +203,10 @@ p<-retire_cs$Wpval
 retire_cs_dyn <- aggte(retire_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_retire_allEHR <- ggdid(retire_cs_dyn, ylab = "Estimate and 95% CI", xlab="Relative Year", title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + ylim(-.01,.01)
+cs_retire_allEHR <- ggdid(retire_cs_dyn, xlab="\nEvent Time", title="All Physicians") + 
+  labs(caption=paste0("p-value= ",round(p,3),"\n")) + theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + ylim(-.0025,.007) +
+    theme(text = element_text(size = 17, family="lm"))
 
 
 
@@ -228,11 +235,11 @@ p<-retireold_cs$Wpval
 retireold_cs_dyn <- aggte(retireold_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_retireold_allEHR <- ggdid(retireold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +ylim(-.01,.01) +
-  theme(legend.position = "none")
+cs_retireold_allEHR <- ggdid(retireold_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +ylim(-.005,.01) +
+  theme(legend.position = "none", text = element_text(size = 17, family="lm"))
 
 
 # Young Physicians
@@ -258,12 +265,12 @@ p<-retireyoung_cs$Wpval
 retireyoung_cs_dyn <- aggte(retireyoung_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_retireyoung_allEHR <- ggdid(retireyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, ref_line=0, 
+cs_retireyoung_allEHR <- ggdid(retireyoung_cs_dyn,  theming=FALSE, legend=FALSE, ref_line=0, 
     title="Physicians < 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"), name="") + ylim(-.01,.01) +
-  theme(legend.position = "none")
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"), name="") + ylim(-.005,.01) +
+  theme(legend.position = "none", text=element_text(size=17, family="lm"))
 
 
 
@@ -274,11 +281,11 @@ retire_plot <- ggarrange(
             ncol=2),
   nrow=2,
   common.legend = TRUE,
-  legend="bottom",
+  legend="right",
   heights  = c(1.25,1)
 )
 
-ggsave(retire_plot,filename="Objects/retire_plot.pdf", width=9.08, height = 11.4, units="in")
+ggsave(retire_plot,filename="Objects/retire_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -303,11 +310,12 @@ p<-office_frac_cs$Wpval
 office_frac_cs_dyn <- aggte(office_frac_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_officefrac_allEHR <- ggdid(office_frac_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_officefrac_allEHR <- ggdid(office_frac_cs_dyn, xlab="\n Event Time", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value= ",round(p,3),"\n")) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept=0, size=.2, linetype="dashed") + ylim(-.075,.075)
+  geom_hline(yintercept=0, size=.2, linetype="dashed") + ylim(-.03,.03) +
+  theme(text=element_text(size=17,family="lm"))
 
 
 
@@ -329,11 +337,12 @@ p<-office_fracold_cs$Wpval
 office_fracold_cs_dyn <- aggte(office_fracold_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_officefracold_allEHR <- ggdid(office_fracold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_officefracold_allEHR <- ggdid(office_fracold_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0, size=.2, linetype="dashed") +ylim(-.075,.075) + theme(legend.position = "none")
+  geom_hline(yintercept = 0, size=.2, linetype="dashed") +ylim(-.075,.04) + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm"))
 
 
 # Young Sample using fraction of patients in office
@@ -353,11 +362,12 @@ p<-office_fracyoung_cs$Wpval
 office_fracyoung_cs_dyn <- aggte(office_fracyoung_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_officefracyoung_allEHR <- ggdid(office_fracyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_officefracyoung_allEHR <- ggdid(office_fracyoung_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="none") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed")+ylim(-.075,.075) + theme(legend.position ="none")
+  geom_hline(yintercept = 0,size=.2,linetype="dashed")+ylim(-.075,.04) + 
+  theme(legend.position ="none", text=element_text(size=17,family="lm"))
 
 # Plot office frac graphs
 officefrac_plot <- ggarrange(
@@ -366,11 +376,11 @@ officefrac_plot <- ggarrange(
             ncol=2),
   nrow=2,
   common.legend = TRUE,
-  legend="bottom",
+  legend="right",
   heights  = c(1.25,1)
 )
 
-ggsave(officefrac_plot,filename="Objects/officefrac_plot.pdf", width=9.08, height = 11.4, units="in")
+ggsave(officefrac_plot,filename="Objects/officefrac_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -391,11 +401,12 @@ p<-office_ind_cs$Wpval
 office_ind_cs_dyn <- aggte(office_ind_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_officeind_allEHR <- ggdid(office_ind_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_officeind_allEHR <- ggdid(office_ind_cs_dyn, xlab="\n Event Time", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value= ",round(p,3),"\n")) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-.08,.08)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-.05,.05) +
+  theme(text=element_text(size=17,family="lm"))
 
 
 
@@ -416,11 +427,11 @@ p<-office_indold_cs$Wpval
 office_indold_cs_dyn <- aggte(office_indold_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_officeindold_allEHR <- ggdid(office_indold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_officeindold_allEHR <- ggdid(office_indold_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.08,.08)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.08,.08)
 
 
 
@@ -441,11 +452,11 @@ p<-office_indyoung_cs$Wpval
 office_indyoung_cs_dyn <- aggte(office_indyoung_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_officeindyoung_allEHR <- ggdid(office_indyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_officeindyoung_allEHR <- ggdid(office_indyoung_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.08,.08)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none",text=element_text(size=17,family="lm")) + ylim(-.08,.08)
 
 
 # Create office ind plot 
@@ -455,11 +466,11 @@ officeind_plot <- ggarrange(
             ncol=2),
   nrow=2,
   common.legend = TRUE,
-  legend="bottom",
+  legend="right",
   heights  = c(1.25,1)
 )
 
-ggsave(officeind_plot,filename="Objects/officeind_plot.pdf", width=9.08, height = 11.4, units="in")
+ggsave(officeind_plot,filename="Objects/officeind_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -482,11 +493,11 @@ p<-zip_cs$Wpval
 zip_cs_dyn <- aggte(zip_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_zip_allEHR <- ggdid(zip_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_zip_allEHR <- ggdid(zip_cs_dyn, xlab="\n Event Time", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value= ",round(p,3),"\n")) + theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-.08,.08)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-.05,.08) + 
+  theme(text=element_text(size=17,family="lm"))
 
 
 
@@ -507,11 +518,11 @@ p<-zipold_cs$Wpval
 zipold_cs_dyn <- aggte(zipold_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_zipold_allEHR <- ggdid(zipold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_zipold_allEHR <- ggdid(zipold_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) + theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.085,.085)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.085,.09)
 
 
 
@@ -532,25 +543,27 @@ p<-zipyoung_cs$Wpval
 zipyoung_cs_dyn <- aggte(zipyoung_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_zipyoung_allEHR <- ggdid(zipyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_zipyoung_allEHR <- ggdid(zipyoung_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-.085,.085)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.085,.085)
 
 
 # Create office ind plot 
-zip_plot <- ggarrange(
+zip_plot 
+ggarrange(
   cs_zip_allEHR,
   ggarrange(cs_zipyoung_allEHR, cs_zipold_allEHR,
             ncol=2),
   nrow=2,
   common.legend = TRUE,
-  legend="bottom",
+  legend="right",
   heights  = c(1.25,1)
 )
 
-ggsave(zip_plot,filename="Objects/zip_plot.pdf", width=9.08, height = 11.4, units="in")
+ggsave(zip_plot,filename="Objects/zip_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -576,11 +589,12 @@ p<-patient_cs$Wpval
 patient_cs_dyn <- aggte(patient_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_patient_allEHR <- ggdid(patient_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_patient_allEHR <- ggdid(patient_cs_dyn, xlab="\n Event Time", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value= ",round(p,3),"\n")) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") +ylim(-50,50)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") +ylim(-25,30) +
+  theme(text=element_text(size=17,family="lm"))
 
 
 
@@ -601,11 +615,12 @@ p<-patientold_cs$Wpval
 patientold_cs_dyn <- aggte(patientold_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_patientold_allEHR <- ggdid(patientold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_patientold_allEHR <- ggdid(patientold_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") +ylim(-50,50)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") +
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) +ylim(-50,50)
 
 
 
@@ -626,11 +641,12 @@ p<-patientyoung_cs$Wpval
 patientyoung_cs_dyn <- aggte(patientyoung_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_patientyoung_allEHR <- ggdid(patientyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_patientyoung_allEHR <- ggdid(patientyoung_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") +ylim(-50,50)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) +ylim(-50,50)
 
 
 # Create office ind plot 
@@ -640,11 +656,11 @@ patient_plot <- ggarrange(
             ncol=2),
   nrow=2,
   common.legend = TRUE,
-  legend="bottom",
+  legend="right",
   heights  = c(1.25,1)
 )
 
-ggsave(patient_plot,filename="Objects/patient_plot.pdf", width=9.08, height = 11.4, units="in")
+ggsave(patient_plot,filename="Objects/patient_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 ## CLAIM COUNT
@@ -665,11 +681,12 @@ p<-claim_cs$Wpval
 claim_cs_dyn <- aggte(claim_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_claim_allEHR <- ggdid(claim_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_claim_allEHR <- ggdid(claim_cs_dyn, xlab="\n Event Time", theming=FALSE, legend=FALSE, title="All Physicians") + 
+  labs(caption=paste0("p-value= ",round(p,3),"\n")) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + 
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-300,300)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + ylim(-300,200) +
+  theme(text=element_text(size=17,family="lm"))
 
 
 
@@ -690,11 +707,12 @@ p<-claimold_cs$Wpval
 claimold_cs_dyn <- aggte(claimold_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_claimold_allEHR <- ggdid(claimold_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_claimold_allEHR <- ggdid(claimold_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians >= 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") + ylim(-550,550)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17, family="lm")) + ylim(-580,400)
 
 
 
@@ -715,11 +733,12 @@ p<-claimyoung_cs$Wpval
 claimyoung_cs_dyn <- aggte(claimyoung_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_claimyoung_allEHR <- ggdid(claimyoung_cs_dyn, xlab="\n Relative Year", theming=FALSE, legend=FALSE, title="Physicians < 60") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3))) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
+cs_claimyoung_allEHR <- ggdid(claimyoung_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians < 60") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + theme(legend.position = "none") +ylim(-550,550)
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) +ylim(-550,400)
 
 
 # Create  plot 
@@ -729,11 +748,11 @@ claim_plot <- ggarrange(
             ncol=2),
   nrow=2,
   common.legend = TRUE,
-  legend="bottom",
+  legend="right",
   heights  = c(1.25,1)
 )
 
-ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=9.08, height = 11.4, units="in")
+ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -851,7 +870,7 @@ retire_plot <- ggarrange(
 
 retire_plot
 
-ggsave(retire_plot,filename="Objects/retire_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+ggsave(retire_plot,filename="Objects/retire_plot_LI.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -945,7 +964,7 @@ officefrac_plot <- ggarrange(
 
 officefrac_plot
 
-ggsave(officefrac_plot,filename="Objects/officefrac_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+ggsave(officefrac_plot,filename="Objects/officefrac_plot_LI.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -1036,7 +1055,7 @@ officeind_plot <- ggarrange(
 
 officeind_plot
 
-ggsave(officeind_plot,filename="Objects/officeind_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+ggsave(officeind_plot,filename="Objects/officeind_plot_LI.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -1129,7 +1148,7 @@ zip_plot <- ggarrange(
 
 zip_plot
 
-ggsave(zip_plot,filename="Objects/zip_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+ggsave(zip_plot,filename="Objects/zip_plot_LI.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -1225,7 +1244,7 @@ patient_plot <- ggarrange(
 
 patient_plot
 
-ggsave(patient_plot,filename="Objects/patient_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+ggsave(patient_plot,filename="Objects/patient_plot_LI.pdf", width=11.4, height = 9.08, units="in")
 
 
 ## CLAIM COUNT
@@ -1316,7 +1335,7 @@ claim_plot <- ggarrange(
 
 claim_plot
 
-ggsave(claim_plot,filename="Objects/claim_plot_LI.pdf", width=9.08, height = 11.4, units="in")
+ggsave(claim_plot,filename="Objects/claim_plot_LI.pdf", width=11.4, height = 9.08, units="in")
 
 
 
