@@ -53,12 +53,12 @@ data <- data %>%
 num_hosp <- data %>% ungroup() %>%
   filter(!is.na(AHAID)) %>%
   distinct(HospNPI)
-  # There are 4271 unique hospitals in the data that are not missing AHAID (good)
+  # There are 4253 unique hospitals in the data that are not missing AHAID (good)
 
 # Only keep pairs with AHA hospitals since that is where EHR information comes from
 data <- data %>%
   filter(!is.na(AHAID))
-  #857k obs
+  #780k obs
 
 # Read in main AHA survey data
 # I need to think about adding more hospital characteristics to this dataset
@@ -86,7 +86,7 @@ num_missing_EHR <- data %>%
   filter(is.na(EHLTH)) %>%
   group_by(year) %>%
   distinct(HospNPI)
-  # 6889 missing 
+  # 7911 missing 
 
 # Find out how many hospitals are missing an answer in every year
 num_always_missing_EHR <- data %>% ungroup() %>%
@@ -97,7 +97,7 @@ num_always_missing_EHR <- data %>% ungroup() %>%
   filter(always_missing==1) %>%
   ungroup() %>%
   distinct(HospNPI, .keep_all = T)
-  # There are only 79 hospitals that never answer this question, but they typically have answers to the other questions in the survey
+  # There are only 89 hospitals that never answer this question, but they typically have answers to the other questions in the survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
 data <- data %>% group_by(AHAID) %>%
@@ -117,7 +117,7 @@ data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
   mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
   ungroup()
-  # Now down to 7739 missing 
+  # Now down to 4253 missing 
 
 # Get rid of unneeded variables 
 data <- data %>% ungroup() %>%
@@ -173,13 +173,13 @@ low_beds <- data %>% ungroup() %>%
   filter(beds<10) %>%
   distinct(HospNPI) %>%
   mutate(low_beds=1)
-  # 60 hospitals
+  # 58 hospitals
 
 data <- data %>%
   left_join(low_beds, by="HospNPI") %>%
   filter(is.na(low_beds)) %>%
   select(-low_beds)
-  # 855k obs
+  # 779k obs
 
 data <- data %>%
   group_by(DocNPI,year) %>%
@@ -372,6 +372,7 @@ data <- data %>%
 
 
 
+## OUTCOME VARIABLES ----------------------------------------------------------- # 
 
 # Create physician level patient count with hospitals
 data <- data %>%
@@ -380,8 +381,84 @@ data <- data %>%
   mutate(hosp_patient_count=sum(samedaycount)) %>%
   ungroup()
 
-observe <- data %>%
-  filter(minyr_EHR>minyr_EHR_dec)
+# Create physician level patient count with EHR hospitals and merge back to data
+EHR_hosp <- data %>%
+  filter(EHR==1) %>%
+  group_by(year, DocNPI) %>%
+  mutate(hosp_patient_count_EHRhosp=sum(samedaycount)) %>%
+  ungroup() %>%
+  distinct(DocNPI,year,hosp_patient_count_EHRhosp)
+
+data <- data %>%
+  left_join(EHR_hosp, by=c("year", "DocNPI")) %>%
+  mutate(hosp_patient_count_EHRhosp=ifelse(is.na(hosp_patient_count_EHRhosp),0,hosp_patient_count_EHRhosp))
+
+# Create physician level patient count with EHR hospitals and merge back to data
+noEHR_hosp <- data %>%
+  filter(EHR==0) %>%
+  group_by(year, DocNPI) %>%
+  mutate(hosp_patient_count_noEHRhosp=sum(samedaycount)) %>%
+  ungroup() %>%
+  distinct(DocNPI,year,hosp_patient_count_noEHRhosp)
+
+data <- data %>%
+  left_join(noEHR_hosp, by=c("year", "DocNPI")) %>%
+  mutate(hosp_patient_count_noEHRhosp=ifelse(is.na(hosp_patient_count_noEHRhosp),0,hosp_patient_count_noEHRhosp))
+
+
+# Create variable: new NPI introduced
+data <- data %>%
+  group_by(DocNPI) %>%
+  mutate(max_numhosp = max(num_hospitals)) %>%
+  ungroup()
+
+data <- data %>%
+  mutate(same=ifelse(num_hospitals==max_numhosp,1,0))
+
+data <- data %>%
+  mutate(same2009=ifelse(year==2009 & same==1, 1,NA),
+         same2009=ifelse(year==2009 & same==0, 0,same2009),
+         same2010=ifelse(year==2010 & same==1, 1,NA),
+         same2010=ifelse(year==2010 & same==0, 0,same2010),
+         same2011=ifelse(year==2011 & same==1, 1,NA),
+         same2011=ifelse(year==2011 & same==0, 0,same2011),
+         same2012=ifelse(year==2012 & same==1, 1,NA),
+         same2012=ifelse(year==2012 & same==0, 0,same2012),
+         same2013=ifelse(year==2013 & same==1, 1,NA),
+         same2013=ifelse(year==2013 & same==0, 0,same2013),
+         same2014=ifelse(year==2014 & same==1, 1,NA),
+         same2014=ifelse(year==2014 & same==0, 0,same2014),
+         same2015=ifelse(year==2015 & same==1, 1,NA),
+         same2015=ifelse(year==2015 & same==0, 0,same2015)) %>%
+  group_by(DocNPI) %>%
+  fill(same2009,.direction="downup") %>%
+  fill(same2010,.direction="downup") %>%
+  fill(same2011,.direction="downup") %>%
+  fill(same2012,.direction="downup") %>%
+  fill(same2013,.direction="downup") %>%
+  fill(same2014,.direction="downup") %>%
+  fill(same2015,.direction="downup") %>%
+  ungroup()
+
+data <- data %>%
+  mutate(newnpi=ifelse(year==2010 & same2009==0 & same2010==1,1,NA)) %>%
+  mutate(newnpi=ifelse(year==2011 & same2010==0 & same2011==1,1,newnpi)) %>%
+  mutate(newnpi=ifelse(year==2012 & same2011==0 & same2012==1,1,newnpi)) %>%
+  mutate(newnpi=ifelse(year==2013 & same2012==0 & same2013==1,1,newnpi)) %>%
+  mutate(newnpi=ifelse(year==2014 & same2013==0 & same2014==1,1,newnpi)) %>%
+  mutate(newnpi=ifelse(year==2015 & same2014==0 & same2015==1,1,newnpi)) %>%
+  mutate(newnpi=ifelse(is.na(newnpi),0,newnpi))
+
+data <- data %>%
+  select(-same,-same2009,-same2010,-same2011,-same2012,-same2013,-same2014,-same2015)
+
+# Create variable for never adds a new npi
+data <- data %>%
+  group_by(DocNPI) %>%
+  mutate(sum=sum(newnpi)) %>%
+  ungroup() %>%
+  mutate(never_newnpi=ifelse(sum==0,1,0)) %>%
+  select(-sum)
 
 
 # Aggregate the data to the physician level -------------------------------------------------------------
@@ -390,7 +467,8 @@ Aggregated_Pairs <- data %>%
   distinct(year, DocNPI,grad_year, avg_beds, experience, 
            num_hospitals,
            frac_EHR, frac_EHR_dec, frac_EHR_doc, minyr_EHR, minyr_EHR_dec, minyr_EHR_int, minyr_EHR_dec_int,
-           num_systems, hosp_patient_count)
+           num_systems, hosp_patient_count, hosp_patient_count_EHRhosp, hosp_patient_count_noEHRhosp, 
+           newnpi, never_newnpi)
   #528k obs
 
 # Now complete the data

@@ -134,15 +134,13 @@ knitr::kable(means_bind[c(9,8,10,11,5,12,7,6,4,2,1,3),], "latex",
 # EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% filter(minyr_EHR>0) %>% group_by(year) %>%
   summarise_at(c("Hospitals using EHR"="frac_EHR", 
-                 "Phys. Exposed to EHR"="anyEHR_exposed",
-                 "Phys. Exposed to EHR (LI)"="anyEHR_LI_exposed"), list(mean), na.rm=T) 
+                 "Phys. Exposed to EHR"="anyEHR_exposed"), list(mean), na.rm=T) 
 
 
 # Create a dataframe out of the summary stats to put in a ggplot
 sum_stats_year <- as.data.frame(sum_stats_year)
 sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Hospitals using EHR",
-                                                                          "Phys. Exposed to EHR",
-                                                                          "Phys. Exposed to EHR (LI)"))
+                                                                          "Phys. Exposed to EHR"))
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 

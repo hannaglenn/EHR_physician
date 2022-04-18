@@ -5,6 +5,7 @@ library(readr)
 library(fixest)
 library(did2s)
 library(ggpubr)
+library(showtext)
 
 # ------------------------------------- ANALYSIS  ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -179,22 +180,27 @@ coefplot(retire_2sdid, keep=c("-4","-3","-2","-1","0",
 
 
 
+
+# RETIREMENT OUTCOMES --------------------------------------------------------------------------------
+
+
 # Callaway and Sant'Anna (CS) ------------------------------------------
+# This is the estimator I land on, that's why it's in a different section
 
 retire_cs <- att_gt(
-              yname = "retire",                # LHS Variable
-              gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-              idname = "DocNPI",               # ID
-              tname = "year",                  # Time Variable
-              # xformla = NULL                 # No covariates
-              xformla = ~grad_year,            # Time-invariant controls
-              data = dplyr::filter(
-                Physician_Data,minyr_EHR>0),   # Remove never-treated units
-              # data = Physician_Data
-              est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-              control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-              clustervars = "DocNPI",          # Cluster Variables          
-              anticipation=0                   # can set a number of years to account for anticipation effects
+  yname = "retire",                # LHS Variable
+  gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
+  idname = "DocNPI",               # ID
+  tname = "year",                  # Time Variable
+  # xformla = NULL                 # No covariates
+  xformla = ~grad_year,            # Time-invariant controls
+  data = dplyr::filter(
+    Physician_Data,minyr_EHR>0),   # Remove never-treated units
+  # data = Physician_Data
+  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
+  clustervars = "DocNPI",          # Cluster Variables          
+  anticipation=0                   # can set a number of years to account for anticipation effects
 )
 # Save p-value for pre-trends to put in footnote of table
 p<-retire_cs$Wpval
@@ -206,11 +212,12 @@ retire_cs_dyn <- aggte(retire_cs, type = "dynamic", na.rm=T)
 cs_retire_allEHR <- ggdid(retire_cs_dyn, xlab="\nEvent Time", title="All Physicians") + 
   labs(caption=paste0("p-value= ",round(p,3),"\n")) + theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + ylim(-.0025,.007) +
-    theme(text = element_text(size = 17, family="lm"))
+  theme(text = element_text(size = 17, family="lm"))
 
 
 
-# OTHER RETIREMENT OUTCOMES --------------------------------------------------------------------------------
+
+
 
 # Senior Physicians
 retireold_cs <- att_gt(
@@ -522,7 +529,7 @@ cs_zipold_allEHR <- ggdid(zipold_cs_dyn, theming=FALSE, legend=FALSE, title="Phy
   labs(caption=paste0("p-value= ",round(p,3))) + theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
   geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
-  theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.085,.09)
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.085,.1)
 
 
 
@@ -548,7 +555,7 @@ cs_zipyoung_allEHR <- ggdid(zipyoung_cs_dyn, theming=FALSE, legend=FALSE, title=
   theme_bw() +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
   geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
-  theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.085,.085)
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) + ylim(-.085,.1)
 
 
 # Create office ind plot 
@@ -570,9 +577,9 @@ ggsave(zip_plot,filename="Objects/zip_plot.pdf", width=11.4, height = 9.08, unit
 
 
 
-## PRODUCTIVITY ####
+## PRODUCTIVITY ####---------------------------------------------------------------------------------------
 
-# Full Sample using indicator for working in office
+# Full Sample 
 patient_cs <- att_gt(yname = "npi_unq_benes",
                         gname = "minyr_EHR",
                         idname = "DocNPI",
@@ -663,7 +670,8 @@ patient_plot <- ggarrange(
 ggsave(patient_plot,filename="Objects/patient_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
-## CLAIM COUNT
+## CLAIM COUNT ---------------------------------------------------------------------------------------
+
 # Full Sample 
 claim_cs <- att_gt(yname = "claim_count_total",
                         gname = "minyr_EHR",
@@ -690,7 +698,7 @@ cs_claim_allEHR <- ggdid(claim_cs_dyn, xlab="\n Event Time", theming=FALSE, lege
 
 
 
-# Old Sample using indicator for working in office
+# Old Sample
 claimold_cs <- att_gt(yname = "claim_count_total",
                            gname = "minyr_EHR",
                            idname = "DocNPI",
@@ -716,7 +724,7 @@ cs_claimold_allEHR <- ggdid(claimold_cs_dyn, theming=FALSE, legend=FALSE, title=
 
 
 
-# Young Sample using indicator for working in office
+# Young Sample
 claimyoung_cs <- att_gt(yname = "claim_count_total",
                              gname = "minyr_EHR",
                              idname = "DocNPI",
@@ -755,7 +763,58 @@ claim_plot <- ggarrange(
 ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
+## CLAIM COUNT ONLY IN EHR HOSPITALS FOR THOSE WHO NEVER GET NEW NPI -------------------------
 
+claim2_cs <- att_gt(yname = "claim_count_total",
+                        gname = "minyr_EHR",
+                        idname = "DocNPI",
+                        tname = "year",
+                        xformla = ~grad_year,
+                        data = dplyr::filter(Physician_Data,minyr_EHR>0 & never_newnpi==1 & ever_retire==0),
+                        est_method = "dr",
+                        control_group = "notyettreated"
+)
+
+p<-claim2_cs$Wpval
+
+# Aggregate the effects
+claim2_cs_dyn <- aggte(claim2_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_claim2_allEHR 
+ggdid(claim2_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians Who Do Not Change Hospitals") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) 
+
+
+## SHARED PATIENT COUNT IN EHR HOSPITALS ---------------------------------------------------------------------
+
+claim3_cs <- att_gt(yname = "hosp_patient_count_EHRhosp",
+                    gname = "minyr_EHR",
+                    idname = "DocNPI",
+                    tname = "year",
+                    xformla = ~grad_year,
+                    data = dplyr::filter(Physician_Data,minyr_EHR>0 & minyr_EHR<2015 & year<2015 & ever_retire==0),
+                    est_method = "dr",
+                    control_group = "notyettreated"
+)
+
+p<-claim3_cs$Wpval
+
+# Aggregate the effects
+claim3_cs_dyn <- aggte(claim3_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_claim3_allEHR 
+ggdid(claim3_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians Who Do Not Change Hospitals") + 
+  labs(caption=paste0("p-value= ")) +
+  theme_bw() +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) 
 
 
 ##### APPENDIX: SECONDARY TREATMENT VARIABLE #####################################################################
