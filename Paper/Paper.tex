@@ -172,15 +172,17 @@ The effects of EHR exposure on zip code switching over time are shown in Figure 
 
 An important, and heavily debated, aspect of the implementation of EHRs is whether or not they allow users to be more productive. A main purpose of the HITECH Act was to improve efficiency of care, specifically to decrease time spent on administrative burden. Such a decrease implies a change in patient care: either a larger number of patients have access to an appointment, or the same amount of patients receive more face-to-face time with physicians during appointments. Alternatively, because the technology is not hugely user friendly, it may not decrease administrative burden after all. In this section, I address EHRs' effect on productivity by estimating its effect on a physician's number of patients seen. 
 
-The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}. For physicians of any age, patient count increases by 11.5 patients in the year of EHR exposure, 24 patients in the year after exposure, 15.3 patients in the second year after exposure, and then no effect after the second year. These results translate to a .5-1\% increase in the number of patients seen relative to the mean. As with other outcomes, this result is totally due to changes by the younger group of physicians. While there is a statistically larger effect for younger physicians relative to senior physicians (who likely take longer to adapt to technology changes), the observed effect is economically trivial. 
+The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}. For physicians of any age, patient count increases by 11.5 patients in the year of EHR exposure, 24 patients in the year after exposure, 15.3 patients in the second year after exposure, and then no effect after the second year. These results translate to a .5-1\% increase in the number of patients seen relative to the mean. As with other outcomes, this result is totally due to changes by the younger group of physicians. While there is a statistically larger effect for younger physicians relative to senior physicians (who likely take longer to adapt to technology changes), the observed effect is not largely meaningful. 
 
-Since this is a demand-driven variable as well, I investigate whether any external factors may shift the demand for health care over the sample period. 
+Since this is also a demand-driven variable as well, I investigate whether any external factors may shift the demand for health care over the sample period. 
 
 This outcome directly relates to the outcome in the previous section, the fraction of patients seen in an office setting. For younger physicians, since the total number of patients increases in the first couple of years after exposure, the absolute number of patients seen in offices increases as well. That is, it seems that younger physicians are shifting a positive amount of work towards offices but still able to increase productivity in the time spent in the hospital, thus the null effect on fraction of office patients. 
 
 EHRs have the potential to change claim incentives if the administrative costs of billing decrease or if EHRs encourage billing for more items than otherwise would have been recorded. 
 
 On average for the entire sample, claim counts are roughly 5.5 times the number of patients seen in a year. Shown in Figure \ref{fig:claim}, young physicians increase claim count by 37 in the year of exposure and 96 in the year after exposure, 3-4 times the increase in patient count. Thus, billing activity increases proportionally less than average. EHRs do not seem to be facilitating more billable activity. 
+
+However, these results include physicians who shift place of work, which may lead to biased estimates since a physician could switch hospitals due to an EHR and then change practice behavior due to the move, not due to the EHR. Thus, I limit the sample to only physicians who work stay with the same one hospital through the entire sample. These physicians do not retire or see patients in another hospital. Thus, when an EHR is implemented, the physician remains utilizing the EHR for the remainder of the period. I present the results for this limited sample in Figure \ref{fig:limi}. 
 
 
 \subsection{Late Adopters as Comparison Group}
@@ -281,6 +283,14 @@ This paper contributes to our understanding of health information technology by 
     \includegraphics[scale=.4]{Objects/patient_plot.pdf}
     \label{fig:patient}
 \end{figure}
+
+\begin{figure}[p]
+    \centering
+    \caption{Effect of EHR Exposure on Patient Count, Limited Sample}
+    \includegraphics[scale=.4]{Objects/patient2_plot.pdf}
+    \label{fig:patient2}
+\end{figure}
+
 
 \begin{figure}[p]
     \centering
