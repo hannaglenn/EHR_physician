@@ -392,5 +392,6 @@ AHA_sample <- AHAmainsurvey %>%
 
 
 panelview(AHA_sample, Y=NULL, D="EHR", index=c("ID","year"), axis.lab = "time", by.timing=TRUE) +
-  theme(text=element_text(size=50,family="lm"))
-ggsave("Objects/hosp_treat.png", width=11.4, height=15)
+  theme(text=element_text(size=70,family="lm"))
+
+ggsave("Objects/hosp_treat.pdf")

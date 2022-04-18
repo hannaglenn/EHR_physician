@@ -664,7 +664,7 @@ cs_patientyoung_allEHR <- ggdid(patientyoung_cs_dyn, theming=FALSE, legend=FALSE
   theme(legend.position = "none", text=element_text(size=17,family="lm")) +ylim(-50,50)
 
 
-# Create office ind plot 
+# Create plot 
 patient_plot <- ggarrange(
   cs_patient_allEHR,
   ggarrange(cs_patientyoung_allEHR, cs_patientold_allEHR,
@@ -676,6 +676,32 @@ patient_plot <- ggarrange(
 )
 
 ggsave(patient_plot,filename="Objects/patient_plot.pdf", width=11.4, height = 9.08, units="in")
+
+
+# PATIENT COUNT LIMITED SAMPLE
+patient2_cs <- att_gt(yname = "npi_unq_benes",
+                    gname = "minyr_EHR",
+                    idname = "DocNPI",
+                    tname = "year",
+                    xformla = ~grad_year,
+                    data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & num_hospitals==1),
+                    est_method = "dr",
+                    control_group = "notyettreated"
+)
+ggdid(patient2_cs)
+p<-patient2_cs$Wpval
+
+# Aggregate the effects
+patient2_cs_dyn <- aggte(patient2_cs, type = "dynamic", na.rm=T)
+
+# Create a plot
+cs_patient2_allEHR <- ggdid(patient2_cs_dyn, theming=FALSE, legend=FALSE, title="Patient Count") + 
+  labs(caption=paste0("p-value= ",round(p,3))) +
+  theme_bw() + xlab("Event Time") +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) 
+
 
 
 ## CLAIM COUNT ---------------------------------------------------------------------------------------
@@ -789,14 +815,27 @@ p<-claim2_cs$Wpval
 claim2_cs_dyn <- aggte(claim2_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_claim2_allEHR <- ggdid(claim2_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians Who Do Not Change Hospitals") + 
+cs_claim2_allEHR <- ggdid(claim2_cs_dyn, theming=FALSE, legend=FALSE, title="Claim Count") + 
   labs(caption=paste0("p-value= ",round(p,3))) +
   theme_bw() + xlab("Event Time") +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
   geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
   theme(legend.position = "none", text=element_text(size=17,family="lm")) 
 
-ggsave(cs_claim2_allEHR,filename="Objects/claim2_plot.pdf", width=11.4, height = 5, units="in")
+
+limitedsample_plot <- ggarrange(
+  cs_patient2_allEHR,
+  cs_claim2_allEHR,
+  nrow=2,
+  common.legend = TRUE,
+  legend="bottom",
+  heights  = c(1,1)
+)
+
+limitedsample_plot
+
+
+ggsave(cs_claim2_allEHR,filename="Objects/limitedsample_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
