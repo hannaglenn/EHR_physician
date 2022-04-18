@@ -4,6 +4,15 @@ library(knitr)
 library(kableExtra)
 library(ggplot2)
 library(readr)
+library(showtext)
+
+font_add_google("Cormorant Garamond", "corm")
+
+font_add("lm","C:/Users/hkagele/Downloads/Latin-Modern-Roman/lmroman10-regular.otf")
+
+## Automatically use showtext to render text
+showtext_auto()
+
 
 
 
@@ -149,7 +158,8 @@ ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) +
   scale_colour_manual(values=cbbPalette) + ylim(0,1)  + xlim(2009,2015) +
   theme(legend.key.size=unit(.3,'cm'),
         legend.key.height = unit(.4, 'cm'),
-        legend.key.width = unit(.3, 'cm'))
+        legend.key.width = unit(.3, 'cm'),
+        text=element_text(size=17, family="lm"))
 
 ggsave("Objects/sum_stats_year.pdf", width=11.4, height=6, units="in")
 
@@ -381,5 +391,6 @@ AHA_sample <- AHAmainsurvey %>%
 
 
 
-panel <- panelview(AHA_sample, Y=NULL, D="EHR", index=c("ID","year"), axis.lab = "time", by.timing=TRUE)
-ggsave("Objects/hosp_treat.png")
+panelview(AHA_sample, Y=NULL, D="EHR", index=c("ID","year"), axis.lab = "time", by.timing=TRUE) +
+  theme(text=element_text(size=50,family="lm"))
+ggsave("Objects/hosp_treat.png", width=11.4, height=15)

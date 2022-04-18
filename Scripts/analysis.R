@@ -592,6 +592,14 @@ patient_cs <- att_gt(yname = "npi_unq_benes",
 
 p<-patient_cs$Wpval
 
+patient_cs_group <- ggdid(patient_cs, theming=FALSE, legend=FALSE, title="Results by Group") + 
+  theme_bw() + xlab("\nYear") +
+  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
+  theme(legend.position = "none", text=element_text(size=17,family="lm")) 
+
+ggsave(patient_cs_group, filename="Objects/patient_group.pdf", width=19, height = 15, units="in")
+
 # Aggregate the effects
 patient_cs_dyn <- aggte(patient_cs, type = "dynamic", na.rm=T)
 
@@ -766,55 +774,39 @@ ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=11.4, height = 9.08, 
 ## CLAIM COUNT ONLY IN EHR HOSPITALS FOR THOSE WHO NEVER GET NEW NPI -------------------------
 
 claim2_cs <- att_gt(yname = "claim_count_total",
-                        gname = "minyr_EHR",
-                        idname = "DocNPI",
-                        tname = "year",
-                        xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,minyr_EHR>0 & never_newnpi==1 & ever_retire==0),
-                        est_method = "dr",
-                        control_group = "notyettreated"
+                    gname = "minyr_EHR",
+                    idname = "DocNPI",
+                    tname = "year",
+                    xformla = ~grad_year,
+                    data = dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & num_hospitals==1),
+                    est_method = "dr",
+                    control_group = "notyettreated"
 )
-
+ggdid(claim2_cs)
 p<-claim2_cs$Wpval
 
 # Aggregate the effects
 claim2_cs_dyn <- aggte(claim2_cs, type = "dynamic", na.rm=T)
 
 # Create a plot
-cs_claim2_allEHR 
-ggdid(claim2_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians Who Do Not Change Hospitals") + 
+cs_claim2_allEHR <- ggdid(claim2_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians Who Do Not Change Hospitals") + 
   labs(caption=paste0("p-value= ",round(p,3))) +
-  theme_bw() +
+  theme_bw() + xlab("Event Time") +
   scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
   geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
   theme(legend.position = "none", text=element_text(size=17,family="lm")) 
 
+ggsave(cs_claim2_allEHR,filename="Objects/claim2_plot.pdf", width=11.4, height = 5, units="in")
 
-## SHARED PATIENT COUNT IN EHR HOSPITALS ---------------------------------------------------------------------
 
-claim3_cs <- att_gt(yname = "hosp_patient_count_EHRhosp",
-                    gname = "minyr_EHR",
-                    idname = "DocNPI",
-                    tname = "year",
-                    xformla = ~grad_year,
-                    data = dplyr::filter(Physician_Data,minyr_EHR>0 & minyr_EHR<2015 & year<2015 & ever_retire==0),
-                    est_method = "dr",
-                    control_group = "notyettreated"
-)
 
-p<-claim3_cs$Wpval
 
-# Aggregate the effects
-claim3_cs_dyn <- aggte(claim3_cs, type = "dynamic", na.rm=T)
 
-# Create a plot
-cs_claim3_allEHR 
-ggdid(claim3_cs_dyn, theming=FALSE, legend=FALSE, title="Physicians Who Do Not Change Hospitals") + 
-  labs(caption=paste0("p-value= ")) +
-  theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
-  theme(legend.position = "none", text=element_text(size=17,family="lm")) 
+
+
+
+
+
 
 
 ##### APPENDIX: SECONDARY TREATMENT VARIABLE #####################################################################

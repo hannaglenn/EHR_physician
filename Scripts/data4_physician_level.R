@@ -393,7 +393,7 @@ data <- data %>%
   left_join(EHR_hosp, by=c("year", "DocNPI")) %>%
   mutate(hosp_patient_count_EHRhosp=ifelse(is.na(hosp_patient_count_EHRhosp),0,hosp_patient_count_EHRhosp))
 
-# Create physician level patient count with EHR hospitals and merge back to data
+# Create physician level patient count with non-EHR hospitals and merge back to data
 noEHR_hosp <- data %>%
   filter(EHR==0) %>%
   group_by(year, DocNPI) %>%
