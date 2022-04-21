@@ -37,7 +37,7 @@ data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
   filter(grad_year<2005)
-  # Now have 1 mill obs
+  # Now have 900k obs
 
 
 #### Create EHR Variables ---------------------------------------------------------------------- ####
@@ -159,8 +159,21 @@ data <- data %>%
 
 # If the hospital doesn't have an EHR then make the indicators for decision/documentation 0
 data <- data %>%
-  mutate(EHR_dec=ifelse(EHLTH==0 & is.na(EHR_dec),0,EHR_dec),
+  dplyr::mutate(EHR_dec=ifelse(EHLTH==0 & is.na(EHR_dec),0,EHR_dec),
          EHR_doc=ifelse(EHLTH==0 & is.na(EHR_doc),0,EHR_doc))
+
+## Read in Hospitals with Data Assistants
+Hosp_with_DA <- readRDS(paste0(created_data_path,"/Hosp_with_DA.rds"))
+
+Hosp_with_DA <- Hosp_with_DA %>%
+  mutate(DA=1) %>%
+  mutate(HospNPI=as.numeric(HospNPI))
+
+data <- data %>%
+  left_join(Hosp_with_DA, by=c("year","HospNPI"))
+
+data <- data %>%
+  mutate(DA=ifelse(is.na(DA),0,DA))
 
 
 # Create/Clean Variables (Reading in data is complete) --------------------------------------------
@@ -460,12 +473,18 @@ data <- data %>%
   mutate(never_newnpi=ifelse(sum==0,1,0)) %>%
   select(-sum)
 
+# Create variable for "works with hospital with DA"
+data <- data %>%
+  group_by(DocNPI,year) %>%
+  mutate(sum=sum(DA)) %>%
+  mutate(works_with_DA=ifelse(sum>0,1,0)) %>%
+  ungroup()
 
 # Aggregate the data to the physician level -------------------------------------------------------------
 
 Aggregated_Pairs <- data %>%
   distinct(year, DocNPI,grad_year, avg_beds, experience, 
-           num_hospitals,
+           num_hospitals, works_with_DA,
            frac_EHR, frac_EHR_dec, frac_EHR_doc, minyr_EHR, minyr_EHR_dec, minyr_EHR_int, minyr_EHR_dec_int,
            num_systems, hosp_patient_count, hosp_patient_count_EHRhosp, hosp_patient_count_noEHRhosp, 
            newnpi, never_newnpi)

@@ -183,7 +183,6 @@ coefplot(retire_2sdid, keep=c("-4","-3","-2","-1","0",
 
 # RETIREMENT OUTCOMES --------------------------------------------------------------------------------
 
-
 # Callaway and Sant'Anna (CS) ------------------------------------------
 # This is the estimator I land on, that's why it's in a different section
 
@@ -202,6 +201,7 @@ retire_cs <- att_gt(
   clustervars = "DocNPI",          # Cluster Variables          
   anticipation=0                   # can set a number of years to account for anticipation effects
 )
+
 # Save p-value for pre-trends to put in footnote of table
 p<-retire_cs$Wpval
 
@@ -235,6 +235,8 @@ retireold_cs <- att_gt(
   clustervars = "DocNPI",          # Cluster Variables          
   anticipation=0                   # can set a number of years to account for anticipation effects
 )
+
+
 # Save p-value for pre-trends to put in footnote of table
 p<-retireold_cs$Wpval
 
@@ -292,7 +294,7 @@ retire_plot <- ggarrange(
   heights  = c(1.25,1)
 )
 
-ggsave(retire_plot,filename="Objects/retire_plot.pdf", width=11.4, height = 9.08, units="in")
+#ggsave(retire_plot,filename="Objects/retire_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -387,7 +389,7 @@ officefrac_plot <- ggarrange(
   heights  = c(1.25,1)
 )
 
-ggsave(officefrac_plot,filename="Objects/officefrac_plot.pdf", width=11.4, height = 9.08, units="in")
+#ggsave(officefrac_plot,filename="Objects/officefrac_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -477,7 +479,7 @@ officeind_plot <- ggarrange(
   heights  = c(1.25,1)
 )
 
-ggsave(officeind_plot,filename="Objects/officeind_plot.pdf", width=11.4, height = 9.08, units="in")
+#ggsave(officeind_plot,filename="Objects/officeind_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 
@@ -598,7 +600,7 @@ patient_cs_group <- ggdid(patient_cs, theming=FALSE, legend=FALSE, title="Result
   geom_hline(yintercept = 0,size=.2,linetype="dashed") + 
   theme(legend.position = "none", text=element_text(size=17,family="lm")) 
 
-ggsave(patient_cs_group, filename="Objects/patient_group.pdf", width=19, height = 15, units="in")
+#ggsave(patient_cs_group, filename="Objects/patient_group.pdf", width=19, height = 15, units="in")
 
 # Aggregate the effects
 patient_cs_dyn <- aggte(patient_cs, type = "dynamic", na.rm=T)
@@ -675,7 +677,7 @@ patient_plot <- ggarrange(
   heights  = c(1.25,1)
 )
 
-ggsave(patient_plot,filename="Objects/patient_plot.pdf", width=11.4, height = 9.08, units="in")
+#ggsave(patient_plot,filename="Objects/patient_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 # PATIENT COUNT LIMITED SAMPLE
@@ -794,7 +796,7 @@ claim_plot <- ggarrange(
   heights  = c(1.25,1)
 )
 
-ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=11.4, height = 9.08, units="in")
+#ggsave(claim_plot,filename="Objects/claim_plot.pdf", width=11.4, height = 9.08, units="in")
 
 
 ## CLAIM COUNT ONLY IN EHR HOSPITALS FOR THOSE WHO NEVER GET NEW NPI -------------------------
@@ -835,8 +837,235 @@ limitedsample_plot <- ggarrange(
 limitedsample_plot
 
 
-ggsave(cs_claim2_allEHR,filename="Objects/limitedsample_plot.pdf", width=11.4, height = 9.08, units="in")
+#ggsave(limitedsample_plot,filename="Objects/limitedsample_plot.pdf", width=11.4, height = 9.08, units="in")
 
+
+# Create a dataframe of all singel value ATT plus SE and CI ---------------------------------------
+single_ATT_values <- data.frame(matrix(ncol = 7, nrow = 0))
+
+#provide column names
+colnames(single_ATT_values) <- c('Variable', 'ATT', 'SE', 'Lower', 'Upper', 'Age', 'Specification')
+
+# Retire
+retire_cs_simple <- aggte(retire_cs, type = "simple")
+retire_list <- c("Retire", 
+                 round(retire_cs_simple$overall.att,5), 
+                 round(retire_cs_simple$overall.se, 5),
+                 round(retire_cs_simple$overall.att-(1.959*retire_cs_simple$overall.se),5),
+                 round(retire_cs_simple$overall.att+(1.959*retire_cs_simple$overall.se),5),
+                 "Any",
+                 "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- retire_list
+
+# Retire Old 
+retireold_cs_simple <- aggte(retireold_cs, type = "simple")
+retireold_list <- c("Retire", 
+                    round(retireold_cs_simple$overall.att,5), 
+                    round(retireold_cs_simple$overall.se,5),
+                    round(retireold_cs_simple$overall.att-(1.959*retireold_cs_simple$overall.se),5),
+                    round(retireold_cs_simple$overall.att+(1.959*retireold_cs_simple$overall.se),5),
+                    ">= 60",
+                    "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- retireold_list
+
+# Retire Young
+retireyoung_cs_simple <- aggte(retireyoung_cs, type = "simple")
+retireyoung_list <- c("Retire", 
+                    round(retireyoung_cs_simple$overall.att,5), 
+                    round(retireyoung_cs_simple$overall.se,5),
+                    round(retireyoung_cs_simple$overall.att-(1.959*retireyoung_cs_simple$overall.se),5),
+                    round(retireyoung_cs_simple$overall.att+(1.959*retireyoung_cs_simple$overall.se),5),
+                    "< 60",
+                    "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- retireyoung_list
+
+# Office Frac
+office_frac_cs_simple <- aggte(office_frac_cs, type = "simple")
+office_frac_list <- c("Frac. Patients in Office", 
+                      round(office_frac_cs_simple$overall.att,5), 
+                      round(office_frac_cs_simple$overall.se,5),
+                      round(office_frac_cs_simple$overall.att-(1.959*office_frac_cs_simple$overall.se),5),
+                      round(office_frac_cs_simple$overall.att+(1.959*office_frac_cs_simple$overall.se),5),
+                      "Any",
+                      "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- office_frac_list
+
+# Office Frac Old
+office_fracold_cs_simple <- aggte(office_fracold_cs, type = "simple")
+office_fracold_list <- c("Frac. Patients in Office", 
+                      round(office_fracold_cs_simple$overall.att,5), 
+                      round(office_fracold_cs_simple$overall.se,5),
+                      round(office_fracold_cs_simple$overall.att-(1.959*office_fracold_cs_simple$overall.se),5),
+                      round(office_fracold_cs_simple$overall.att+(1.959*office_fracold_cs_simple$overall.se),5),
+                      ">= 60",
+                      "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- office_fracold_list
+
+# Office Frac Young
+office_fracyoung_cs_simple <- aggte(office_fracyoung_cs, type = "simple")
+office_fracyoung_list <- c("Frac. Patients in Office", 
+                      round(office_fracyoung_cs_simple$overall.att,5), 
+                      round(office_fracyoung_cs_simple$overall.se,5),
+                      round(office_fracyoung_cs_simple$overall.att-(1.959*office_fracyoung_cs_simple$overall.se),5),
+                      round(office_fracyoung_cs_simple$overall.att+(1.959*office_fracyoung_cs_simple$overall.se),5),
+                      "< 60",
+                      "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- office_fracyoung_list
+
+# Office Indicator
+office_ind_cs_simple <- aggte(office_ind_cs, type = "simple")
+office_ind_list <- c("Prob. Working in Office", 
+                      round(office_ind_cs_simple$overall.att,5), 
+                      round(office_ind_cs_simple$overall.se,5),
+                      round(office_ind_cs_simple$overall.att-(1.959*office_ind_cs_simple$overall.se),5),
+                      round(office_ind_cs_simple$overall.att+(1.959*office_ind_cs_simple$overall.se),5),
+                     "Any",
+                     "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- office_ind_list
+
+# Office Indicator Old
+office_indold_cs_simple <- aggte(office_indold_cs, type = "simple")
+office_indold_list <- c("Prob. Working in Office", 
+                     round(office_indold_cs_simple$overall.att,5), 
+                     round(office_indold_cs_simple$overall.se,5),
+                     round(office_indold_cs_simple$overall.att-(1.959*office_indold_cs_simple$overall.se),5),
+                     round(office_indold_cs_simple$overall.att+(1.959*office_indold_cs_simple$overall.se),5),
+                     ">= 60",
+                      "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- office_indold_list
+
+# Office Indicator Young
+office_indyoung_cs_simple <- aggte(office_indyoung_cs, type = "simple")
+office_indyoung_list <- c("Prob. Working in Office", 
+                     round(office_indyoung_cs_simple$overall.att,5), 
+                     round(office_indyoung_cs_simple$overall.se,5),
+                     round(office_indyoung_cs_simple$overall.att-(1.959*office_indyoung_cs_simple$overall.se),5),
+                     round(office_indyoung_cs_simple$overall.att+(1.959*office_indyoung_cs_simple$overall.se),5),
+                     "< 60",
+                     "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- office_indyoung_list
+
+# Patient Count
+patient_cs_simple <- aggte(patient_cs, type = "simple")
+patient_list <- c("Number Patients", 
+                          round(patient_cs_simple$overall.att,5), 
+                          round(patient_cs_simple$overall.se,5),
+                          round(patient_cs_simple$overall.att-(1.959*patient_cs_simple$overall.se),5),
+                          round(patient_cs_simple$overall.att+(1.959*patient_cs_simple$overall.se),5),
+                  "Any",
+                  "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- patient_list
+
+# Patient Old
+patientold_cs_simple <- aggte(patientold_cs, type = "simple")
+patientold_list <- c("Number Patients", 
+                  round(patientold_cs_simple$overall.att,5), 
+                  round(patientold_cs_simple$overall.se,5),
+                  round(patientold_cs_simple$overall.att-(1.959*patientold_cs_simple$overall.se),5),
+                  round(patientold_cs_simple$overall.att+(1.959*patientold_cs_simple$overall.se),5),
+                  ">= 60",
+                  "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- patientold_list
+
+# Patient Young
+patientyoung_cs_simple <- aggte(patientyoung_cs, type = "simple")
+patientyoung_list <- c("Number Patients", 
+                  round(patientyoung_cs_simple$overall.att,5), 
+                  round(patientyoung_cs_simple$overall.se,5),
+                  round(patientyoung_cs_simple$overall.att-(1.959*patientyoung_cs_simple$overall.se),5),
+                  round(patientyoung_cs_simple$overall.att+(1.959*patientyoung_cs_simple$overall.se),5),
+                  "< 60",
+                  "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- patientyoung_list
+
+# Claim Count
+claim_cs_simple <- aggte(claim_cs, type = "simple")
+claim_list <- c("Claim Count", 
+                  round(claim_cs_simple$overall.att,5), 
+                  round(claim_cs_simple$overall.se,5),
+                  round(claim_cs_simple$overall.att-(1.959*claim_cs_simple$overall.se),5),
+                  round(claim_cs_simple$overall.att+(1.959*claim_cs_simple$overall.se),5),
+                "Any",
+                "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- claim_list
+
+# Claim Count Old
+claimold_cs_simple <- aggte(claimold_cs, type = "simple")
+claimold_list <- c("Claim Count", 
+                round(claimold_cs_simple$overall.att,5), 
+                round(claimold_cs_simple$overall.se,5),
+                round(claimold_cs_simple$overall.att-(1.959*claimold_cs_simple$overall.se),5),
+                round(claimold_cs_simple$overall.att+(1.959*claimold_cs_simple$overall.se),5),
+                ">= 60",
+                "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- claimold_list
+
+# Claim Count
+claimyoung_cs_simple <- aggte(claimyoung_cs, type = "simple")
+claimyoung_list <- c("Claim Count", 
+                round(claimyoung_cs_simple$overall.att,5), 
+                round(claimyoung_cs_simple$overall.se,5),
+                round(claimyoung_cs_simple$overall.att-(1.959*claimyoung_cs_simple$overall.se),5),
+                round(claimyoung_cs_simple$overall.att+(1.959*claimyoung_cs_simple$overall.se),5),
+                "< 60",
+                "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- claimyoung_list
+
+# Zip
+zip_cs_simple <- aggte(zip_cs, type = "simple")
+zip_list <- c("Prob. Change Zip", 
+                     round(zip_cs_simple$overall.att,5), 
+                     round(zip_cs_simple$overall.se,5),
+                     round(zip_cs_simple$overall.att-(1.959*zip_cs_simple$overall.se),5),
+                     round(zip_cs_simple$overall.att+(1.959*zip_cs_simple$overall.se),5),
+                     "Any",
+                     "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- zip_list
+
+# Zip Old
+zipold_cs_simple <- aggte(zipold_cs, type = "simple")
+zipold_list <- c("Prob. Change Zip", 
+              round(zipold_cs_simple$overall.att,5), 
+              round(zipold_cs_simple$overall.se,5),
+              round(zipold_cs_simple$overall.att-(1.959*zipold_cs_simple$overall.se),5),
+              round(zipold_cs_simple$overall.att+(1.959*zipold_cs_simple$overall.se),5),
+              ">= 60",
+              "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- zipold_list
+
+# Zip Young
+zipyoung_cs_simple <- aggte(zipyoung_cs, type = "simple")
+zipyoung_list <- c("Prob. Change Zip", 
+              round(zipyoung_cs_simple$overall.att,5), 
+              round(zipyoung_cs_simple$overall.se,5),
+              round(zipyoung_cs_simple$overall.att-(1.959*zipyoung_cs_simple$overall.se),5),
+              round(zipyoung_cs_simple$overall.att+(1.959*zipyoung_cs_simple$overall.se),5),
+              "< 60",
+              "Main")
+
+single_ATT_values[nrow(single_ATT_values) + 1,] <- zipyoung_list
+
+
+
+# save dataframe 
+saveRDS(single_ATT_values, paste0(created_data_path,"/singel_ATT_values.rds"))
 
 
 
@@ -852,34 +1081,6 @@ ggsave(cs_claim2_allEHR,filename="Objects/limitedsample_plot.pdf", width=11.4, h
 ##################################################################################################################
 #################################################################################################################
 ##################################################################################################################
-
-
-retire_cs <- att_gt(
-  yname = "retire",                # LHS Variable
-  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
-  idname = "DocNPI",               # ID
-  tname = "year",                  # Time Variable
-  # xformla = NULL                 # No covariates
-  xformla = ~grad_year,            # Time-invariant controls
-  data = dplyr::filter(
-    Physician_Data,minyr_EHR_int>0),   # Remove never-treated units
-  # data = Physician_Data
-  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-  clustervars = "DocNPI",          # Cluster Variables          
-  anticipation=0                   # can set a number of years to account for anticipation effects
-)
-# Save p-value for pre-trends to put in footnote of table
-p<-retire_cs$Wpval
-
-# Aggregate the effects
-retire_cs_dyn <- aggte(retire_cs, type = "dynamic", na.rm=T)
-
-# Create a plot
-cs_retire_allEHR <- ggdid(retire_cs_dyn, ylab = "Estimate and 95% CI", xlab="Relative Year", title="All Physicians") + 
-  labs(caption=paste0("p-value for pre-test of parallel trends assumption= ",round(p,3),"\n")) +
-  theme(plot.caption = element_text(hjust = 0, face= "italic")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + ylim(-.01,.01)
 
 
 

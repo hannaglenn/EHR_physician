@@ -99,14 +99,6 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(minyr_retire=ifelse(!is.na(minyr_retire),minyr_retire+1,minyr_retire)) %>%
   dplyr::mutate(minyr_retire=ifelse(minyr_retire==2017,NA,minyr_retire))
 
-# Don't count those who retire who are missing in the data beforehand
-# Maybe I shouldn't remove these people?
-Physician_Data <- Physician_Data %>%
-  dplyr::mutate(missingbefore=ifelse(!is.na(minyr_retire) & year<minyr_retire & is.na(claim_count_total),1,NA)) %>%
-  dplyr::group_by(DocNPI) %>%
-  tidyr::fill(missingbefore,.direction="downup") %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(minyr_retire=ifelse(is.na(missingbefore),minyr_retire,NA))
 
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(retire=ifelse(is.na(minyr_retire),0,ifelse(year==minyr_retire,1,0)))
@@ -248,8 +240,6 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(change_zip=ifelse(year==2009,0,change_zip)) 
 
-observe <- Physician_Data %>%
-  filter(is.na(frac_EHR))
 
 # PRODUCTIVITY ####
 
