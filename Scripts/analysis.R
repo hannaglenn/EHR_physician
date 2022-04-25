@@ -70,7 +70,7 @@ for (d in 2010:2015){
            clean_control=ifelse(minyr_EHR>d,1,0),
            years_included=ifelse(year>=d-1 & year<=d+1,1,0)) %>%
     mutate(inclusion=years_included*(treated_unit+clean_control)) %>%
-    filter(inclusion==1)
+    dplyr::filter(inclusion==1)
   
   assign(paste0("subgroup_",d),subgroup)
 }

@@ -2,6 +2,8 @@ library(showtext)
 library(ggplot2)
 library(did)
 library(ggpubr)
+library(fixest)
+library(did2s)
 
 
 
@@ -26,521 +28,206 @@ showtext_auto()
 # Read in the main data created in "data5_MDPPAS.R"
 Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
+
+
+
 ### LOW INTEGRATION DEFINITION #####################################################################################
- # Retire
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+# Create List of Results for each age group
+models_LI <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR_int",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0) else dplyr::filter(Physician_Data,minyr_EHR_int>0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_LI_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR_int",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60) else dplyr::filter(Physician_Data,minyr_EHR_int>0 & max_age<60),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_LI_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR_int",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60) else dplyr::filter(Physician_Data,minyr_EHR_int>0 & max_age>=60),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+# Translate to single ATT value for each age group
+Simple_LI <- lapply(models_LI, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_LI_young <- lapply(models_LI_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_LI_old <- lapply(models_LI_old, function(x){
+  aggte(x, type = "simple")
+})
+
+# Save relevant information for each age group
+ATT_LI <- lapply(Simple_LI, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Low-Integration")
+})
+
+ATT_LI_young <- lapply(Simple_LI_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "Low-Integration")
+})
+
+ATT_LI_old <- lapply(Simple_LI_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "Low-Integration")
+})
+
+# Convert to data frame for each age group 
+LI_values <- as.data.frame(do.call(rbind, ATT_LI)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+LI_values_young <- as.data.frame(do.call(rbind, ATT_LI_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+LI_values_old <- as.data.frame(do.call(rbind, ATT_LI_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+  
+# Merge all ages and main specification results
+LI_merged <- rbind(LI_values, LI_values_young, LI_values_old, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
 
-# Senior Physicians
-retire_LI <- att_gt(
-  yname = "retire",                # LHS Variable
-  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
-  idname = "DocNPI",               # ID
-  tname = "year",                  # Time Variable
-  # xformla = NULL                 # No covariates
-  xformla = ~grad_year,            # Time-invariant controls
-  data = dplyr::filter(
-    Physician_Data,minyr_EHR_int>0),   # Remove never-treated units and young physicians
-  # data = Physician_Data
-  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-  clustervars = "DocNPI",          # Cluster Variables          
-  anticipation=0                   # can set a number of years to account for anticipation effects
-)
 
-# OTHER RETIREMENT OUTCOMES --------------------------------------------------------------------------------
-
-# Senior Physicians
-retireold_LI <- att_gt(
-  yname = "retire",                # LHS Variable
-  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
-  idname = "DocNPI",               # ID
-  tname = "year",                  # Time Variable
-  # xformla = NULL                 # No covariates
-  xformla = ~grad_year,            # Time-invariant controls
-  data = dplyr::filter(
-    Physician_Data,minyr_EHR_int>0 & max_age>=60),   # Remove never-treated units and young physicians
-  # data = Physician_Data
-  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-  clustervars = "DocNPI",          # Cluster Variables          
-  anticipation=0                   # can set a number of years to account for anticipation effects
-)
-
-
-
-# Young Physicians
-retireyoung_LI <- att_gt(
-  yname = "retire",                # LHS Variable
-  gname = "minyr_EHR_int",             # First year a unit is treated. (set to 0 if never treated)
-  idname = "DocNPI",               # ID
-  tname = "year",                  # Time Variable
-  # xformla = NULL                 # No covariates
-  xformla = ~grad_year,            # Time-invariant controls
-  data = dplyr::filter(
-    Physician_Data,minyr_EHR_int>0 & max_age<60),   # Remove never-treated units and young physicians
-  # data = Physician_Data
-  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-  clustervars = "DocNPI",          # Cluster Variables          
-  anticipation=0                   # can set a number of years to account for anticipation effects
-)
-
-
-
-
-
-
-# OFFICE BASED OUTCOMES -------------------------------------------------------------
-
-# Full Sample using fraction of patients in office
-office_frac_LI <- att_gt(yname = "pos_office",
-                         gname = "minyr_EHR_int",
-                         idname = "DocNPI",
-                         tname = "year",
-                         xformla = ~grad_year,
-                         data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
-                         est_method = "dr",
-                         control_group = "notyettreated"
-)
-
-
-
-
-
-# Old Sample using fraction of patients in office
-office_fracold_LI <- att_gt(yname = "pos_office",
-                            gname = "minyr_EHR_int",
-                            idname = "DocNPI",
-                            tname = "year",
-                            xformla = ~grad_year,
-                            data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
-                            est_method = "dr",
-                            control_group = "notyettreated"
-)
-
-
-
-# Young Sample using fraction of patients in office
-office_fracyoung_LI <- att_gt(yname = "pos_office",
-                              gname = "minyr_EHR_int",
-                              idname = "DocNPI",
-                              tname = "year",
-                              xformla = ~grad_year,
-                              data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
-                              est_method = "dr",
-                              control_group = "notyettreated"
-)
-
-
-# Full Sample using indicator for working in office
-office_ind_LI <- att_gt(yname = "work_in_office",
-                        gname = "minyr_EHR_int",
-                        idname = "DocNPI",
-                        tname = "year",
-                        xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
-                        est_method = "dr",
-                        control_group = "notyettreated"
-)
-
-
-
-
-# Old Sample using indicator for working in office
-office_indold_LI <- att_gt(yname = "work_in_office",
-                           gname = "minyr_EHR_int",
-                           idname = "DocNPI",
-                           tname = "year",
-                           xformla = ~grad_year,
-                           data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
-                           est_method = "dr",
-                           control_group = "notyettreated"
-)
-
-
-
-
-# Young Sample using indicator for working in office
-office_indyoung_LI <- att_gt(yname = "work_in_office",
-                             gname = "minyr_EHR_int",
-                             idname = "DocNPI",
-                             tname = "year",
-                             xformla = ~grad_year,
-                             data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
-                             est_method = "dr",
-                             control_group = "notyettreated"
-)
-
-
-
-
-## CHANGE ZIP CODE ###
-# Full Sample using indicator for working in office
-zip_LI <- att_gt(yname = "change_zip",
-                 gname = "minyr_EHR_int",
-                 idname = "DocNPI",
-                 tname = "year",
-                 xformla = ~grad_year,
-                 data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
-                 est_method = "dr",
-                 control_group = "notyettreated"
-)
-
-
-
-# Old Sample using indicator for working in office
-zipold_LI <- att_gt(yname = "change_zip",
-                    gname = "minyr_EHR_int",
-                    idname = "DocNPI",
-                    tname = "year",
-                    xformla = ~grad_year,
-                    data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
-                    est_method = "dr",
-                    control_group = "notyettreated"
-)
-
-
-
-
-# Young Sample using indicator for working in office
-zipyoung_LI <- att_gt(yname = "change_zip",
-                      gname = "minyr_EHR_int",
-                      idname = "DocNPI",
-                      tname = "year",
-                      xformla = ~grad_year,
-                      data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
-                      est_method = "dr",
-                      control_group = "notyettreated"
-)
-
-
-
-
-
-
-
-## PRODUCTIVITY ####
-
-# Full Sample using indicator for working in office
-patient_LI <- att_gt(yname = "npi_unq_benes",
-                     gname = "minyr_EHR_int",
-                     idname = "DocNPI",
-                     tname = "year",
-                     xformla = ~grad_year,
-                     data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
-                     est_method = "dr",
-                     control_group = "notyettreated"
-)
-
-
-
-
-# Old Sample using indicator for working in office
-patientold_LI <- att_gt(yname = "npi_unq_benes",
-                        gname = "minyr_EHR_int",
-                        idname = "DocNPI",
-                        tname = "year",
-                        xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
-                        est_method = "dr",
-                        control_group = "notyettreated"
-)
-
-
-
-
-# Young Sample using indicator for working in office
-patientyoung_LI <- att_gt(yname = "npi_unq_benes",
-                          gname = "minyr_EHR_int",
-                          idname = "DocNPI",
-                          tname = "year",
-                          xformla = ~grad_year,
-                          data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
-                          est_method = "dr",
-                          control_group = "notyettreated"
-)
-
-
-
-
-## CLAIM COUNT
-# Full Sample 
-claim_LI <- att_gt(yname = "claim_count_total",
-                   gname = "minyr_EHR_int",
-                   idname = "DocNPI",
-                   tname = "year",
-                   xformla = ~grad_year,
-                   data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0),
-                   est_method = "dr",
-                   control_group = "notyettreated"
-)
-
-
-# Old Sample using indicator for working in office
-claimold_LI <- att_gt(yname = "claim_count_total",
-                      gname = "minyr_EHR_int",
-                      idname = "DocNPI",
-                      tname = "year",
-                      xformla = ~grad_year,
-                      data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60),
-                      est_method = "dr",
-                      control_group = "notyettreated"
-)
-
-
-
-# Young Sample using indicator for working in office
-claimyoung_LI <- att_gt(yname = "claim_count_total",
-                        gname = "minyr_EHR_int",
-                        idname = "DocNPI",
-                        tname = "year",
-                        xformla = ~grad_year,
-                        data = dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60),
-                        est_method = "dr",
-                        control_group = "notyettreated"
-)
-
-
-# Create a dataframe of all singel value ATT plus SE and CI ---------------------------------------
-single_ATT_values_LI <- data.frame(matrix(ncol = 7, nrow = 0))
-
-#provide column names
-colnames(single_ATT_values_LI) <- c('Variable', 'ATT', 'SE', 'Lower', 'Upper', 'Age', 'Specification')
-
-# Retire
-retire_cs_simple <- aggte(retire_LI, type = "simple")
-retire_list <- c("Retire", 
-                 round(retire_cs_simple$overall.att,5), 
-                 round(retire_cs_simple$overall.se, 5),
-                 round(retire_cs_simple$overall.att-(1.959*retire_cs_simple$overall.se),5),
-                 round(retire_cs_simple$overall.att+(1.959*retire_cs_simple$overall.se),5),
-                 "Any",
-                 "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- retire_list
-
-# Retire Old 
-retireold_cs_simple <- aggte(retireold_LI, type = "simple")
-retireold_list <- c("Retire", 
-                    round(retireold_cs_simple$overall.att,5), 
-                    round(retireold_cs_simple$overall.se,5),
-                    round(retireold_cs_simple$overall.att-(1.959*retireold_cs_simple$overall.se),5),
-                    round(retireold_cs_simple$overall.att+(1.959*retireold_cs_simple$overall.se),5),
-                    ">= 60",
-                    "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- retireold_list
-
-# Retire Young
-retireyoung_cs_simple <- aggte(retireyoung_LI, type = "simple")
-retireyoung_list <- c("Retire", 
-                      round(retireyoung_cs_simple$overall.att,5), 
-                      round(retireyoung_cs_simple$overall.se,5),
-                      round(retireyoung_cs_simple$overall.att-(1.959*retireyoung_cs_simple$overall.se),5),
-                      round(retireyoung_cs_simple$overall.att+(1.959*retireyoung_cs_simple$overall.se),5),
-                      "< 60",
-                      "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- retireyoung_list
-
-# Office Frac
-office_frac_cs_simple <- aggte(office_frac_LI, type = "simple")
-office_frac_list <- c("Frac. Patients in Office", 
-                      round(office_frac_cs_simple$overall.att,5), 
-                      round(office_frac_cs_simple$overall.se,5),
-                      round(office_frac_cs_simple$overall.att-(1.959*office_frac_cs_simple$overall.se),5),
-                      round(office_frac_cs_simple$overall.att+(1.959*office_frac_cs_simple$overall.se),5),
-                      "Any",
-                      "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- office_frac_list
-
-# Office Frac Old
-office_fracold_cs_simple <- aggte(office_fracold_LI, type = "simple")
-office_fracold_list <- c("Frac. Patients in Office", 
-                         round(office_fracold_cs_simple$overall.att,5), 
-                         round(office_fracold_cs_simple$overall.se,5),
-                         round(office_fracold_cs_simple$overall.att-(1.959*office_fracold_cs_simple$overall.se),5),
-                         round(office_fracold_cs_simple$overall.att+(1.959*office_fracold_cs_simple$overall.se),5),
-                         ">= 60",
-                         "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- office_fracold_list
-
-# Office Frac Young
-office_fracyoung_cs_simple <- aggte(office_fracyoung_LI, type = "simple")
-office_fracyoung_list <- c("Frac. Patients in Office", 
-                           round(office_fracyoung_cs_simple$overall.att,5), 
-                           round(office_fracyoung_cs_simple$overall.se,5),
-                           round(office_fracyoung_cs_simple$overall.att-(1.959*office_fracyoung_cs_simple$overall.se),5),
-                           round(office_fracyoung_cs_simple$overall.att+(1.959*office_fracyoung_cs_simple$overall.se),5),
-                           "< 60",
-                           "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- office_fracyoung_list
-
-# Office Indicator
-office_ind_cs_simple <- aggte(office_ind_LI, type = "simple")
-office_ind_list <- c("Prob. Working in Office", 
-                     round(office_ind_cs_simple$overall.att,5), 
-                     round(office_ind_cs_simple$overall.se,5),
-                     round(office_ind_cs_simple$overall.att-(1.959*office_ind_cs_simple$overall.se),5),
-                     round(office_ind_cs_simple$overall.att+(1.959*office_ind_cs_simple$overall.se),5),
-                     "Any",
-                     "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- office_ind_list
-
-# Office Indicator Old
-office_indold_cs_simple <- aggte(office_indold_LI, type = "simple")
-office_indold_list <- c("Prob. Working in Office", 
-                        round(office_indold_cs_simple$overall.att,5), 
-                        round(office_indold_cs_simple$overall.se,5),
-                        round(office_indold_cs_simple$overall.att-(1.959*office_indold_cs_simple$overall.se),5),
-                        round(office_indold_cs_simple$overall.att+(1.959*office_indold_cs_simple$overall.se),5),
-                        ">= 60",
-                        "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- office_indold_list
-
-# Office Indicator Young
-office_indyoung_cs_simple <- aggte(office_indyoung_LI, type = "simple")
-office_indyoung_list <- c("Prob. Working in Office", 
-                          round(office_indyoung_cs_simple$overall.att,5), 
-                          round(office_indyoung_cs_simple$overall.se,5),
-                          round(office_indyoung_cs_simple$overall.att-(1.959*office_indyoung_cs_simple$overall.se),5),
-                          round(office_indyoung_cs_simple$overall.att+(1.959*office_indyoung_cs_simple$overall.se),5),
-                          "< 60",
-                          "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- office_indyoung_list
-
-# Patient Count
-patient_cs_simple <- aggte(patient_LI, type = "simple")
-patient_list <- c("Number Patients", 
-                  round(patient_cs_simple$overall.att,5), 
-                  round(patient_cs_simple$overall.se,5),
-                  round(patient_cs_simple$overall.att-(1.959*patient_cs_simple$overall.se),5),
-                  round(patient_cs_simple$overall.att+(1.959*patient_cs_simple$overall.se),5),
-                  "Any",
-                  "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- patient_list
-
-# Patient Old
-patientold_cs_simple <- aggte(patientold_LI, type = "simple")
-patientold_list <- c("Number Patients", 
-                     round(patientold_cs_simple$overall.att,5), 
-                     round(patientold_cs_simple$overall.se,5),
-                     round(patientold_cs_simple$overall.att-(1.959*patientold_cs_simple$overall.se),5),
-                     round(patientold_cs_simple$overall.att+(1.959*patientold_cs_simple$overall.se),5),
-                     ">= 60",
-                     "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- patientold_list
-
-# Patient Young
-patientyoung_cs_simple <- aggte(patientyoung_LI, type = "simple")
-patientyoung_list <- c("Number Patients", 
-                       round(patientyoung_cs_simple$overall.att,5), 
-                       round(patientyoung_cs_simple$overall.se,5),
-                       round(patientyoung_cs_simple$overall.att-(1.959*patientyoung_cs_simple$overall.se),5),
-                       round(patientyoung_cs_simple$overall.att+(1.959*patientyoung_cs_simple$overall.se),5),
-                       "< 60",
-                       "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- patientyoung_list
-
-# Claim Count
-claim_cs_simple <- aggte(claim_LI, type = "simple")
-claim_list <- c("Claim Count", 
-                round(claim_cs_simple$overall.att,5), 
-                round(claim_cs_simple$overall.se,5),
-                round(claim_cs_simple$overall.att-(1.959*claim_cs_simple$overall.se),5),
-                round(claim_cs_simple$overall.att+(1.959*claim_cs_simple$overall.se),5),
-                "Any",
-                "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- claim_list
-
-# Claim Count Old
-claimold_cs_simple <- aggte(claimold_LI, type = "simple")
-claimold_list <- c("Claim Count", 
-                   round(claimold_cs_simple$overall.att,5), 
-                   round(claimold_cs_simple$overall.se,5),
-                   round(claimold_cs_simple$overall.att-(1.959*claimold_cs_simple$overall.se),5),
-                   round(claimold_cs_simple$overall.att+(1.959*claimold_cs_simple$overall.se),5),
-                   ">= 60",
-                   "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- claimold_list
-
-# Claim Count
-claimyoung_cs_simple <- aggte(claimyoung_LI, type = "simple")
-claimyoung_list <- c("Claim Count", 
-                     round(claimyoung_cs_simple$overall.att,5), 
-                     round(claimyoung_cs_simple$overall.se,5),
-                     round(claimyoung_cs_simple$overall.att-(1.959*claimyoung_cs_simple$overall.se),5),
-                     round(claimyoung_cs_simple$overall.att+(1.959*claimyoung_cs_simple$overall.se),5),
-                     "< 60",
-                     "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- claimyoung_list
-
-# Zip
-zip_cs_simple <- aggte(zip_LI, type = "simple")
-zip_list <- c("Prob. Change Zip", 
-              round(zip_cs_simple$overall.att,5), 
-              round(zip_cs_simple$overall.se,5),
-              round(zip_cs_simple$overall.att-(1.959*zip_cs_simple$overall.se),5),
-              round(zip_cs_simple$overall.att+(1.959*zip_cs_simple$overall.se),5),
-              "Any",
-              "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- zip_list
-
-# Zip Old
-zipold_cs_simple <- aggte(zipold_LI, type = "simple")
-zipold_list <- c("Prob. Change Zip", 
-                 round(zipold_cs_simple$overall.att,5), 
-                 round(zipold_cs_simple$overall.se,5),
-                 round(zipold_cs_simple$overall.att-(1.959*zipold_cs_simple$overall.se),5),
-                 round(zipold_cs_simple$overall.att+(1.959*zipold_cs_simple$overall.se),5),
-                 ">= 60",
-                 "Low Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- zipold_list
-
-# Zip Young
-zipyoung_cs_simple <- aggte(zipyoung_LI, type = "simple")
-zipyoung_list <- c("Prob. Change Zip", 
-                   round(zipyoung_cs_simple$overall.att,5), 
-                   round(zipyoung_cs_simple$overall.se,5),
-                   round(zipyoung_cs_simple$overall.att-(1.959*zipyoung_cs_simple$overall.se),5),
-                   round(zipyoung_cs_simple$overall.att+(1.959*zipyoung_cs_simple$overall.se),5),
-                   "< 60",
-                   "Low-Integration Hosp.")
-
-single_ATT_values_LI[nrow(single_ATT_values_LI) + 1,] <- zipyoung_list
-
-
-
-
-
-
-saveRDS(single_ATT_values_LI,file=paste0(created_data_path,"/single_ATT_values_LI.rds"))
-
-ATT <- rbind(single_ATT_values,single_ATT_values_LI)
-
-ATT <- ATT %>%
-  mutate(ATT=as.numeric(ATT),
-         SE=as.numeric(SE),
-         Upper=as.numeric(Upper),
-         Lower=as.numeric(Lower))
-
-# Create plot
-
+# Create Graph
 dodge <- position_dodge(width=.75)
-small_values <- ggplot(filter(ATT, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+small_values <- ggplot(dplyr::filter(LI_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+
+large_values <- ggplot(dplyr::filter(LI_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+# Save graph
+ggsave("Objects/LI_graph.pdf", height=6, width=11, units = "in")
+
+
+
+
+
+###  ANTICIPATION ########################################################################
+
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+models_anticipation <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+        gname = "minyr_EHR",
+        idname = "DocNPI",
+        tname = "year",
+        xformla = ~grad_year,
+        data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data,minyr_EHR>0),
+        est_method = "dr",
+        control_group = "notyettreated",
+        anticipation = 1)
+                       
+})
+
+Simple_anticipation <- lapply(models_anticipation, function(x){
+  aggte(x, type = "simple")
+})
+
+ATT_anticipation <- lapply(Simple_anticipation, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "1-Year Anticipation")
+})
+
+
+anticipation_values <- as.data.frame(do.call(rbind, ATT_anticipation)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+anticipation_merged <- rbind(anticipation_values, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper))
+
+
+ # Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(anticipation_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
        aes(x=Variable, y=ATT, color=Specification)) +
   geom_point(position=dodge) +
   geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
@@ -551,7 +238,7 @@ small_values <- ggplot(filter(ATT, Variable!="Claim Count" & Variable!="Number P
   scale_color_manual(values=c("#999999", "#E69F00"))
 
 
-large_values <- ggplot(filter(ATT, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+large_values <- ggplot(dplyr::filter(anticipation_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
        aes(x=Variable, y=ATT, color=Specification)) +
   geom_point(position=dodge) +
   geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
@@ -571,13 +258,152 @@ ggarrange(
   align="v"
 )
 
-ggsave("Objects/LI_results.pdf")
+ggsave("Objects/anticipation_graph.pdf", height=6, width=11, units = "in")
 
 
 
+### LIMITED YEARS #####################################################################################
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+# Create List of Results for each age group
+models_years <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & year<2016) else dplyr::filter(Physician_Data,minyr_EHR>0 & year<2016),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_years_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & year<2016) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & year<2016),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_years_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & year<2016) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & year<2016),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+# Translate to single ATT value for each age group
+Simple_years <- lapply(models_years, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_years_young <- lapply(models_years_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_years_old <- lapply(models_years_old, function(x){
+  aggte(x, type = "simple")
+})
+
+# Save relevant information for each age group
+ATT_years <- lapply(Simple_years, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Limited Years: 2009-2015")
+})
+
+ATT_years_young <- lapply(Simple_years_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "Limited Years: 2009-2015")
+})
+
+ATT_years_old <- lapply(Simple_years_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "Limited Years: 2009-2015")
+})
+
+# Convert to data frame for each age group 
+years_values <- as.data.frame(do.call(rbind, ATT_years)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+years_values_young <- as.data.frame(do.call(rbind, ATT_years_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+years_values_old <- as.data.frame(do.call(rbind, ATT_years_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+# Merge all ages and main specification results
+years_merged <- rbind(years_values, years_values_young, years_values_old, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
 
 
+# Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(years_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
 
+
+large_values <- ggplot(dplyr::filter(years_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+# Save graph
+ggsave("Objects/years_graph.pdf", height=6, width=11, units = "in")
 
 
 
@@ -585,36 +411,279 @@ ggsave("Objects/LI_results.pdf")
 
 ### PHYSICIANS NOT EXPOSED TO DATA ASSISTANTS #####################################################################
 
-da_cs <- att_gt(
-  yname = "retire",                # LHS Variable
-  gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-  idname = "DocNPI",               # ID
-  tname = "year",                  # Time Variable
-  # xformla = NULL                 # No covariates
-  xformla = ~grad_year,            # Time-invariant controls
-  data = dplyr::filter(
-  Physician_Data,minyr_EHR>0 & works_with_DA==0 & max_age<=60),   # Remove never-treated units
-  # data = Physician_Data
-  est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-  control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-  clustervars = "DocNPI",          # Cluster Variables          
-  anticipation=0                   # can set a number of years to account for anticipation effects
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+# Create List of Results for each age group
+models_DA <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & year<2016 & works_with_DA==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & year<2016 & works_with_DA==0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_DA_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & year<2016 & works_with_DA==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & year<2016 & works_with_DA==0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_DA_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & year<2016 & works_with_DA==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & year<2016 & works_with_DA==0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+# Translate to single ATT value for each age group
+Simple_DA <- lapply(models_DA, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_DA_young <- lapply(models_DA_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_DA_old <- lapply(models_DA_old, function(x){
+  aggte(x, type = "simple")
+})
+
+# Save relevant information for each age group
+ATT_DA <- lapply(Simple_DA, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "No Data Assistants")
+})
+
+ATT_DA_young <- lapply(Simple_DA_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "No Data Assistants")
+})
+
+ATT_DA_old <- lapply(Simple_DA_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "No Data Assistants")
+})
+
+# Convert to data frame for each age group 
+DA_values <- as.data.frame(do.call(rbind, ATT_DA)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+DA_values_young <- as.data.frame(do.call(rbind, ATT_DA_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+DA_values_old <- as.data.frame(do.call(rbind, ATT_DA_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+# Merge all ages and main specification results
+DA_merged <- rbind(DA_values, DA_values_young, DA_values_old, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+
+# Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(DA_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+
+large_values <- ggplot(dplyr::filter(DA_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
 )
-# Save p-value for pre-trends to put in footnote of table
-p<-da_cs$Wpval
 
-# Aggregate the effects
-da_cs_dyn <- aggte(da_cs, type = "dynamic", na.rm=T)
-
-# Create a plot
-cs_da_allEHR 
-ggdid(da_cs_dyn, xlab="\nEvent Time", title="All Physicians") + 
-  labs(caption=paste0("p-value= ",round(p,3),"\n")) + theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="")  +
-  theme(text = element_text(size = 17, family="lm"))
+# Save graph
+ggsave("Objects/DA_graph.pdf", height=6, width=11, units = "in")
 
 
 
+## DIFFERENT ESTIMATORS ############################################################################################
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+# Stacked Regression ###
+for (d in 2010:2015){
+  subgroup <- Physician_Data %>%
+    mutate(treated_unit=ifelse(minyr_EHR==d,1,0),
+           clean_control=ifelse(minyr_EHR>d,1,0),
+           years_included=ifelse(year>=d-1 & year<=d+1,1,0)) %>%
+    mutate(inclusion=years_included*(treated_unit+clean_control)) %>%
+    dplyr::filter(inclusion==1)
+  
+  assign(paste0("subgroup_",d),subgroup)
+}
+
+stacked_data_1 <- rbind(subgroup_2010, subgroup_2011,subgroup_2012,subgroup_2013,subgroup_2014, subgroup_2015)
+
+
+models_stacked <- lapply(varlist, function(x){
+  feols(xpd(..lhs ~ treated_unit:rel_m1 + treated_unit:rel_0 + treated_unit:rel_p1 + experience | DocNPI:minyr_EHR, ..lhs = x),
+        cluster="DocNPI",
+        data=stacked_data_1)
+})
+
+ATT_stacked <- lapply(models_stacked, function(x){
+  c(x$fml[[2]],
+    round(x[["coefficients"]][["treated_unit:rel_p1"]],5), 
+    round(x[["se"]][["treated_unit:rel_p1"]], 5),
+    round(x[["coefficients"]][["treated_unit:rel_p1"]]-(1.959*x[["se"]][["treated_unit:rel_p1"]]),5),
+    round(x[["coefficients"]][["treated_unit:rel_p1"]]+(1.959*x[["se"]][["treated_unit:rel_p1"]]),5),
+    "Any",
+    "Stacked Regression")
+})
+
+stacked_values <- as.data.frame(do.call(rbind, ATT_stacked)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+
+# 2sDid #####
+models_2sdid <- lapply(varlist, function(x){
+  did2s(Physician_Data,
+        yname = x, 
+        first_stage = ~ 0 | DocNPI + year, 
+        second_stage = ~rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 +
+          rel_p2 + rel_p3 + rel_p4, 
+        treatment = "anyEHR_exposed",
+        cluster_var="DocNPI",
+        bootstrap=TRUE,
+        n_bootstraps = 250)
+})
+
+agg_2sdid <- lapply(models_2sdid, function(x){
+  aggregate(x, agg="(rel_p)")
+})
+
+ATT_2sdid <- lapply(agg_2sdid, function(x){
+  c("name",
+    round(x[[1]],5), 
+    round(x[[2]], 5),
+    round(x[[1]]-(1.959*x[[2]]),5),
+    round(x[[1]]+(1.959*x[[2]]),5),
+    "Any",
+    "Two-Stage DiD")
+})
+
+ATT_2sdid[[1]][[1]] <- "retire"
+ATT_2sdid[[2]][[1]] <- "pos_office"
+ATT_2sdid[[3]][[1]] <- "work_in_office"
+ATT_2sdid[[4]][[1]] <- "change_zip"
+ATT_2sdid[[5]][[1]] <- "npi_unq_benes"
+ATT_2sdid[[6]][[1]] <- "claim_count_total"
+
+tsdid_values <- as.data.frame(do.call(rbind, ATT_2sdid)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+
+
+
+
+
+
+estimates_merged <- rbind(stacked_values, tsdid_values, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper),
+                SE=as.numeric(SE),
+                Variable=as.character(Variable),
+                Specification=as.character(Specification)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(estimates_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+
+large_values <- ggplot(dplyr::filter(estimates_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+# Save graph
+ggsave("Objects/estimators_graph.pdf", height=6, width=11, units = "in")
 
 
 
