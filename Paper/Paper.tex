@@ -123,7 +123,7 @@ where $G_g=1$ for those in group $g$. A group indicates all physicians treated, 
 
 There are several assumptions necessary to identify $ATT(g,t)$. First, I assume that treatment is not reversed once it occurs. That is, once a physician is exposed to an EHR, they cannot be un-exposed. At the hospital level, this assumption is supported by both the institutional details of hospital EHR implementation and the definition of exposure. An EHR is a costly technology and requires a significant amount of collaboration to implement. A hospital does not have incentive to un-implement an EHR once it is implemented. They may add features or switch vendors, but do not reverse EHR use. This institutional detail is supported by Figure \ref{fig:hosp_treat}, which shows EHR status of a random sample of hospitals over time. Further, since we think of treatment at the physician level as exposure to the technology, this assumption is satisfied when thought of as whether the physician has ever used an EHR. Once they are exposed to the EHR for the first time, that experience cannot be forgotten. However, when considering the outcomes of patient count and billing activity, it could be that a physician moves from a hospital that uses an EHR to a hospital that does not, affecting the number of claims observed in the data. I investigate this possibility and limit the data to address it in Section \ref{sec:patientcount}. 
 
-Second, I assume physicians do not anticipate EHR exposure prior to occurrence. Since the technology has different vendors and varies in capabilities, anticipation may be a concern if physicians learn that the system will be implemented and then do not actually use it until a future period. Generally, even a complex EHR system can be completely set up within a year, and most systems take 6 to 9 months (\cite{uzialko_2021}). Therefore, I proceed in the main specification assuming no anticipation. However, I explore and present results for a one year anticipation period in Appendix (). 
+Second, I assume physicians do not anticipate EHR exposure prior to occurrence. Since the technology has different vendors and varies in capabilities, anticipation may be a concern if physicians learn that the system will be implemented and then do not actually use it until a future period. Generally, even a complex EHR system can be completely set up within a year, and most systems take 6 to 9 months (\cite{uzialko_2021}). Therefore, I proceed in the main specification assuming no anticipation. However, I explore and present results for a one year anticipation period in Appendix \ref{app:anticipation}. 
 
 As is usual in a difference-in-differences framework, I assume a version of parallel trends based on not-yet-treated units. I assume that, conditional on covariates, average outcomes for those treated in group $g$ would have followed a parallel trend as those in groups treated in later periods. This assumption would be violated under external conditions in certain years that may be correlated with labor markets, such as a major recession. The time period I study, 2009-2017, is reassuringly stable. In my analysis, I present p-values for a Wald test of pre-trends. In most cases, there is no evidence of a pre-trend, however, I investigate the assumption in detail in Appendix (). 
 
@@ -377,18 +377,29 @@ I present a comparison of the average treatment effect in the main specification
 
 
 
-\subsection{Anticipation}
+\subsection{Anticipation}\label{app:anticipation}
+
+While there is evidence to suggest the time it takes to implement an EHR does not exceed one year, there still may be some anticipation if physicians are expecting implementation in the hospitals they work in. In Figure \ref{fig:anticipation}, I present aggregated estimates in the case of one year of anticipation. The results are virtually identical, just noisier, compared to the estimates from the main specification. 
+
+\subsection{Other Estimators}
 
 
 \clearpage
 
 \section{Tables and Figures}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
-    \caption{Comparison of ATT, Main Specification and Low-Integration Treatment Variable}
+    \caption{Comparison of ATT, Low-Integration Treatment Variable}
     \includegraphics[scale=.5]{Objects/LI_results.pdf}
     \label{fig:LI}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \caption{ATT With Anticipation}
+    \includegraphics[scale=.57]{Objects/anticipation_graph.pdf}
+    \label{fig:anticipation}
 \end{figure}
 
 
