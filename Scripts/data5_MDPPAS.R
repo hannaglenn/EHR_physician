@@ -2,7 +2,7 @@ library(readr)
 library(tidyr)
 library(stringr)
 library(dplyr)
-library(stringi)
+library(lubridate)
 
 # ------------------------------------- INITIALIZING PHYSICIAN DATA WITH MDPPAS ------------------------------------
 #                                       Hanna Glenn, Emory University
@@ -59,6 +59,22 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
   dplyr::filter(max>.2)
   # 403k obs
+
+
+## Read in Medicare Opt-Out Data
+opt_out <- read_csv(paste0(raw_data_path,"/Study_01.164.01_2022.04.15_Opt_Out_List_March.csv"), 
+                                                          col_types = cols(`Optout Effective Date` = col_date(format = "%m/%d/%Y"), 
+                                                                           `Optout End Date` = col_date(format = "%m/%d/%Y")))
+
+opt_out <- opt_out %>%
+  mutate(optout_year=year(`Optout Effective Date`)) %>%
+  filter(optout_year>2008 & optout_year<2018) %>%
+  select(NPI,Specialty,optout_year) 
+
+Physician_Data <- Physician_Data %>%
+  left_join(opt_out,by=c("DocNPI"="NPI"))
+# I see zero doctors actually opt out of medicare... can this be right?
+
 
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
 

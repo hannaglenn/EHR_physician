@@ -4,6 +4,7 @@ library(did)
 library(ggpubr)
 library(fixest)
 library(did2s)
+library(readxl)
 
 
 
@@ -684,6 +685,644 @@ ggarrange(
 
 # Save graph
 ggsave("Objects/estimators_graph.pdf", height=6, width=11, units = "in")
+
+
+
+### HETEROGENEITY ANALYSIS: MALE VS. FEMALE #####################################################################
+
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+# Create List of Results for each gender
+models_male <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & female==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & female==0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_male_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & female==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & female==0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_male_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & female==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & female==0),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_female <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & female==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & female==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_female_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & female==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & female==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_female_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & female==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & female==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+# Translate to single ATT value for each gender
+Simple_male <- lapply(models_male, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_male_young <- lapply(models_male_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_male_old <- lapply(models_male_old, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_female <- lapply(models_female, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_female_young <- lapply(models_female_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_female_old <- lapply(models_female_old, function(x){
+  aggte(x, type = "simple")
+})
+
+# Save relevant information for each gender
+ATT_male <- lapply(Simple_male, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Male")
+})
+
+ATT_male_young <- lapply(Simple_male_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "Male")
+})
+
+ATT_male_old <- lapply(Simple_male_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "Male")
+})
+
+ATT_female <- lapply(Simple_female, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Female")
+})
+
+ATT_female_young <- lapply(Simple_female_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "Female")
+})
+
+ATT_female_old <- lapply(Simple_female_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "Female")
+})
+
+# Convert to data frame for each age group 
+male_values <- as.data.frame(do.call(rbind, ATT_male)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+male_values_young <- as.data.frame(do.call(rbind, ATT_male_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+male_values_old <- as.data.frame(do.call(rbind, ATT_male_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+female_values <- as.data.frame(do.call(rbind, ATT_female)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+female_values_young <- as.data.frame(do.call(rbind, ATT_female_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+female_values_old <- as.data.frame(do.call(rbind, ATT_female_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+# Merge all genders and main specification results
+gender_merged <- rbind(male_values, male_values_young, male_values_old,female_values, female_values_young, female_values_old, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+
+# Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(gender_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00","#56B4E9"))
+
+
+large_values <- ggplot(dplyr::filter(gender_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00","#56B4E9"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+# Save graph
+ggsave("Objects/gender_graph.pdf", height=6, width=11, units = "in")
+
+
+## RURAL vs. URBAN ZIP CODES ------------------------------------------------------------------- #####
+# Read in rural zip code data
+RUCA2010zipcode <- read_excel(paste0(raw_data_path,"/RUCA2010zipcode.xlsx"), 
+                              sheet = "Data")
+
+Physician_Data <- Physician_Data %>%
+  mutate(phy_zip1=as.character(phy_zip1)) %>%
+  dplyr::left_join(RUCA2010zipcode, by=c("phy_zip1"="ZIP_CODE"))
+
+observe <- Physician_Data %>%
+  dplyr::filter(ever_rural==1 & minyr_EHR>0)
+
+# Create rural and urban indicators
+Physician_Data <- Physician_Data %>%
+  mutate(rural=ifelse(RUCA1==8 | RUCA1==9 | RUCA1==10,1,0),
+         urban=ifelse(RUCA1==1 | RUCA1==2 | RUCA1==3,1,0))
+
+# Create "ever urban" and "ever rural"
+Physician_Data <- Physician_Data %>%
+  dplyr::group_by(DocNPI) %>%
+  dplyr::mutate(sum=sum(rural),
+         sum1=sum(urban)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ever_rural=ifelse(sum>0,1,0),
+         ever_urban=ifelse(sum1>0,1,0)) %>%
+  dplyr::select(-sum,-sum1)
+
+# Run regressions
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+# Create List of Results for each gender
+models_rural <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & ever_rural==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_rural_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & ever_rural==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & ever_rural==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_rural_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & ever_rural==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & ever_rural==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_urban <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & ever_urban==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & ever_urban==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_urban_young <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & ever_urban==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & year<2016 & ever_urban==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+models_urban_old <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & ever_urban==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & ever_urban==1),
+         est_method = "dr",
+         control_group = "notyettreated")
+  
+})
+
+# Translate to single ATT value for each gender
+Simple_rural <- lapply(models_rural, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_rural_young <- lapply(models_rural_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_rural_old <- lapply(models_rural_old, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_urban <- lapply(models_urban, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_urban_young <- lapply(models_urban_young, function(x){
+  aggte(x, type = "simple")
+})
+
+Simple_urban_old <- lapply(models_urban_old, function(x){
+  aggte(x, type = "simple")
+})
+
+# Save relevant information for each gender
+ATT_rural <- lapply(Simple_rural, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Rural")
+})
+
+ATT_rural_young <- lapply(Simple_rural_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "Rural")
+})
+
+ATT_rural_old <- lapply(Simple_rural_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "Rural")
+})
+
+ATT_urban <- lapply(Simple_urban, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Urban")
+})
+
+ATT_urban_young <- lapply(Simple_urban_young, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "< 60",
+    "Urban")
+})
+
+ATT_urban_old <- lapply(Simple_urban_old, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    ">= 60",
+    "Urban")
+})
+
+# Convert to data frame for each age group 
+rural_values <- as.data.frame(do.call(rbind, ATT_rural)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+rural_values_young <- as.data.frame(do.call(rbind, ATT_rural_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+rural_values_old <- as.data.frame(do.call(rbind, ATT_rural_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+urban_values <- as.data.frame(do.call(rbind, ATT_urban)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+urban_values_young <- as.data.frame(do.call(rbind, ATT_urban_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+urban_values_old <- as.data.frame(do.call(rbind, ATT_urban_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+# Merge all genders and main specification results
+rural_merged <- rbind(rural_values, rural_values_young, rural_values_old,urban_values, urban_values_young, urban_values_old, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+
+# Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(rural_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00","#56B4E9"))
+
+
+large_values <- ggplot(dplyr::filter(rural_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00","#56B4E9"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+# Save graph
+ggsave("Objects/gender_graph.pdf", height=6, width=11, units = "in")
+
+
+
+## PHYSICIANS WHO SEE PRIMARILY WHITE PATIENTS ------------------------------------------------------------#
+
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+
+models_wht <- lapply(varlist, function(x) {
+  att_gt(yname = x,
+         gname = "minyr_EHR",
+         idname = "DocNPI",
+         tname = "year",
+         xformla = ~grad_year,
+         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & perc_white>.5) else dplyr::filter(Physician_Data,minyr_EHR>0 & perc_white>.5),
+         est_method = "dr",
+         control_group = "notyettreated",
+         anticipation = 1)
+  
+})
+
+Simple_wht <- lapply(models_wht, function(x){
+  aggte(x, type = "simple")
+})
+
+ATT_wht <- lapply(Simple_wht, function(x){
+  c(x$DIDparams$yname,
+    round(x$overall.att,5), 
+    round(x$overall.se, 5),
+    round(x$overall.att-(1.959*x$overall.se),5),
+    round(x$overall.att+(1.959*x$overall.se),5),
+    "Any",
+    "Sees Majority White Patients")
+})
+
+
+wht_values <- as.data.frame(do.call(rbind, ATT_wht)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+wht_merged <- rbind(wht_values, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper))
+
+
+# Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(wht_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+
+large_values <- ggplot(dplyr::filter(wht_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#999999", "#E69F00"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+ggsave("Objects/wht_graph.pdf", height=6, width=11, units = "in")
+
+
+
+
+# Make one large heterogeneity graph ------------------------------------------------
+
+heterogeneity_merged <- rbind(wht_values, female_values, male_values, rural_values, urban_values, singel_ATT_values) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+# Create Graph
+dodge <- position_dodge(width=.75)
+small_values <- ggplot(dplyr::filter(heterogeneity_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab(" ") +
+  scale_color_manual(values=c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+
+
+large_values <- ggplot(dplyr::filter(heterogeneity_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
+                       aes(x=Variable, y=ATT, color=Specification)) +
+  geom_point(position=dodge) +
+  geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
+  geom_hline(yintercept=0, linetype="dashed", size=.1) +
+  coord_flip() + theme_bw() + 
+  theme(text=element_text(size=17, family="lm")) +
+  xlab(" ") + ylab("\nATT and 95% CI") +
+  scale_color_manual(values=c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+
+ggarrange(
+  small_values,
+  large_values,
+  nrow=2,
+  common.legend = TRUE,
+  legend="right",
+  heights  = c(1,1),
+  align="v"
+)
+
+ggsave("Objects/heterogeneity _graph.pdf", height=6, width=11, units = "in")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
