@@ -44,7 +44,9 @@ sorting=ynt,citestyle=authoryear]{biblatex}
 
 \maketitle
 
-
+\begin{abstract}
+    I investigate the relationship between technological innovation and labor market decisions by examining changes in physician behavior as a result of major technology shift in U.S. health care, electronic health records. Physician labor market decisions such as retirement, choice of work setting, and productivity potentially have downstream effects for quality of care and access to care for patients. I treat EHR implementation in hospitals as exogenous to physicians employed by the hospital and estimate average group time treatment effects on these labor market outcomes. I find that physicians of retirement age are more likely to retire, younger physicians are more likely to switch to office settings, and physicians who do not switch work settings see more patients as a results of individual EHR exposure. Further, I find that data assistants do not play a meaningful role in physician response to EHR implementation. 
+\end{abstract}
 
 \vspace{1.5cm}
 
@@ -83,7 +85,7 @@ Figure \ref{fig:EPIC} shows a two computer screenshots of what physicians might 
 
 \section{Physician Incentives}
 
-The physician behaviors that I consider in this analysis are closely intertwined and should not be taken as independent. For example, a physician's choice of work setting depends on their previous decision not to retire, and billing activity depends on work setting. Thus, I discuss the behaviors in terms of stages of decision making. 
+This section serves to investigate why we might expect physicians to respond to the implementation of EHRs. The physician behaviors that I consider in this analysis are closely related and should not be taken as independent. For example, a physician's choice of work setting depends on their previous decision to prolong retirement, and billing activity depends on work setting. Thus, I discuss the behaviors in terms of stages of decision making. 
 
 \subsection{Retirement}
 
@@ -433,6 +435,7 @@ In this section, I present results for the main specification with a data limita
 
 \section{Heterogeneity Analysis}
 
+While the majority of the analysis focuses on senior vs. young physicians, there are other physician characteristics that are also interesting to investigate. Figure \ref{fig:het} presents estimates for different subsets of physicians. These include female physicians,those in rural or urban zip codes, and physicians who see majority white patients relative to the entire sample. Most of the estimates are similar across these characteristics, with some particularly noisy due to low sample sizes (such as physicians in rural settings). The implications implication of this table is that EHRs did in fact lead to behavioral changes in many different physicians, not just a specific subgroup.  
 
 
 \clearpage
@@ -478,8 +481,8 @@ In this section, I present results for the main specification with a data limita
 \begin{figure}[ht]
     \centering
     \caption{Heterogeneity Analysis}
-    \includegraphics[scale=.57]{Objects/gr}
-    \label{fig:DA}
+    \includegraphics[scale=.57]{Objects/heterogeneity _graph.pdf}
+    \label{fig:het}
 \end{figure}
 
 
