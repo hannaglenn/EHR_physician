@@ -161,7 +161,7 @@ ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) +
         legend.key.width = unit(.3, 'cm'),
         text=element_text(size=17, family="lm"))
 
-ggsave("Objects/sum_stats_year.pdf", width=11.4, height=6, units="in")
+ggsave("Objects/sum_stats_year.pdf", width=10, height=7, units="in")
 
 # Graph continuous labor variable with lines for each year treated ------------------------------------
 # I don't think I want to include this graph in the paper
@@ -391,7 +391,7 @@ AHA_sample <- AHAmainsurvey %>%
 
 
 
-panelview(AHA_sample, Y=NULL, D="EHR", index=c("ID","year"), axis.lab = "time", by.timing=TRUE) +
-  theme(text=element_text(size=70,family="lm"))
+panelview(AHAmainsurvey, Y=NULL,D="EHR", index=c("ID","year"), axis.lab = "time", by.timing=TRUE) +
+  theme(text=element_text(size=10,family="lm"))
 
 ggsave("Objects/hosp_treat.pdf")

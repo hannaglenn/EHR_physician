@@ -53,11 +53,11 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(max_age=max(age)) %>%
   dplyr::ungroup()
 
-# Drop any physicians with less than 20% of patients in hospitals
+# Drop any physicians with less than 70% of patients in hospitals
 Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
-  dplyr::filter(max>.2)
+  dplyr::filter(max>.7)
   # 403k obs
 
 
@@ -73,7 +73,7 @@ opt_out <- opt_out %>%
 
 Physician_Data <- Physician_Data %>%
   left_join(opt_out,by=c("DocNPI"="NPI"))
-# I see zero doctors actually opt out of medicare... can this be right?
+# I see zero doctors actually opt out of medicare.
 
 
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
@@ -122,10 +122,6 @@ Physician_Data <- Physician_Data %>%
 # Create variable for whether the physician ever retires
 Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
   dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1)) 
-
-observe <- Physician_Data %>%
-  dplyr::filter(ever_retire==1) %>%
-  dplyr::select(DocNPI, year,age,retire,hosp_patient_count,claim_count_total,missingbefore)
 
 
 # OFFICE ####
