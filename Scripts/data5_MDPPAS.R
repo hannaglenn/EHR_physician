@@ -58,7 +58,7 @@ Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
   dplyr::filter(max>.7)
-  # 403k obs
+  # 214k obs
 
 
 ## Read in Medicare Opt-Out Data

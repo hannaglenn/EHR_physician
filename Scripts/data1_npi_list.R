@@ -26,7 +26,7 @@ MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPP
 # they are family practice or internal medicine. (Some of these will get dropped later when I filter doctor-hospital pairs.)
 MDPPAS <- MDPPAS %>%
   dplyr::mutate(n=ifelse(spec_prim_1_name=='Hospitalist' | spec_prim_1_name=='Internal Medicine' |
-                           spec_prim_1_name=="Pediatric Medicine" | spec_prim_1_name=='Family Practice' |
+                           spec_prim_1_name=='Family Practice' |
                            spec_prim_1_name=="General Practice",1,0)) %>%
   dplyr::group_by(npi) %>%
   dplyr::mutate(sum=sum(n)) %>%
@@ -56,7 +56,7 @@ npi_list <- MDPPAS %>%
 # Create a list of npi numbers to use when creating the shared patient data
 npi_list <- npi_list %>%
   dplyr::distinct(npi)
-  # 243k obs
+  # 240k obs
 
 
 

@@ -115,8 +115,8 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   mutate(ID = cur_group_id())
 
 # Get rid of unneeded variables
-phys_hosp_pairs <- data %>%
-  select(-yrs,-count)
+phys_hosp_pairs <- phys_hosp_pairs %>%
+  select(year,HospNPI,DocNPI,samedaycount,ID)
 
 saveRDS(phys_hosp_pairs,paste0(created_data_path,"phys_hosp_pairs.rds"))
 

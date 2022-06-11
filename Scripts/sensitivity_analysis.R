@@ -1315,8 +1315,87 @@ ggsave("Objects/heterogeneity _graph.pdf", height=6, width=11, units = "in")
 
 
 
+## TWO WAY FIXED EFFECTS ------------------------------------- ####
+
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
 
 
+twfe_models <- lapply(varlist, function(x){
+  feols(xpd(..lhs ~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
+              rel_p2+ rel_p3 + rel_p4 | DocNPI + year, ..lhs = x),
+        cluster="DocNPI",
+        data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data,minyr_EHR>0)
+  )
+})
+
+#Extract Needed Info from Regressions
+coefs <- lapply(twfe_models, function(x){
+  y <- as.data.frame(list(x$coefficients,x$se))
+   y <- y %>% rename(Estimate=names(y)[[1]]) %>%
+     rename(se=names(y)[[2]]) 
+   
+   y <- rbind(y[1:3, ],            
+                     c(0,0,"rel_m1"),
+                     y[4:8, ])
+   rownames(y)[rownames(y)=="4"] <- "rel_m1"
+   
+   y <- y %>%
+     mutate(vars=row.names(y),
+            se=as.numeric(se),
+            Estimate=as.numeric(Estimate)) %>%
+     mutate(vars=ifelse(vars=="rel_m4", "-4",vars),
+            vars=ifelse(vars=="rel_m3", "-3",vars),
+            vars=ifelse(vars=="rel_m2", "-2",vars),
+            vars=ifelse(vars=="rel_m1", "-1",vars),
+            vars=ifelse(vars=="rel_0", "0",vars),
+            vars=ifelse(vars=="rel_p1", "1",vars),
+            vars=ifelse(vars=="rel_p2", "2",vars),
+            vars=ifelse(vars=="rel_p3", "3",vars),
+            vars=ifelse(vars=="rel_p4", "4",vars)) %>%
+     mutate(vars=factor(vars,levels=unique(vars))) %>%
+     mutate(category=ifelse(vars=="-4"|vars=="-3"|vars=="-2"|vars=="-1","Pre","Post")) %>%
+     mutate(title=as.character(x[["fml"]][[2]]))      
+      
+    y <- y %>%
+      mutate(title=ifelse(title=="retire", "Outcome: Retire",title),
+             title=ifelse(title=="pos_office", "Outcome: Fraction of Patients Seen in Office",title),
+             title=ifelse(title=="work_in_office", "Outcome: Works in an Office",title),
+             title=ifelse(title=="change_zip", "Outcome: Change Zip Codes",title),
+             title=ifelse(title=="npi_unq_benes", "Outcome: Number of Patients",title),
+             title=ifelse(title=="claim_count_total", "Outcome: Number of Claims",title))
+      
+    return(y)
+})
+
+graphs <- lapply(coefs, function(x){
+  pd <- position_dodge(0.2) # move them .05 to the left and right
+  
+  y <- ggplot(x, aes(vars, Estimate)) + 
+    geom_hline(yintercept=0, lty=2, lwd=.5, colour="black") +
+    geom_errorbar(aes(ymin=Estimate - 1.96*se, ymax=Estimate + 1.96*se, color=category), 
+                  lwd=.5, width=.18) +
+    geom_point(aes(fill=category, color=category), size=1.5, pch=21) +
+    theme_bw() + theme(text=element_text(size=10,family="lm"),
+                       legend.title = element_blank()) + xlab("Event Time") +
+    ylab("Estimate and 95% CI") +
+    scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  scale_fill_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") + labs(title=x$title[[1]])
+  
+  return(y)
+})
+
+twfe_finalplot <- ggarrange(graphs[[1]]+ rremove("ylab") + rremove("xlab"),
+          graphs[[2]] + rremove("ylab") + rremove("xlab"),
+          graphs[[3]] + rremove("ylab") + rremove("xlab"),
+          graphs[[4]] + rremove("ylab") + rremove("xlab"),
+          graphs[[5]] + rremove("ylab") + rremove("xlab"),
+          graphs[[6]] + rremove("ylab") + rremove("xlab"),
+          ncol=2, nrow=3,
+          common.legend = TRUE,
+          labels=NULL,
+          legend="bottom")
+
+ggsave("Objects/twfe_plot.pdf", twfe_finalplot, height=9.5, width=8, units = "in")
 
 
 

@@ -288,14 +288,14 @@ graphs <- lapply(Models_agg, function(x){
     labs(caption=paste0("p-value= ",round(x$p_young,3))) +
     theme_bw() +
     scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-    ylim(1.5*min,1.5*max) +
+    ylim(1.8*min,1.5*max) +
     theme(legend.position = "none", text = element_text(size = 17, family="lm"))
   
   old <- ggdid(x[["agg_old"]], theming=FALSE, legend=FALSE, title="Hospitalists >= 60") + 
     labs(caption=paste0("p-value= ",round(x$p_old,3))) +
     theme_bw() +
     scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-    ylim(1.5*min,1.5*max) +
+    ylim(1.8*min,1.5*max) +
     theme(legend.position = "none", text = element_text(size = 17, family="lm"))
   
   list(all=all,young=young,old=old)
@@ -311,8 +311,23 @@ plots <- lapply(graphs, function(x){
     common.legend = TRUE,
     legend="right",
     heights  = c(1.25,1)
-  )
+  ) %>%
+    annotate_figure(
+      bottom=text_grob("\nEvent Time", family="lm", hjust=.5, vjust=.5, size=15)
+    )
 })
+
+# Save plots
+ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
+ggsave(file="Objects/officeind_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
+ggsave(file="Objects/zip_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
+ggsave(file="Objects/patient_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
+
+
+# Save specific values to reference in paper
+cat(round(Models_agg[[1]][["agg_all"]][["overall.att"]],3),file="Results.tex")
 
 
 observe <- Physician_Data %>%

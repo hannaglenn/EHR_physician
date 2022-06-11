@@ -11,7 +11,7 @@ library(kableExtra)
 # ORDER::::: 4
 
 # This script develops the main dataset to be used in the paper.
-# This builds on the physician-hospital pairs created in "data2_pairs.R"
+# This builds on the physician-hospital pairs created in "data3_pairs.R"
 # First, I bring in (raw) Physician Compare for information about medical school graduation and gender. 
 # For EHR information, I use the (raw) main and supplement AHA surveys.
 # The final dataset is called "Data.rds"
@@ -37,7 +37,7 @@ data <- data %>%
   left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
   distinct() %>%
   filter(grad_year<2005)
-  # Now have 900k obs
+  # Now have 902k obs
 
 
 #### Create EHR Variables ---------------------------------------------------------------------- ####
@@ -53,12 +53,12 @@ data <- data %>%
 num_hosp <- data %>% ungroup() %>%
   filter(!is.na(AHAID)) %>%
   distinct(HospNPI)
-  # There are 4253 unique hospitals in the data that are not missing AHAID (good)
+  # There are 4241 unique hospitals in the data that are not missing AHAID (good)
 
 # Only keep pairs with AHA hospitals since that is where EHR information comes from
 data <- data %>%
   filter(!is.na(AHAID))
-  #780k obs
+  #777k obs
 
 # Read in main AHA survey data
 # I need to think about adding more hospital characteristics to this dataset
@@ -86,7 +86,7 @@ num_missing_EHR <- data %>%
   filter(is.na(EHLTH)) %>%
   group_by(year) %>%
   distinct(HospNPI)
-  # 7911 missing 
+  # 7902 missing 
 
 # Find out how many hospitals are missing an answer in every year
 num_always_missing_EHR <- data %>% ungroup() %>%
@@ -97,7 +97,7 @@ num_always_missing_EHR <- data %>% ungroup() %>%
   filter(always_missing==1) %>%
   ungroup() %>%
   distinct(HospNPI, .keep_all = T)
-  # There are only 89 hospitals that never answer this question, but they typically have answers to the other questions in the survey
+  # There are only 90 hospitals that never answer this question, but they typically have answers to the other questions in the survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
 data <- data %>% group_by(AHAID) %>%
@@ -117,7 +117,7 @@ data <- data %>% group_by(AHAID) %>%
   mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
   mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
   ungroup()
-  # Now down to 4253 missing 
+  # Now down to 6822 missing 
 
 # Get rid of unneeded variables 
 data <- data %>% ungroup() %>%
@@ -155,7 +155,7 @@ AHAIT <- AHAIT %>%
 data <- data %>%
   mutate(AHAID=as.character(AHAID)) %>%
   left_join(AHAIT,by=c("AHAID"="ID","year"="YEAR"), na_matches="never") %>%
-  select(-Hospital_name, -decision_index,-documentation_index)
+  select(-decision_index,-documentation_index)
 
 # If the hospital doesn't have an EHR then make the indicators for decision/documentation 0
 data <- data %>%
@@ -175,6 +175,18 @@ data <- data %>%
 data <- data %>%
   mutate(DA=ifelse(is.na(DA),0,DA))
 
+# Get rid of physicians who only work on VA hospitals
+VA <- data %>%
+  mutate(VA=ifelse(str_detect(Hospital_name,"Veteran"),1,0)) %>%
+  filter(VA==1) %>%
+  distinct(pairID,VA)
+
+data <- data %>%
+  left_join(VA,by="pairID") %>%
+  filter(is.na(VA)) %>%
+  select(-VA)
+
+
 
 # Create/Clean Variables (Reading in data is complete) --------------------------------------------
 
@@ -192,7 +204,7 @@ data <- data %>%
   left_join(low_beds, by="HospNPI") %>%
   filter(is.na(low_beds)) %>%
   select(-low_beds)
-  # 779k obs
+  # 775k obs
 
 data <- data %>%
   group_by(DocNPI,year) %>%
@@ -488,7 +500,7 @@ Aggregated_Pairs <- data %>%
            frac_EHR, frac_EHR_dec, frac_EHR_doc, minyr_EHR, minyr_EHR_dec, minyr_EHR_int, minyr_EHR_dec_int,
            num_systems, hosp_patient_count, hosp_patient_count_EHRhosp, hosp_patient_count_noEHRhosp, 
            newnpi, never_newnpi)
-  #528k obs
+  #526k obs
 
 # Now complete the data
 Aggregated_Pairs <- complete(Aggregated_Pairs,DocNPI,year=2009:2017)
