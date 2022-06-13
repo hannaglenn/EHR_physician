@@ -69,7 +69,7 @@ AHAmainsurvey <- AHAmainsurvey %>%
   mutate(ID=as.character(ID)) %>%
   mutate(low_integration=ifelse(IPAHOS==1 | OPHOHOS==1 | CPHOHOS==1,1,0),
          high_integration=ifelse(GPWWHOS==1 | MSOHOS==1 | ISMHOS==1 | EQMODHOS==1,1,0)) %>%
-  rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
+  dplyr::rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
          joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
   select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
   select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS,
@@ -179,10 +179,10 @@ data <- data %>%
 VA <- data %>%
   mutate(VA=ifelse(str_detect(Hospital_name,"Veteran"),1,0)) %>%
   filter(VA==1) %>%
-  distinct(pairID,VA)
+  distinct(ID,VA)
 
 data <- data %>%
-  left_join(VA,by="pairID") %>%
+  left_join(VA,by="ID") %>%
   filter(is.na(VA)) %>%
   select(-VA)
 

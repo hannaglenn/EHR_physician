@@ -5,6 +5,7 @@ library(kableExtra)
 library(ggplot2)
 library(readr)
 library(showtext)
+library(panelView)
 
 font_add_google("Cormorant Garamond", "corm")
 
@@ -344,8 +345,7 @@ AHAmainsurvey <- AHAmainsurvey %>% ungroup() %>%
   select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
 
 AHAmainsurvey <- AHAmainsurvey %>%
-  mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) %>%
-  select(-EHLTH)
+  mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA)))
 
 # In some cases, 2009 or 2015 can be filled in to not have a missing value. 
 # Create dataset to fill in 2009 or 2015 conditionally
@@ -380,18 +380,20 @@ AHAmainsurvey <- AHAmainsurvey %>%
   select(-always_missing)
 
 sample <- AHAmainsurvey %>%
-  distinct(ID) %>%
-  sample_frac(.02) %>%
+  distinct(HospNPI) %>%
+  sample_frac(.02, replace=FALSE) %>%
   mutate(sample=1)
 
+
 AHA_sample <- AHAmainsurvey %>%
-  left_join(sample,by="ID") %>%
+  left_join(sample,by="HospNPI") %>%
   filter(sample==1) %>%
-  select(-sample)
+  select(-sample) 
 
 
 
-panelview(AHAmainsurvey, Y=NULL,D="EHR", index=c("ID","year"), axis.lab = "time", by.timing=TRUE) +
+
+panelview(AHA_sample, Y=NULL,D="EHR", index=c("HospNPI","year"), axis.lab = "time", by.timing=TRUE) +
   theme(text=element_text(size=10,family="lm"))
 
-ggsave("Objects/hosp_treat.pdf")
+ggsave("Objects/test.pdf")
