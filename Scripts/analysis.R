@@ -172,18 +172,66 @@ ggsave(file="Objects/patient_plot.pdf",plot=plots[[5]], width=10, height=7, unit
 ggsave(file="Objects/claim_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
 
 
-# Save specific values to reference in paper
-cat(round(Models_agg[[1]][["agg_all"]][["overall.att"]],3),file="Results.tex")
-
-
-observe <- Physician_Data %>%
-  filter(ever_retire==1) %>%
-  select(year, phy_zip1, DocNPI, age, retire, pos_office, claim_count_total)
+#Save plot of patient count dis-aggregated
+ggdid(models[[5]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count")
+ggsave(filename = "Objects/patient_group.pdf", width=10, height=12, units="in")
 
 
 
+# Create data frame of overall ATT values
 
+ATT_all <- lapply(Models_agg, function(x){
+  c(x[["agg_all"]][["DIDparams"]][["yname"]],
+    round(x[["agg_all"]][["overall.att"]],5), 
+    round(x[["agg_all"]][["overall.se"]], 5),
+    round(x[["agg_all"]][["overall.att"]]-(1.959*x[["agg_all"]][["overall.se"]]),5),
+    round(x[["agg_all"]][["overall.att"]]+(1.959*x[["agg_all"]][["overall.se"]]),5),
+    "Any",
+    "Main")
+})
 
+ATT_young <- lapply(Models_agg, function(x){
+  c(x[["agg_young"]][["DIDparams"]][["yname"]],
+    round(x[["agg_young"]][["overall.att"]],5), 
+    round(x[["agg_young"]][["overall.se"]], 5),
+    round(x[["agg_young"]][["overall.att"]]-(1.959*x[["agg_young"]][["overall.se"]]),5),
+    round(x[["agg_young"]][["overall.att"]]+(1.959*x[["agg_young"]][["overall.se"]]),5),
+    "< 60",
+    "Main")
+})
 
+ATT_old <- lapply(Models_agg, function(x){
+  c(x[["agg_old"]][["DIDparams"]][["yname"]],
+    round(x[["agg_old"]][["overall.att"]],5), 
+    round(x[["agg_old"]][["overall.se"]], 5),
+    round(x[["agg_old"]][["overall.att"]]-(1.959*x[["agg_old"]][["overall.se"]]),5),
+    round(x[["agg_old"]][["overall.att"]]+(1.959*x[["agg_old"]][["overall.se"]]),5),
+    ">= 60",
+    "Main")
+})
 
+# Convert to data frame
+values <- as.data.frame(do.call(rbind, ATT_all)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+values_young <- as.data.frame(do.call(rbind, ATT_young)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+values_old <- as.data.frame(do.call(rbind, ATT_old)) %>%
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
+
+# Merge all ages and main specification results
+merged <- rbind(values, values_young, values_old) %>%
+  dplyr::mutate(ATT=as.numeric(ATT),
+                Lower=as.numeric(Lower),
+                Upper=as.numeric(Upper)) %>%
+  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
+                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
+                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
+                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
+                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
+                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
+
+saveRDS(merged,file="CreatedData/main_ATT.rds")
 

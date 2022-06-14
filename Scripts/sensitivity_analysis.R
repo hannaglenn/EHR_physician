@@ -42,7 +42,7 @@ models_LI <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0) else dplyr::filter(Physician_Data,minyr_EHR_int>0),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR_int>0) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR_int>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR_int>0 & ever_retire==0 & never_newnpi==1)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -54,7 +54,7 @@ models_LI_young <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age<60) else dplyr::filter(Physician_Data,minyr_EHR_int>0 & max_age<60),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & max_age<60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR_int>0 & ever_retire==0 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR_int>0 & ever_retire==0 & never_newnpi==1 & max_age<60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -66,7 +66,7 @@ models_LI_old <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & ever_retire==0 & max_age>=60) else dplyr::filter(Physician_Data,minyr_EHR_int>0 & max_age>=60),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR_int>0 & max_age>=60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR_int>0 & ever_retire==0 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR_int>0 & ever_retire==0 & never_newnpi==1 & max_age>=60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -127,7 +127,7 @@ LI_values_old <- as.data.frame(do.call(rbind, ATT_LI_old)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
   
 # Merge all ages and main specification results
-LI_merged <- rbind(LI_values, LI_values_young, LI_values_old, singel_ATT_values) %>%
+LI_merged <- rbind(LI_values, LI_values_young, LI_values_old) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -142,7 +142,7 @@ LI_merged <- rbind(LI_values, LI_values_young, LI_values_old, singel_ATT_values)
 # Create Graph
 dodge <- position_dodge(width=.75)
 small_values <- ggplot(dplyr::filter(LI_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
-                       aes(x=Variable, y=ATT, color=Specification)) +
+                       aes(x=Variable, y=ATT)) +
   geom_point(position=dodge) +
   geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
   geom_hline(yintercept=0, linetype="dashed", size=.1) +
@@ -153,7 +153,7 @@ small_values <- ggplot(dplyr::filter(LI_merged, Variable!="Claim Count" & Variab
 
 
 large_values <- ggplot(dplyr::filter(LI_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
-                       aes(x=Variable, y=ATT, color=Specification)) +
+                       aes(x=Variable, y=ATT)) +
   geom_point(position=dodge) +
   geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
   geom_hline(yintercept=0, linetype="dashed", size=.1) +
