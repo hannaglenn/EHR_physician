@@ -127,7 +127,7 @@ LI_values_old <- as.data.frame(do.call(rbind, ATT_LI_old)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
   
 # Merge all ages and main specification results
-LI_merged <- rbind(LI_values, LI_values_young, LI_values_old) %>%
+LI_merged <- rbind(LI_values, LI_values_young, LI_values_old, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -142,25 +142,25 @@ LI_merged <- rbind(LI_values, LI_values_young, LI_values_old) %>%
 # Create Graph
 dodge <- position_dodge(width=.75)
 small_values <- ggplot(dplyr::filter(LI_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
-                       aes(x=Variable, y=ATT)) +
+                       aes(x=Variable, y=ATT, color=Specification)) +
   geom_point(position=dodge) +
   geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.5),position = dodge) + 
   geom_hline(yintercept=0, linetype="dashed", size=.1) +
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab(" ") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999", "Low-Integration"="#E69F00"))
 
 
 large_values <- ggplot(dplyr::filter(LI_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
-                       aes(x=Variable, y=ATT)) +
+                       aes(x=Variable, y=ATT, color=Specification)) +
   geom_point(position=dodge) +
   geom_errorbar(aes(ymax=Upper,ymin=Lower, width=.3),position = dodge)  +
   geom_hline(yintercept=0, linetype="dashed", size=.1) +
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab("\nATT and 95% CI") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999", "Low-Integration"="#E69F00"))
 
 ggarrange(
   small_values,
@@ -173,7 +173,7 @@ ggarrange(
 )
 
 # Save graph
-ggsave("Objects/LI_graph.pdf", height=6, width=11, units = "in")
+ggsave("Objects/LI_graph.pdf", height=7, width=10, units = "in")
 
 
 
@@ -189,7 +189,7 @@ models_anticipation <- lapply(varlist, function(x) {
         idname = "DocNPI",
         tname = "year",
         xformla = ~grad_year,
-        data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data,minyr_EHR>0),
+        data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
         est_method = "dr",
         control_group = "notyettreated",
         anticipation = 1)
@@ -220,7 +220,7 @@ anticipation_values <- as.data.frame(do.call(rbind, ATT_anticipation)) %>%
                 Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
                 Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
 
-anticipation_merged <- rbind(anticipation_values, singel_ATT_values) %>%
+anticipation_merged <- rbind(anticipation_values, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper))
@@ -236,7 +236,7 @@ small_values <- ggplot(dplyr::filter(anticipation_merged, Variable!="Claim Count
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab(" ") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999","1-Year Anticipation"="#E69F00"))
 
 
 large_values <- ggplot(dplyr::filter(anticipation_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
@@ -247,7 +247,7 @@ large_values <- ggplot(dplyr::filter(anticipation_merged, (Variable=="Claim Coun
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab("\nATT and 95% CI") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999","1-Year Anticipation"="#E69F00"))
 
 ggarrange(
   small_values,
@@ -259,7 +259,7 @@ ggarrange(
   align="v"
 )
 
-ggsave("Objects/anticipation_graph.pdf", height=6, width=11, units = "in")
+ggsave("Objects/anticipation_graph.pdf", height=7, width=10, units = "in")
 
 
 
@@ -273,48 +273,19 @@ models_years <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & year<2016) else dplyr::filter(Physician_Data,minyr_EHR>0 & year<2016),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & year<2016) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & year<2016) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & year<2016)),
          est_method = "dr",
          control_group = "notyettreated")
   
 })
 
-models_years_young <- lapply(varlist, function(x) {
-  att_gt(yname = x,
-         gname = "minyr_EHR",
-         idname = "DocNPI",
-         tname = "year",
-         xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & year<2016) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & year<2016),
-         est_method = "dr",
-         control_group = "notyettreated")
-  
-})
 
-models_years_old <- lapply(varlist, function(x) {
-  att_gt(yname = x,
-         gname = "minyr_EHR",
-         idname = "DocNPI",
-         tname = "year",
-         xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & year<2016) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & year<2016),
-         est_method = "dr",
-         control_group = "notyettreated")
-  
-})
 
 # Translate to single ATT value for each age group
 Simple_years <- lapply(models_years, function(x){
   aggte(x, type = "simple")
 })
 
-Simple_years_young <- lapply(models_years_young, function(x){
-  aggte(x, type = "simple")
-})
-
-Simple_years_old <- lapply(models_years_old, function(x){
-  aggte(x, type = "simple")
-})
 
 # Save relevant information for each age group
 ATT_years <- lapply(Simple_years, function(x){
@@ -327,38 +298,14 @@ ATT_years <- lapply(Simple_years, function(x){
     "Limited Years: 2009-2015")
 })
 
-ATT_years_young <- lapply(Simple_years_young, function(x){
-  c(x$DIDparams$yname,
-    round(x$overall.att,5), 
-    round(x$overall.se, 5),
-    round(x$overall.att-(1.959*x$overall.se),5),
-    round(x$overall.att+(1.959*x$overall.se),5),
-    "< 60",
-    "Limited Years: 2009-2015")
-})
-
-ATT_years_old <- lapply(Simple_years_old, function(x){
-  c(x$DIDparams$yname,
-    round(x$overall.att,5), 
-    round(x$overall.se, 5),
-    round(x$overall.att-(1.959*x$overall.se),5),
-    round(x$overall.att+(1.959*x$overall.se),5),
-    ">= 60",
-    "Limited Years: 2009-2015")
-})
 
 # Convert to data frame for each age group 
 years_values <- as.data.frame(do.call(rbind, ATT_years)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
 
-years_values_young <- as.data.frame(do.call(rbind, ATT_years_young)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
-
-years_values_old <- as.data.frame(do.call(rbind, ATT_years_old)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
 
 # Merge all ages and main specification results
-years_merged <- rbind(years_values, years_values_young, years_values_old, singel_ATT_values) %>%
+years_merged <- rbind(years_values, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -380,7 +327,7 @@ small_values <- ggplot(dplyr::filter(years_merged, Variable!="Claim Count" & Var
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab(" ") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999","Limited Years: 2009-2015"="#E69F00"))
 
 
 large_values <- ggplot(dplyr::filter(years_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
@@ -391,7 +338,7 @@ large_values <- ggplot(dplyr::filter(years_merged, (Variable=="Claim Count" | Va
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab("\nATT and 95% CI") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999", "Limited Years: 2009-2015"="#E69F00"))
 
 ggarrange(
   small_values,
@@ -404,7 +351,7 @@ ggarrange(
 )
 
 # Save graph
-ggsave("Objects/years_graph.pdf", height=6, width=11, units = "in")
+ggsave("Objects/years_graph.pdf", height=7, width=10, units = "in")
 
 
 
@@ -421,48 +368,18 @@ models_DA <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & year<2016 & works_with_DA==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & year<2016 & works_with_DA==0),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & works_with_DA==0) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & works_with_DA==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & works_with_DA==0)),
          est_method = "dr",
          control_group = "notyettreated")
   
 })
 
-models_DA_young <- lapply(varlist, function(x) {
-  att_gt(yname = x,
-         gname = "minyr_EHR",
-         idname = "DocNPI",
-         tname = "year",
-         xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & year<2016 & works_with_DA==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & year<2016 & works_with_DA==0),
-         est_method = "dr",
-         control_group = "notyettreated")
-  
-})
-
-models_DA_old <- lapply(varlist, function(x) {
-  att_gt(yname = x,
-         gname = "minyr_EHR",
-         idname = "DocNPI",
-         tname = "year",
-         xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & year<2016 & works_with_DA==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & year<2016 & works_with_DA==0),
-         est_method = "dr",
-         control_group = "notyettreated")
-  
-})
 
 # Translate to single ATT value for each age group
 Simple_DA <- lapply(models_DA, function(x){
   aggte(x, type = "simple")
 })
 
-Simple_DA_young <- lapply(models_DA_young, function(x){
-  aggte(x, type = "simple")
-})
-
-Simple_DA_old <- lapply(models_DA_old, function(x){
-  aggte(x, type = "simple")
-})
 
 # Save relevant information for each age group
 ATT_DA <- lapply(Simple_DA, function(x){
@@ -475,38 +392,14 @@ ATT_DA <- lapply(Simple_DA, function(x){
     "No Data Assistants")
 })
 
-ATT_DA_young <- lapply(Simple_DA_young, function(x){
-  c(x$DIDparams$yname,
-    round(x$overall.att,5), 
-    round(x$overall.se, 5),
-    round(x$overall.att-(1.959*x$overall.se),5),
-    round(x$overall.att+(1.959*x$overall.se),5),
-    "< 60",
-    "No Data Assistants")
-})
-
-ATT_DA_old <- lapply(Simple_DA_old, function(x){
-  c(x$DIDparams$yname,
-    round(x$overall.att,5), 
-    round(x$overall.se, 5),
-    round(x$overall.att-(1.959*x$overall.se),5),
-    round(x$overall.att+(1.959*x$overall.se),5),
-    ">= 60",
-    "No Data Assistants")
-})
 
 # Convert to data frame for each age group 
 DA_values <- as.data.frame(do.call(rbind, ATT_DA)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
 
-DA_values_young <- as.data.frame(do.call(rbind, ATT_DA_young)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
-
-DA_values_old <- as.data.frame(do.call(rbind, ATT_DA_old)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
 
 # Merge all ages and main specification results
-DA_merged <- rbind(DA_values, DA_values_young, DA_values_old, singel_ATT_values) %>%
+DA_merged <- rbind(DA_values, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -528,7 +421,7 @@ small_values <- ggplot(dplyr::filter(DA_merged, Variable!="Claim Count" & Variab
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab(" ") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999","No Data Assistants"="#E69F00"))
 
 
 large_values <- ggplot(dplyr::filter(DA_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
@@ -539,7 +432,7 @@ large_values <- ggplot(dplyr::filter(DA_merged, (Variable=="Claim Count" | Varia
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab("\nATT and 95% CI") +
-  scale_color_manual(values=c("#999999", "#E69F00"))
+  scale_color_manual(values=c(Main="#999999", "No Data Assistants"="#E69F00"))
 
 ggarrange(
   small_values,
@@ -552,7 +445,7 @@ ggarrange(
 )
 
 # Save graph
-ggsave("Objects/DA_graph.pdf", height=6, width=11, units = "in")
+ggsave("Objects/DA_graph.pdf", height=7, width=10, units = "in")
 
 
 
@@ -637,7 +530,7 @@ tsdid_values <- as.data.frame(do.call(rbind, ATT_2sdid)) %>%
 
 
 
-estimates_merged <- rbind(stacked_values, tsdid_values, singel_ATT_values) %>%
+estimates_merged <- rbind(stacked_values, tsdid_values, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper),
@@ -660,7 +553,7 @@ small_values <- ggplot(dplyr::filter(estimates_merged, Variable!="Claim Count" &
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab(" ") +
-  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+  scale_color_manual(values=c(Main="#999999","Stacked Regression"="#E69F00","Two-Stage DiD"="#56B4E9"))
 
 
 large_values <- ggplot(dplyr::filter(estimates_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
@@ -671,7 +564,7 @@ large_values <- ggplot(dplyr::filter(estimates_merged, (Variable=="Claim Count" 
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab("\nATT and 95% CI") +
-  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+  scale_color_manual(values=c(Main="#999999","Stacked Regression"="#E69F00","Two-Stage Did"="#56B4E9"))
 
 ggarrange(
   small_values,
@@ -684,7 +577,7 @@ ggarrange(
 )
 
 # Save graph
-ggsave("Objects/estimators_graph.pdf", height=6, width=11, units = "in")
+ggsave("Objects/estimators_graph.pdf", height=7, width=10, units = "in")
 
 
 
@@ -699,7 +592,7 @@ models_male <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & female==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & female==0),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & female==0) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & female==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & female==0)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -711,7 +604,7 @@ models_male_young <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & female==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & female==0),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & female==0 & max_age<60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & female==0 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & female==0 & max_age<60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -723,7 +616,7 @@ models_male_old <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & female==0) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & female==0),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & female==0 & max_age>=60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & female==0 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & female==0 & max_age>=60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -735,7 +628,7 @@ models_female <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & female==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & female==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & female==1) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & female==1) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & female==1)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -747,7 +640,7 @@ models_female_young <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & female==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & female==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & female==1 & max_age<60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & female==1 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & female==1 & max_age<60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -759,7 +652,7 @@ models_female_old <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & female==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & female==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & female==1 & max_age>=60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & female==1 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & female==1 & max_age>=60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -871,7 +764,7 @@ female_values_old <- as.data.frame(do.call(rbind, ATT_female_old)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
 
 # Merge all genders and main specification results
-gender_merged <- rbind(male_values, male_values_young, male_values_old,female_values, female_values_young, female_values_old, singel_ATT_values) %>%
+gender_merged <- rbind(male_values, male_values_young, male_values_old,female_values, female_values_young, female_values_old, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -929,8 +822,6 @@ Physician_Data <- Physician_Data %>%
   mutate(phy_zip1=as.character(phy_zip1)) %>%
   dplyr::left_join(RUCA2010zipcode, by=c("phy_zip1"="ZIP_CODE"))
 
-observe <- Physician_Data %>%
-  dplyr::filter(ever_rural==1 & minyr_EHR>0)
 
 # Create rural and urban indicators
 Physician_Data <- Physician_Data %>%
@@ -957,7 +848,7 @@ models_rural <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & ever_rural==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==1) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & ever_rural==1) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_rural==1)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -969,7 +860,7 @@ models_rural_young <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & ever_rural==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & ever_rural==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==1 & max_age<60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & ever_rural==1 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_rural==1 & max_age<60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -981,7 +872,7 @@ models_rural_old <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & ever_rural==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & ever_rural==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==1 & max_age>=60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & ever_rural==1 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_rural==1 & max_age>=60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -993,7 +884,7 @@ models_urban <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & ever_urban==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & ever_urban==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==0) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & ever_rural==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_rural==0)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -1005,7 +896,7 @@ models_urban_young <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age<60 & ever_urban==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60 & year<2016 & ever_urban==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==0 & max_age<60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & ever_rural==0 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_rural==0 & max_age<60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -1017,7 +908,7 @@ models_urban_old <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & max_age>=60 & ever_urban==1) else dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60 & ever_urban==1),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_rural==0 & max_age>=60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & ever_rural==0 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_rural==0 & max_age>=60)),
          est_method = "dr",
          control_group = "notyettreated")
   
@@ -1129,7 +1020,7 @@ urban_values_old <- as.data.frame(do.call(rbind, ATT_urban_old)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
 
 # Merge all genders and main specification results
-rural_merged <- rbind(rural_values, rural_values_young, rural_values_old,urban_values, urban_values_young, urban_values_old, singel_ATT_values) %>%
+rural_merged <- rbind(rural_values, rural_values_young, rural_values_old,urban_values, urban_values_young, urban_values_old, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -1189,7 +1080,7 @@ models_wht <- lapply(varlist, function(x) {
          idname = "DocNPI",
          tname = "year",
          xformla = ~grad_year,
-         data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0 & perc_white>.5) else dplyr::filter(Physician_Data,minyr_EHR>0 & perc_white>.5),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & perc_white>.5) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & perc_white>.5) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & perc_white>.5)),
          est_method = "dr",
          control_group = "notyettreated",
          anticipation = 1)
@@ -1220,7 +1111,7 @@ wht_values <- as.data.frame(do.call(rbind, ATT_wht)) %>%
                 Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
                 Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
 
-wht_merged <- rbind(wht_values, singel_ATT_values) %>%
+wht_merged <- rbind(wht_values, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper))
@@ -1266,7 +1157,7 @@ ggsave("Objects/wht_graph.pdf", height=6, width=11, units = "in")
 
 # Make one large heterogeneity graph ------------------------------------------------
 
-heterogeneity_merged <- rbind(wht_values, female_values, male_values, rural_values, urban_values, singel_ATT_values) %>%
+heterogeneity_merged <- rbind(wht_values, female_values, male_values, rural_values, urban_values, main_ATT) %>%
   dplyr::mutate(ATT=as.numeric(ATT),
                 Lower=as.numeric(Lower),
                 Upper=as.numeric(Upper)) %>%
@@ -1278,7 +1169,7 @@ heterogeneity_merged <- rbind(wht_values, female_values, male_values, rural_valu
                 Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
 
 # Create Graph
-dodge <- position_dodge(width=.75)
+dodge <- position_dodge(width=1)
 small_values <- ggplot(dplyr::filter(heterogeneity_merged, Variable!="Claim Count" & Variable!="Number Patients" & Age=="Any"),
                        aes(x=Variable, y=ATT, color=Specification)) +
   geom_point(position=dodge) +
@@ -1287,7 +1178,7 @@ small_values <- ggplot(dplyr::filter(heterogeneity_merged, Variable!="Claim Coun
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab(" ") +
-  scale_color_manual(values=c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+  scale_color_manual(values=c(Main="#000000","Sees Majority White Patients"="#E69F00","Female"="#009E73","Male"="#F0E442","Rural"="#0072B2","Urban"="#D55E00"))
 
 
 large_values <- ggplot(dplyr::filter(heterogeneity_merged, (Variable=="Claim Count" | Variable=="Number Patients") & Age=="Any"),
@@ -1298,7 +1189,7 @@ large_values <- ggplot(dplyr::filter(heterogeneity_merged, (Variable=="Claim Cou
   coord_flip() + theme_bw() + 
   theme(text=element_text(size=17, family="lm")) +
   xlab(" ") + ylab("\nATT and 95% CI") +
-  scale_color_manual(values=c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+  scale_color_manual(values=c(Main="#000000","Sees Majority White Patients"="#E69F00","Female"="#009E73","Male"="#F0E442","Rural"="#0072B2","Urban"="#D55E00"))
 
 ggarrange(
   small_values,
@@ -1310,7 +1201,7 @@ ggarrange(
   align="v"
 )
 
-ggsave("Objects/heterogeneity _graph.pdf", height=6, width=11, units = "in")
+ggsave("Objects/heterogeneity _graph.pdf", height=7, width=10, units = "in")
 
 
 
