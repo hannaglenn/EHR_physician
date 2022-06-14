@@ -29,7 +29,6 @@ sorting=ynt,citestyle=authoryear]{biblatex}
  }
  
 
-
 \title{Labor Markets and Technological Change: Evidence from Electronic Health Records}
 \author{Hanna Glenn}
 %\date{\today}
@@ -209,7 +208,25 @@ Second, I assume physicians do not anticipate EHR exposure prior to occurrence. 
 
 As is usual in a difference-in-differences framework, I assume a version of parallel trends based on not-yet-treated units. I assume that, conditional on covariates, average outcomes for those treated in group $g$ would have followed a parallel trend as those in groups treated in later periods. This assumption would be violated under external conditions in certain years that may be correlated with labor markets, such as a major recession. The time period I study, 2009-2017, is reassuringly stable. In my analysis, I present p-values for a Wald test of pre-trends. In most cases, there is no evidence of a pre-trend. In cases where a pre-trend could be driving the results, I make no strong claims about the effect of EHR exposure. 
 
-An institutional assumption that I make is that physicians working in EHR-adopted hospitals are constrained to use the technology. My outcomes have two key determinants: the choice of physicians to learn and utilize the technology, and the realized effect of electronic health records themselves. The point of this paper is to identify the second determinant, and thus I assume that when a physician continues to work in an electronic record utilizing-hospital, they utilize the electronic health record system fully. That is, there are no physicians who stay actively working in a hospital but choose not to partake in the electronic health record used by the hospital. It is reasonable to believe that physicians are fully utilizing the EHRs in the hospital they work in, since by 2015 electronic health records were widely implemented and considered unavoidable. An objection to this assumption may be that physicians stay in a hospital, but the hospital hires an employee to do technology work for the physician. In this case, the effects seen could be from having the data assistant instead of EHR use. I investigate this in Section \ref{sec:dataass}.
+An institutional assumption that I make is that physicians working in EHR-adopted hospitals are constrained to use the technology. My outcomes have two key determinants: the choice of physicians to learn and utilize the technology, and the realized effect of electronic health records themselves. The point of this paper is to identify the second determinant, and thus I assume that when a physician continues to work in an electronic record utilizing-hospital, they utilize the electronic health record system fully. That is, there are no physicians who stay actively working in a hospital but choose not to partake in the electronic health record used by the hospital. It is reasonable to believe that physicians are fully utilizing the EHRs in the hospital they work in, since by 2015 electronic health records were widely implemented and considered unavoidable. An objection to this assumption may be that physicians stay in a hospital, but the hospital hires an employee to do technology work for the physician. In this case, the effects seen could be from having the data assistant instead of EHR use. Thus, I investigate hteir existence further.
+
+\subsection{Hiring Data Assistants}\label{sec:dataass}
+
+One concern with the presented analysis is that any effect could be caused by an outside factor also correlated with EHR adoption in hospitals, such as the existence or hiring of employees with the purpose of utilizing electronic health records on a physician's behalf, which is a way for physicians to continue working in a hospital with an EHR but not experience exposure to the technology. Employees of this type are traditionally referred to as scribes, and are assigned a medical tax ID when working in hospitals. they have the following official titles in tax data: Coding Specialist (Hospital Based), Health Information Technologist and Registered Record Administrator. I will refer to any employee in these categories as a data assistant. In this Section, I investigate whether data assistants were hired in accordance with EHR implementation and whether the presence of data assistants affects physician response to EHRs.  
+
+First, using NPPES data on all NPIs and their tax information, I analyze the existence of data assistants in hospitals. Figure \ref{fig:dataassistant_histogram} presents a frequency plot of the year of activation for every tax code that falls in the categories listed above. The total number of these registered employees is 875, and the first data assistants ever registered were in 2005. From 2005 to 2013, 15-60 more employees were registered each year. The graph is clearly skewed towards later years, where a significant increase in the number of new data assistants occurred in 2014. If hiring data assistants was directly correlated with both EHR implementation and physician frustration, one would expect the increase to occur from 2011-2012, when a majority of physicians first became exposed to EHRs. The results of my main specification are not sensitive to leaving out later years, which is a good indication that the results are not driven by the enumeration of data assistants. 
+
+\begin{figure}[ht]
+\centering
+\captionsetup{width=.5\linewidth}
+\caption{Frequency of Data Assistant Enumeration by Year}
+\includegraphics[scale=.5]{Objects/dataassistant_histogram.pdf}
+\label{fig:dataassistant_histogram}
+\vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Histtogram uses NPPES data on the enumeration of certain types of NPIs to estimate the number of new data assistants being hired in each year of my sample.}}
+\end{figure}
+
+Further, I investigate the occurrence of hospitals and data assistants sharing patients in the CMS Shared Patient data. I create a list of hospital-years for which the hospital has a positive number of shared patients with a data assistant. I merge this to the physician-hospital pairs and create a physician level variable for whether any hospital worked with is associated with a data assistant. I find that .1\% of physician-year observations are associated with data assistants. This sample of physicians is too small to analyze whether data assistants are more likely with EHR exposure, yielding largely noisy estimates. However, I limit the sample to only physicians not associated with data assistants and find that the magnitude of estimates are similar, albeit more noisy. Details of this analysis are given in Appendix \ref{app:DA}. 
 
 
 
@@ -284,6 +301,8 @@ A limitation in this analysis is that physicians may shift work behavior due to 
 
 \subsection{Patient Count and Billable Activity}\label{sec:patientcount}
 
+For both patient and claim count, if the sample includes physicians who shift place of work, this may lead to biased estimates since a physician could switch hospitals due to an EHR and then change practice behavior due to the move, not due to the EHR. Thus, I limit the sample to only physicians who work with the same one hospital through the entire sample. These physicians do not retire or see patients in another hospital. Thus, when an EHR is implemented, the physician remains utilizing the EHR for the remainder of the period. 
+
 The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}. For physicians of any age, patient count increases by 11.5 patients in the year of EHR exposure, 24 patients in the year after exposure, 15.3 patients in the second year after exposure, and then no effect after the second year. These results translate to a .5-1\% increase in the number of patients seen relative to the mean. As with other outcomes, this result is totally due to changes by the younger group of physicians. While there is a statistically larger effect for younger physicians relative to senior physicians (who likely take longer to adapt to technology changes), the observed effect is not largely meaningful. 
 
 \begin{figure}[ht]
@@ -297,11 +316,27 @@ The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}
 
 Patient count is also driven by demand for health care. A major change in the U.S. health care system, the Affordable Care Act (ACA) was passed in 2010 and took effect in 2014 for the majority of states that partook. If my results are driven primarily by the group of hospitals who implemented EHRs in 2014, one might be concerned that the legislation may be driving the results. The ACA has potentially opposing effects on Medicare patients: Medicare patients may be crowded out by an increased demand in Medicaid patients, or the small changes to Medicare may have led to an increase in utilization from the Medicare population. A recent study found no negative spillovers to the Medicare population due to the ACA (\cite{carey2020impact}), suggesting that demand change is not driving my results. Further, I present average group time treatment effects for each treated group in Figure \ref{fig:patientgroup}. Each group shows the same pattern of a small increase in patient count in the first 0-2 years after implementation. 
 
+\begin{figure}[ht]
+    \centering
+    \caption{Effect of EHR Exposure on Patient Count by Group}
+    \includegraphics[scale=.47]{Objects/patient_group.pdf}
+    \label{fig:patientgroup}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
+\end{figure}
+
 Total patient count is directly related to the fraction of patients seen in an office setting. For younger physicians, since the total number of patients increases in the first couple of years after exposure, the absolute number of patients seen in offices increases as well. That is, it seems that younger physicians are shifting a positive amount of work towards offices but still able to increase productivity in the time spent in the hospital, thus the null effect on fraction of office patients. 
 
 EHRs may affect physician incentives in such a way that billing activity changes differently from patient count. If, for example, EHRs reduce the administrative burden of filing extra claims, then physicians might increase the things they bill for whether the amount of patients has changed or not. On average for the entire sample, claim counts are roughly 5.5 times the number of patients seen in a year. Shown in Figure \ref{fig:claim}, young physicians increase claim count by 37 in the year of exposure and 96 in the year after exposure, 3-4 times the increase in patient count. Thus, billing activity increases proportionally less than average. EHRs do not seem to be facilitating more billable activity. 
 
-However, for both patient and claim count, the results include physicians who shift place of work, which may lead to biased estimates since a physician could switch hospitals due to an EHR and then change practice behavior due to the move, not due to the EHR. Thus, I limit the sample to only physicians who work with the same one hospital through the entire sample. These physicians do not retire or see patients in another hospital. Thus, when an EHR is implemented, the physician remains utilizing the EHR for the remainder of the period. I present the results for this limited sample in Figure \ref{fig:limitedsample}. These results are similar to those presented for the full sample, suggesting that physicians become more productive in terms of patient count in the first two years after implementation.
+\begin{figure}[ht]
+    \centering
+    \caption{Effect of EHR Exposure on Claim Count}
+    \includegraphics[scale=.65]{Objects/claim_plot.pdf}
+    \label{fig:claim}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 4.04 (33.89), 25.77 (31.26), -161.06 (133.35), respectively.}}
+\end{figure}
 
 
 \subsection{Late Adopters as Comparison Group}
@@ -309,19 +344,7 @@ However, for both patient and claim count, the results include physicians who sh
 In the observed results above, if EHR exposure affects physician behavior, the effect occurs in the first 0-2 years after exposure. Almost all specifications point to the effect of EHR exposure to become null in the 3-4 years after exposure. One reason for this may be the composition of the hospitals which adopt at different times. Consider event time $t+4$. The physician included in the estimation for this coefficient are those exposed in 2010 compared with those who did not adopt until 2015, implying that the underlying hospitals implemented EHRs in either 2010 or 2015. It is likely that the group of hospitals who adopted in 2015 are compositionally different than early adopters, especially if poorer hospitals adopted later. For this reason, I have focused discussion of results on the immediate years after exposure when hospitals the comparison groups are more comprehensive. 
 
 
-\section{Physician EHR Avoidance}
-
-\subsection{Hiring Data Assistants}\label{sec:dataass}
-
-One concern with the presented analysis is that any effect could be caused by an outside factor also correlated with EHR adoption in hospitals, such as the existence or hiring of employees with the purpose of utilizing electronic health records on a physician's behalf, which is a way for physicians to continue working in a hospital with an EHR but not experience exposure to the technology. Employees of this type are traditionally referred to as scribes, and are assigned a medical tax ID when working in hospitals. they have the following official titles in tax data: Coding Specialist (Hospital Based), Health Information Technologist and Registered Record Administrator. I will refer to any employee in these categories as a data assistant. In this Section, I investigate whether data assistants were hired in accordance with EHR implementation and whether the presence of data assistants affects physician response to EHRs.  
-
-First, using NPPES data on all NPIs and their tax information, I analyze the existence of data assistants in hospitals. Figure \ref{fig:dataassistant_histogram} presents a frequency plot of the year of activation for every tax code that falls in the categories listed above. The total number of these registered employees is 875, and the first data assistants ever registered were in 2005. From 2005 to 2013, 15-60 more employees were registered each year. The graph is clearly skewed towards later years, where a significant increase in the number of new data assistants occurred in 2014. If hiring data assistants was directly correlated with both EHR implementation and physician frustration, one would expect the increase to occur from 2011-2012, when a majority of physicians first became exposed to EHRs. The results of my main specification are not sensitive to leaving out later years, which is a good indication that the results are not driven by the enumeration of data assistants. 
-
-Further, I investigate the occurrence of hospitals and data assistants sharing patients in the CMS Shared Patient data. I create a list of hospital-years for which the hospital has a positive number of shared patients with a data assistant. I merge this to the physician-hospital pairs and create a physician level variable for whether any hospital worked with is associated with a data assistant. I find that .1\% of physician-year observations are associated with data assistants. This sample of physicians is too small to analyze whether data assistants are more likely with EHR exposure, yielding largely noisy estimates. However, I limit the sample to only physicians not associated with data assistants and find that the magnitude of estimates are similar, albeit more noisy. Details of this analysis are given in Appendix \ref{app:DA}. 
-
-
-
-\subsection{Physician Influence of EHR Decision in Hospitals}
+\section{Physician Influence of EHR Decision in Hospitals}
 
 Another way physicians may avoid EHR exposure is to exhibit decision making power to either delay or encourage EHR implementation in hospitals. This would make the binary treatment variable endogenous, biasing the results of the main specification, as it includes physicians who are selecting into their own exposure. After the sample period ends, the government began penalizing hospitals for not using health information technology meaningfully, so implementation eventually occurs across the board. However, during the sample, physicians may impact the timing or occurrence of implementation. I address this question by limiting the sample of hospitals in a meaningful way, only including those hospitals which are considered to have low vertical integration with physicians. That is, physicians are employees and less likely to be decision makers. I then redefine exposure as when a physician is exposed to an EHR in low integration settings. I present details of how I define integration and results for this specification in Appendix \ref{sec:endog}. In general, group time estimates are similar to those in the main specification, with the exception of the probability of working in an office setting, which may indicate some correlation between EHR adoption in high integration settings and acquisition of physician offices. 
 
@@ -338,37 +361,6 @@ This paper contributes to our understanding of health information technology by 
 
 
 
-\section{Tables and Figures}
-
-
-
-\begin{figure}[p]
-    \centering
-    \caption{Effect of EHR Exposure on Patient Count by Group}
-    \includegraphics[scale=.35]{Objects/patient_group.pdf}
-    \label{fig:patientgroup}
-\end{figure}
-
-\begin{figure}[p]
-    \centering
-    \caption{Effect of EHR Exposure on Claim Count, Limited Sample}
-    \includegraphics[scale=.65]{Objects/claim_plot.pdf}
-    \label{fig:claim}
-\end{figure}
-
-\begin{figure}[p]
-    \centering
-    \caption{Effect of EHR Exposure on Patient Count, Limited Sample}
-    \includegraphics[scale=.45]{Objects/limitedsample_plot.pdf}
-    \label{fig:limitedsample}
-\end{figure}
-
-\begin{figure}[p]
-\centering
-\caption{Frequency of Data Assistant Enumeration by Year}
-\includegraphics[scale=.5]{Objects/dataassistant_histogram.pdf}
-\label{fig:dataassistant_histogram}
-\end{figure}
 
 \clearpage
 
