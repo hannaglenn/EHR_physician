@@ -83,6 +83,7 @@ The HITECH Act was passed in 2009, designating \$27 billion in government subsid
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.6\linewidth}
     \caption{Hospitals Receiving Meaningful Use Stage 1 Subsidy}
     \includegraphics[scale=.6]{Objects/QS-Hospitals-Receiving-Payments-for-MU-and-Adoption.png}
     \caption*{Source: HealthIT.gov}
@@ -93,6 +94,7 @@ Figure \ref{fig:EPIC} shows a two computer screenshots of what physicians might 
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.4\linewidth}
     \caption{Screenshot of EHR System}
     \includegraphics[scale=.4]{Objects/epic-ehr-screenshot.jpg}
     \includegraphics[scale=.115]{Objects/EHRimage2.jpg}
@@ -178,6 +180,7 @@ In Figure \ref{fig:treatmentgraph}, I present a graph of the variation in treatm
 
 \begin{figure}[t]
 \centering
+\captionsetup{width=.45\linewidth}
     \caption{Treatment Variables Over Time}
     \includegraphics[scale=.45]{Objects/sum_stats_year.pdf}
     \label{fig:treatmentgraph}
@@ -199,6 +202,7 @@ There are several assumptions necessary to identify the parameters of interest, 
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.7\linewidth}
     \caption{Hospital EHR Adoption Over Time}
     \includegraphics[scale=.7]{Objects/hosp_treat.pdf}
     \label{fig:hosp_treat}
@@ -241,6 +245,7 @@ In Figure \ref{fig:retirefirst}, I present aggregated group time treatment effec
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Retirement}
     \includegraphics[scale=.65]{Objects/retire_plot.pdf}
     \label{fig:retirefirst}
@@ -262,6 +267,7 @@ I first discuss the effect of EHR exposure on the probability of working in an o
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Likelihood of Working in Office}
     \includegraphics[scale=.65]{Objects/officeind_plot.pdf}
     \label{fig:officefirst}
@@ -274,6 +280,7 @@ If senior physicians are already established in offices in some capacity, they m
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Fraction of Total Patients Seen in Office}
     \includegraphics[scale=.65]{Objects/officefrac_plot.pdf}
     \label{fig:officesecond}
@@ -287,6 +294,7 @@ The effects of EHR exposure on zip code switching over time are shown in Figure 
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Likelihood of Changing Zip Codes}
     \includegraphics[scale=.65]{Objects/zip_plot.pdf}
     \label{fig:zip}
@@ -307,6 +315,7 @@ The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Patient Count}
     \includegraphics[scale=.65]{Objects/patient_plot.pdf}
     \label{fig:patient}
@@ -318,6 +327,7 @@ Patient count is also driven by demand for health care. A major change in the U.
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.6\linewidth}
     \caption{Effect of EHR Exposure on Patient Count by Group}
     \includegraphics[scale=.47]{Objects/patient_group.pdf}
     \label{fig:patientgroup}
@@ -331,6 +341,7 @@ EHRs may affect physician incentives in such a way that billing activity changes
 
 \begin{figure}[ht]
     \centering
+    \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Claim Count}
     \includegraphics[scale=.65]{Objects/claim_plot.pdf}
     \label{fig:claim}
@@ -421,11 +432,31 @@ I define a hospital's level of integration based on organizational structure, wh
 
 I present a comparison of the average treatment effect in the main specification and the average treatment effect with low-integration exposure as the binary treatment variable in Figure \ref{fig:LI}. For conciseness, I present group time treatment effects to a single ATT value. As expected, the coefficient on retirement is nearly identical to the main specification. However, the coefficient for the probability of working in office based settings completely switches signs, pointing to questions about acquisition of physician practices. In low-integration settings, physicians are less likely to shift to an office after EHR exposure by a small measure. However, when including physicians with more power, the do seem to start office based work. If high-integration hospitals are acquiring smaller practices as EHRs are implemented, physicians from the hospital may be sent to the newly acquired practice for a period of time during transition. This is an important result because it points to physicians shifting according to hospital incentives instead of as a method to avoid EHR implementation. Estimates for other coefficients are more noisy, but similar to the main specification. 
 
+\begin{figure}[ht]
+    \centering
+    \captionsetup{width=.57\linewidth}
+    \caption{Comparison of ATT, Low-Integration Treatment Variable}
+    \includegraphics[scale=.57]{Objects/LI_graph.pdf}
+    \label{fig:LI}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects are shown for each outcome variable, along with 95\% confidence intervals. Low-integration hospitals are defined by hospital management.}}
+\end{figure}
+
 
 
 \subsection{Anticipation}\label{app:anticipation}
 
 While there is evidence to suggest the time it takes to implement an EHR does not exceed one year, there still may be some anticipation if physicians are expecting implementation in the hospitals they work in. In Figure \ref{fig:anticipation}, I present aggregated estimates in the case of one year of anticipation. The results are virtually identical, just noisier, compared to the estimates from the main specification. 
+
+\begin{figure}[ht]
+    \centering
+    \captionsetup{width=.57\linewidth}
+    \caption{ATT With Anticipation}
+    \includegraphics[scale=.57]{Objects/anticipation_graph.pdf}
+    \label{fig:anticipation}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects are shown for each outcome variable, along with 95\% confidence intervals.}}
+\end{figure}
 
 \subsection{Alternative Estimators}\label{app:estimators}
 
@@ -436,7 +467,27 @@ $$\text{outcome}_{i,t}=\sum_{j=-4}^{-2} \text{rel\_year}_{j} + \sum_{j=0}^{4} \t
 where outcome$_{i,t}$ is one of the six outcomes discussed previously, rel\_year$_j$ is an indicator equal to 1 if year $t$ is $j$ years relative to expansion, $\delta_i$ are physician fixed effects, and $\gamma_t$ are year fixed effects.
 These results from each outcome are presented in Figure \ref{fig:twfe}. These results show similar patterns to the main specification, with slight variations in magnitude. 
 
+\begin{figure}
+    \centering
+    \captionsetup{width=.8\linewidth}
+    \caption{Results: Two Way Fixed Effects}
+    \includegraphics[scale=.8]{Objects/twfe_plot.pdf}
+    \label{fig:twfe}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Event study plots from two way fixed effects estimation are shown for each outcome variable.}}
+\end{figure}
+
 One method that addresses issues with the TWFE specification by differencing out fixed effects is established in \citeauthor{gardner2021two} (\citeyear{gardner2021two}). This approach is commonly known as two stage difference in differences and is very clever. However, the approach requires a group of never-treated units as the comparison group, a drawback for my study in that I remove all never-treated units to utilize all years of MD-PPAS data and because never-treated hospitals are likely compositionally different from those treated in the majority of the sample. Nevertheless, I limit the years of data to 2009-2015 and present estimates of this estimator in Figure \ref{fig:esimators}. Generally, the results have the same sign with a slightly larger magnitude, driven by the inclusion of never-treated units. 
+
+\begin{figure}[ht]
+    \centering
+    \captionsetup{width=.57\linewidth}
+    \caption{Other Event Study Estimators}
+    \includegraphics[scale=.57]{Objects/estimators_graph.pdf}
+    \label{fig:esimators}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Results from various methods of estimation are shown, along with 95\% confidence intervals.}}
+\end{figure}
 
 Another estimation method established first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and "clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:esimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
 
@@ -444,9 +495,29 @@ Another estimation method established first used by \citeauthor{cengiz2019effect
 
 I create the retirement outcome variable as a direct function of future claims. Those who retire in the early years of data have zero future claims for multiple years. However, those who retire after 2016 have only one or two years of zero future claims to be flagged as retired. While some of these physicians are likely retiring, it may be that a fraction of them only drop out of the data temporarily due to pregnancy or other factors. Thus, I limit the years in the analysis to 2009-2015 to ensure that those years are not driving the observed results. Results for this specification are shown in Figure \ref{fig:years}. The observed estimators are virtually identical to those in the main specification. 
 
+\begin{figure}[ht]
+    \centering
+    \captionsetup{width=.57\linewidth}
+    \caption{Limited Sample Years}
+    \includegraphics[scale=.57]{Objects/years_graph.pdf}
+    \label{fig:years}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects and 95\% confidence intervals shown for main specification and a limited sample of years.}}
+\end{figure}
+
 \subsection{Physicians not Exposed to Data Assistants}\label{app:DA}
 
-In this section, I present results for the main specification with a data limitation: only including physicians who are exposed in hospitals that do not record employing any data assistants. These physicians may be more likely to respond negatively to EHRs and may be driving results in the main specification. I present these results in Figure \ref{fig:DA}. These results are surprisingly similar to those for exposure in low integration hospitals discussed in Appendix \ref{sec:endog}. Many outcomes have similar coefficients for the effect of EHR exposure, with the exception of probability of working in office settings. Those who are not exposed to data assistants are less likely to begin working in an office, an opposite sign from the specification in the main analysis. The level of integration could be correlated with hiring data assistants, which both may be correlated with the acquisition of smaller physician practices which are considered office based settings. 
+In this section, I present results for the main specification with a data limitation: only including physicians who are exposed in hospitals that do not record employing any data assistants. These physicians may be more likely to respond negatively to EHRs and may be driving results in the main specification. I present these results in Figure \ref{fig:DA}. These results are surprisingly similar to those for exposure in low integration hospitals discussed in Appendix \ref{sec:endog}. Many outcomes have similar coefficients for the effect of EHR exposure, with the exception of probability of working in office settings. Those who are not exposed to data assistants are less likely to begin working in an office, an opposite sign from the specification in the main analysis. The level of integration could be correlated with hiring data assistants, which both may be correlated with the acquisition of smaller physician practices which are considered office based settings.
+
+\begin{figure}[ht]
+    \centering
+    \captionsetup{width=.57\linewidth}
+    \caption{Physicians without Data Assistants}
+    \includegraphics[scale=.57]{Objects/DA_graph.pdf}
+    \label{fig:DA}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects and 95\% confidence intervals shown for main specification and limited sample of physicians who do not work with data assistants.}}
+\end{figure}
 
 
 
@@ -454,60 +525,19 @@ In this section, I present results for the main specification with a data limita
 
 While the majority of the analysis focuses on senior vs. young physicians, there are other physician characteristics that are also interesting to investigate. Figure \ref{fig:het} presents estimates for different subsets of physicians. These include female physicians,those in rural or urban zip codes, and physicians who see majority white patients relative to the entire sample. Most of the estimates are similar across these characteristics, with some particularly noisy due to low sample sizes (such as physicians in rural settings). The implications implication of this table is that EHRs did in fact lead to behavioral changes in many different physicians, not just a specific subgroup.  
 
-
-\clearpage
-
-\section{Tables and Figures}
-
 \begin{figure}[ht]
     \centering
-    \caption{Comparison of ATT, Low-Integration Treatment Variable}
-    \includegraphics[scale=.57]{Objects/LI_graph.pdf}
-    \label{fig:LI}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \caption{ATT With Anticipation}
-    \includegraphics[scale=.57]{Objects/anticipation_graph.pdf}
-    \label{fig:anticipation}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \caption{Results: Two Way Fixed Effects}
-    \includegraphics[scale=.8]{Objects/twfe_plot.pdf}
-    \label{fig:twfe}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \caption{Other Event Study Estimators}
-    \includegraphics[scale=.57]{Objects/estimators_graph.pdf}
-    \label{fig:esimators}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \caption{Limited Sample Years}
-    \includegraphics[scale=.5]{Objects/years_graph.pdf}
-    \label{fig:years}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \caption{Physicians without Data Assistants}
-    \includegraphics[scale=.57]{Objects/DA_graph.pdf}
-    \label{fig:DA}
-\end{figure}
-
-
-\begin{figure}[ht]
-    \centering
+    \captionsetup{width=.65\linewidth}
     \caption{Heterogeneity Analysis}
-    \includegraphics[scale=.57]{Objects/heterogeneity _graph.pdf}
+    \includegraphics[scale=.65]{Objects/heterogeneity _graph.pdf}
     \label{fig:het}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects and 95\% confidence intervals shown for main specification and various limited samples of physicians.}}
 \end{figure}
+
+
+
+
 
 
 
