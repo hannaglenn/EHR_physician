@@ -43,7 +43,8 @@ models <- lapply(varlist, function(x) {
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
-    anticipation=0                   # can set a number of years to account for anticipation effects
+    anticipation=0,
+    base_period = "universal" # can set a number of years to account for anticipation effects
   )
   
   young <- att_gt(yname = x,                # LHS Variable
@@ -56,7 +57,8 @@ models <- lapply(varlist, function(x) {
          est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
          control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
          clustervars = "DocNPI",          # Cluster Variables          
-         anticipation=0                   # can set a number of years to account for anticipation effects
+         anticipation=0,
+         base_period = "universal" # can set a number of years to account for anticipation effects
   )
   
   old <- att_gt(yname = x,                # LHS Variable
@@ -69,7 +71,8 @@ models <- lapply(varlist, function(x) {
          est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
          control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
          clustervars = "DocNPI",          # Cluster Variables          
-         anticipation=0                   # can set a number of years to account for anticipation effects
+         anticipation=0,
+         base_period = "universal" # can set a number of years to account for anticipation effects
   )
   
   list(all=all,young=young,old=old)

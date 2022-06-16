@@ -5,6 +5,8 @@ library(ggpubr)
 library(fixest)
 library(did2s)
 library(readxl)
+library(HonestDiD)
+library(mvtnorm)
 
 
 
@@ -1290,7 +1292,317 @@ ggsave("Objects/twfe_plot.pdf", twfe_finalplot, height=9.5, width=8, units = "in
 
 
 
+## Roth Prettrends Stuff ---------------------------------- ####
 
+#(Need results from analysis loaded)
+
+honest_did <- function(es, ...) {
+  UseMethod("honest_did", es)
+}
+
+honest_did.AGGTEobj <- function(es,
+                                e=0,
+                                type=c("smoothness", "relative_magnitude"),
+                                method=NULL,
+                                bound="deviation from parallel trends",
+                                Mvec=NULL,
+                                Mbarvec=NULL,
+                                monotonicityDirection=NULL,
+                                biasDirection=NULL,
+                                alpha=0.05,
+                                parallel=FALSE,
+                                gridPoints=10^3,
+                                grid.ub=NA,
+                                grid.lb=NA,
+                                ...) {
+  
+  
+  type <- type[1]
+  
+  # make sure that user is passing in an event study
+  if (es$type != "dynamic") {
+    stop("need to pass in an event study")
+  }
+  
+  # check if used universal base period and warn otherwise
+  if (es$DIDparams$base_period != "universal") {
+    warning("it is recommended to use a universal base period for honest_did")
+  }
+  
+  # recover influence function for event study estimates
+  es_inf_func <- es$inf.function$dynamic.inf.func.e
+  
+  # recover variance-covariance matrix
+  n <- nrow(es_inf_func)
+  V <- t(es_inf_func) %*% es_inf_func / (n*n) 
+  
+  
+  nperiods <- nrow(V)
+  npre <- sum(1*(es$egt < 0))
+  npost <- nperiods - npre
+  
+  baseVec1 <- basisVector(index=(e+1),size=npost)
+  
+  orig_ci <- constructOriginalCS(betahat = es$att.egt,
+                                 sigma = V, numPrePeriods = npre,
+                                 numPostPeriods = npost,
+                                 l_vec = baseVec1)
+  
+  if (type=="relative_magnitude") {
+    if (is.null(method)) method <- "C-LF"
+    robust_ci <- createSensitivityResults_relativeMagnitudes(betahat = es$att.egt, sigma = V, 
+                                                             numPrePeriods = npre, 
+                                                             numPostPeriods = npost,
+                                                             bound=bound,
+                                                             method=method,
+                                                             l_vec = baseVec1,
+                                                             Mbarvec = Mbarvec,
+                                                             monotonicityDirection=monotonicityDirection,
+                                                             biasDirection=biasDirection,
+                                                             alpha=alpha,
+                                                             gridPoints=100,
+                                                             grid.lb=-1,
+                                                             grid.ub=1,
+                                                             parallel=parallel)
+    
+  } else if (type=="smoothness") {
+    robust_ci <- createSensitivityResults(betahat = es$att.egt,
+                                          sigma = V, 
+                                          numPrePeriods = npre, 
+                                          numPostPeriods = npost,
+                                          method=method,
+                                          l_vec = baseVec1,
+                                          monotonicityDirection=monotonicityDirection,
+                                          biasDirection=biasDirection,
+                                          alpha=alpha,
+                                          parallel=parallel)
+  }
+  
+  list(robust_ci=robust_ci, orig_ci=orig_ci, type=type)
+}
+
+
+smooth_year1 <- lapply(Models_agg, function(x){
+  all <- honest_did(x[["agg_all"]], type="smoothness")
+  young <- honest_did(x[["agg_young"]], type="smoothness")
+  old <- honest_did(x[["agg_old"]], type="smoothness")
+  
+  list(all=all,young=young,old=old)
+})
+
+plot_smooth_year1 <- lapply(smooth_year1, function(x){
+  all <- createSensitivityPlot(x$all$robust_ci, x$all$orig_ci)
+  young <- createSensitivityPlot(x$young$robust_ci, x$young$orig_ci)
+  old <- createSensitivityPlot(x$old$robust_ci, x$old$orig_ci)
+  
+  list(all,young,old)
+})
+
+smooth_year2 <- lapply(Models_agg, function(x){
+  all <- honest_did(x[["agg_all"]], type="smoothness")
+  young <- honest_did(x[["agg_young"]], type="smoothness")
+  old <- honest_did(x[["agg_old"]], type="smoothness")
+  
+  list(all=all,young=young,old=old)
+})
+
+plot_smooth_year2 <- lapply(smooth_year2, function(x){
+  all <- createSensitivityPlot(x$all$robust_ci, x$all$orig_ci)
+  young <- createSensitivityPlot(x$young$robust_ci, x$young$orig_ci)
+  old <- createSensitivityPlot(x$old$robust_ci, x$old$orig_ci)
+  
+  list(all,young,old)
+})
+
+smooth_year0 <- lapply(Models_agg, function(x){
+  all <- honest_did(x[["agg_all"]], type="smoothness")
+  young <- honest_did(x[["agg_young"]], type="smoothness")
+  old <- honest_did(x[["agg_old"]], type="smoot whness")
+  
+  list(all=all,young=young,old=old)
+})
+
+plot_smooth_year0 <- lapply(smooth_year0, function(x){
+  all <- createSensitivityPlot(x$all$robust_ci, x$all$orig_ci)
+  young <- createSensitivityPlot(x$young$robust_ci, x$young$orig_ci)
+  old <- createSensitivityPlot(x$old$robust_ci, x$old$orig_ci)
+  
+  list(all,young,old)
+})
+
+# Now that I have the plots saved, I need to fix them up for the paper.
+
+# Retire
+retire_all_yr1 <- plot_smooth_year1[[1]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at Event Time = 1") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) + 
+  ylim(-.02,.03)
+retire_all_yr2 <- plot_smooth_year2[[1]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at Event Time = 2") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) +
+  ylim(-.02,.03)
+
+retire_pretrends_plot <- ggarrange(
+  retire_all_yr1,
+  retire_all_yr2,
+  nrow = 2,
+  common.legend = TRUE,
+  legend="bottom"
+) %>% annotate_figure(
+  top=text_grob("\nOutcome: Retire\n", family="lm", hjust=.5, vjust=.5, size=15)
+)
+
+ggsave(retire_pretrends_plot, file="Objects/retire_pretrends_plot.pdf", height=7, width=10, units="in")  
+
+
+# Work in Office
+work_all_yr0 <- plot_smooth_year0[[3]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 0 (All Ages)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+work_all_yr1 <- plot_smooth_year1[[3]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 1 (All Ages)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+work_old_yr0 <- plot_smooth_year0[[3]][[3]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 0 (>= 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+work_old_yr1 <- plot_smooth_year1[[3]][[3]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 1 (>=60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+
+
+work_pretrends_plot <- ggarrange(
+  work_all_yr0,
+  work_old_yr0,
+  work_all_yr1,
+  work_old_yr1,
+  nrow = 2,
+  ncol = 2,
+  common.legend = TRUE,
+  legend="bottom"
+) %>% annotate_figure(
+  top=text_grob("\nOutcome: Work in Office\n", family="lm", hjust=.5, vjust=.5, size=15)
+)
+
+ggsave(work_pretrends_plot, file="Objects/work_pretrends_plot.pdf", height=7, width=10, units="in")  
+
+# Fraction Patients in Office
+frac_all_yr0 <- plot_smooth_year0[[2]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at Event Time = 0") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm"))
+frac_all_yr1 <- plot_smooth_year1[[2]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at Event Time = 1") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+
+frac_pretrends_plot <- ggarrange(
+  frac_all_yr0,
+  frac_all_yr1,
+  nrow = 2,
+  common.legend = TRUE,
+  legend="bottom"
+) %>% annotate_figure(
+  top=text_grob("\nOutcome: Fraction Patients Seen in Office\n", family="lm", hjust=.5, vjust=.5, size=15)
+)
+
+ggsave(frac_pretrends_plot, file="Objects/frac_pretrends_plot.pdf", height=7, width=10, units="in")  
+
+#Change Zip Codes
+zip_young_yr0 <- plot_smooth_year0[[4]][[2]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 0 (< 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+zip_young_yr1 <- plot_smooth_year1[[4]][[2]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 1 (< 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+zip_old_yr0 <- plot_smooth_year0[[4]][[3]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 0 (>= 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+zip_old_yr1 <- plot_smooth_year1[[4]][[3]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 1 (>=60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+
+
+zip_pretrends_plot <- ggarrange(
+  zip_young_yr0,
+  zip_old_yr0,
+  zip_young_yr1,
+  zip_old_yr1,
+  nrow = 2,
+  ncol = 2,
+  common.legend = TRUE,
+  legend="bottom"
+) %>% annotate_figure(
+  top=text_grob("\nOutcome: Change Zip Code\n", family="lm", hjust=.5, vjust=.5, size=15)
+)
+
+ggsave(zip_pretrends_plot, file="Objects/zip_pretrends_plot.pdf", height=7, width=10, units="in")  
+
+
+#Patient Count
+pat_all_yr0 <- plot_smooth_year0[[5]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at Event Time = 0") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm"))
+pat_all_yr1 <- plot_smooth_year1[[5]][[1]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at Event Time = 1") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+
+pat_pretrends_plot <- ggarrange(
+  pat_all_yr0,
+  pat_all_yr1,
+  nrow = 2,
+  common.legend = TRUE,
+  legend="bottom"
+) %>% annotate_figure(
+  top=text_grob("\nOutcome: Number of Patients\n", family="lm", hjust=.5, vjust=.5, size=15)
+)
+
+ggsave(pat_pretrends_plot, file="Objects/patient_pretrends_plot.pdf", height=7, width=10, units="in")  
+
+# Claim Count
+claim_young_yr0 <- plot_smooth_year0[[6]][[2]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 0 (< 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+claim_young_yr1 <- plot_smooth_year1[[6]][[2]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 1 (< 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+claim_old_yr0 <- plot_smooth_year0[[6]][[3]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 0 (>= 60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+claim_old_yr1 <- plot_smooth_year1[[6]][[3]] + 
+  theme_bw() + labs(title="Robust Confidence Intervals at \nEvent Time = 1 (>=60)") +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12, family="lm")) 
+
+
+claim_pretrends_plot <- ggarrange(
+  claim_young_yr0,
+  claim_old_yr0,
+  claim_young_yr1,
+  claim_old_yr1,
+  nrow = 2,
+  ncol = 2,
+  common.legend = TRUE,
+  legend="bottom"
+) %>% annotate_figure(
+  top=text_grob("\nOutcome: Claim Count\n", family="lm", hjust=.5, vjust=.5, size=15)
+)
+
+ggsave(claim_pretrends_plot, file="Objects/claim_pretrends_plot.pdf", height=7, width=10, units="in")  
 
 
 
