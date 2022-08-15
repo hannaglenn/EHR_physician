@@ -5,18 +5,16 @@ library(readr)
 library(fixest)
 library(did2s)
 library(ggpubr)
-library(showtext)
+library(extrafont)
+
 
 # ------------------------------------- ANALYSIS  ------------------------------------
 #                                       Hanna Glenn, Emory University
 #                                       1/31/2022
 
-font_add_google("Cormorant Garamond", "corm")
-
-font_add("lm","C:/Users/hkagele/Downloads/Latin-Modern-Roman/lmroman10-regular.otf")
-
-## Automatically use showtext to render text
-showtext_auto()
+font_import()
+loadfonts(device="win")
+windowsFonts(A = windowsFont("Times New Roman"))
 
 # This script reads in "Physician_Data.rds" from data5, the final dataset used in my third year paper. 
 # The first portion of the script considers different potential estimators to use as the main specification for the paper.
@@ -29,9 +27,11 @@ Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total")
+varlist <- list("retire", "pos_office_prior", "pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total", "claim_per_patient")
 
-# Get results for ATTGT
+
+
+# Get results for ATTGT 
 models <- lapply(varlist, function(x) {
   all <- att_gt(yname = x,                # LHS Variable
     gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
@@ -39,12 +39,12 @@ models <- lapply(varlist, function(x) {
     tname = "year",                  # Time Variable
     # xformla = NULL                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
-    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
+    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
     anticipation=0,
-    base_period = "universal" # can set a number of years to account for anticipation effects
+    base_period = "varying" # can set a number of years to account for anticipation effects
   )
   
   young <- att_gt(yname = x,                # LHS Variable
@@ -53,12 +53,12 @@ models <- lapply(varlist, function(x) {
          tname = "year",                  # Time Variable
          # xformla = NULL                 # No covariates
          xformla = ~grad_year,            # Time-invariant controls
-         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age<60)),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60) else (if (x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age<60)),
          est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
          control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
          clustervars = "DocNPI",          # Cluster Variables          
          anticipation=0,
-         base_period = "universal" # can set a number of years to account for anticipation effects
+         base_period = "varying" # can set a number of years to account for anticipation effects
   )
   
   old <- att_gt(yname = x,                # LHS Variable
@@ -67,12 +67,12 @@ models <- lapply(varlist, function(x) {
          tname = "year",                  # Time Variable
          # xformla = NULL                 # No covariates
          xformla = ~grad_year,            # Time-invariant controls
-         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60) else (if (x=="pos_office" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age>=60)),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60) else (if (x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age>=60)),
          est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
          control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
          clustervars = "DocNPI",          # Cluster Variables          
          anticipation=0,
-         base_period = "universal" # can set a number of years to account for anticipation effects
+         base_period = "varying" # can set a number of years to account for anticipation effects
   )
   
   list(all=all,young=young,old=old)
@@ -93,91 +93,135 @@ Models_agg <- lapply(models, function(x){
   list(agg_all=agg_all, p_all=p_all, agg_young=agg_young, p_young=p_young, agg_old=agg_old, p_old=p_old)
 })
 
+graph_data <- lapply(Models_agg, function(x){
+  data_allages <- as.data.frame(x[["agg_all"]][["egt"]]) %>%
+    dplyr::rename(year=1) %>%
+    cbind(as.data.frame(x[["agg_all"]][["att.egt"]])) %>%
+    dplyr::rename(att=2) %>%
+    cbind(as.data.frame(x[["agg_all"]][["se.egt"]])) %>%
+    dplyr::rename(se=3) %>%
+    mutate(upper=att+(1.96*se),
+           lower=att-(1.96*se),
+           group="All",
+           year=as.factor(year)
+    )
+  
+  data_young <- as.data.frame(x[["agg_young"]][["egt"]]) %>%
+    dplyr::rename(year=1) %>%
+    cbind(as.data.frame(x[["agg_young"]][["att.egt"]])) %>%
+    dplyr::rename(att=2) %>%
+    cbind(as.data.frame(x[["agg_young"]][["se.egt"]])) %>%
+    dplyr::rename(se=3) %>%
+    mutate(upper=att+(1.96*se),
+           lower=att-(1.96*se),
+           group="Age < 60",
+           year=as.factor(year))
+  
+  data_old <- as.data.frame(x[["agg_old"]][["egt"]]) %>%
+    dplyr::rename(year=1) %>%
+    cbind(as.data.frame(x[["agg_old"]][["att.egt"]])) %>%
+    dplyr::rename(att=2) %>%
+    cbind(as.data.frame(x[["agg_old"]][["se.egt"]])) %>%
+    dplyr::rename(se=3) %>%
+    mutate(upper=att+(1.96*se),
+           lower=att-(1.96*se),
+           group="Age >= 60",
+           year=as.factor(year))
 
+  
+  data <- rbind(data_allages, data_young, data_old)
+  
+  list(data)
+})
 
-# Create ggdid for each group
-graphs <- lapply(Models_agg, function(x){
+dodge <- position_dodge(width=0.3) 
+graphs <- lapply(graph_data, function(x){
   
-  # Define confidence intervals to find max for graph bounds
-  upper_all <- mapply(FUN=function(att,se){att+(1.96*se)},
-                      att=x[["agg_all"]][["att.egt"]],
-                      se=x[["agg_all"]][["se.egt"]],
-                      SIMPLIFY=T)
-  upper_young <- mapply(FUN=function(att,se){att+(1.96*se)},
-                      att=x[["agg_young"]][["att.egt"]],
-                      se=x[["agg_young"]][["se.egt"]],
-                      SIMPLIFY=T)
-  upper_old <- mapply(FUN=function(att,se){att+(1.96*se)},
-                      att=x[["agg_old"]][["att.egt"]],
-                      se=x[["agg_old"]][["se.egt"]],
-                      SIMPLIFY=T)
-  lower_all <- mapply(FUN=function(att,se){att-(1.96*se)},
-                      att=x[["agg_all"]][["att.egt"]],
-                      se=x[["agg_all"]][["se.egt"]],
-                      SIMPLIFY=T)
-  lower_young <- mapply(FUN=function(att,se){att-(1.96*se)},
-                        att=x[["agg_young"]][["att.egt"]],
-                        se=x[["agg_young"]][["se.egt"]],
-                        SIMPLIFY=T)
-  lower_old <- mapply(FUN=function(att,se){att-(1.96*se)},
-                      att=x[["agg_old"]][["att.egt"]],
-                      se=x[["agg_old"]][["se.egt"]],
-                      SIMPLIFY=T)
+  all_data <- x[[1]] %>%
+    filter(group=="All")
   
-  max <- max(max(upper_all),max(upper_young),max(upper_old))
-  min <- min(min(lower_all),min(lower_young),min(lower_old))
-    
-  all <- ggdid(x[["agg_all"]], theming=FALSE, legend=FALSE, title="All Hospitalists") + 
-  labs(caption=paste0("p-value= ",round(x$p_all,3))) +
-  theme_bw() +
-  scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 17, family="lm"))
+  ages_data <- x[[1]] %>%
+    filter(group!="All")
   
-  young <- ggdid(x[["agg_young"]], theming=FALSE, legend=FALSE, title="Hospitalists < 60") + 
-    labs(caption=paste0("p-value= ",round(x$p_young,3))) +
+  all <- ggplot(all_data, aes(year, att)) +  
+    geom_vline(xintercept="0", linetype="dashed", colour="red") +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width=.0, size=1.1) +
+    geom_point(size=2.5) +
     theme_bw() +
-    scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-    ylim(1.8*min,1.5*max) +
-    theme(legend.position = "none", text = element_text(size = 17, family="lm"))
+    theme_light() +
+    geom_hline(yintercept=0, linetype="dashed") +
+    theme(legend.position = "none", text = element_text(size = 15)) +
+    xlab("\n") + ylab("Point Estimate and 95% CI\n") +
+    geom_vline(xintercept=0, linetype="dashed", color="red") +
+    theme(panel.grid.major.x = element_blank() ,
+          panel.grid.major.y = element_line(size=.05, color="lightgray" ))
   
-  old <- ggdid(x[["agg_old"]], theming=FALSE, legend=FALSE, title="Hospitalists >= 60") + 
-    labs(caption=paste0("p-value= ",round(x$p_old,3))) +
+  ages <- ggplot(ages_data, aes(year, att, color=group)) +  
+    geom_vline(xintercept="0", linetype="dashed", colour="red") +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width=.0, size=1.1, position=dodge) +
+    geom_point(size=2.5, position=dodge) +
     theme_bw() +
-    scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-    ylim(1.8*min,1.5*max) +
-    theme(legend.position = "none", text = element_text(size = 17, family="lm"))
+    theme_light() +
+    geom_hline(yintercept=0, linetype="dashed") +
+    theme(text = element_text(size = 15)) +
+    xlab("\n") + ylab("Point Estimate and 95% CI\n") +
+    geom_vline(xintercept=0, linetype="dashed", color="red") +
+    theme(panel.grid.major.x = element_blank() ,
+          panel.grid.major.y = element_line(size=.05, color="lightgray" )) +
+    paletteer::scale_colour_paletteer_d("ggthemes::excel_Badge") +
+    theme(legend.position="bottom") + labs(color='Age Group')
   
-  list(all=all,young=young,old=old)
+  list(all=all, ages=ages)
+})
 
-  })
+
 
 plots <- lapply(graphs, function(x){
   ggarrange(
     x$all,
-    ggarrange(x$young, x$old,
-              ncol=2),
+    x$ages,
     nrow=2,
     common.legend = TRUE,
     legend="right",
-    heights  = c(1.25,1)
+    align="v",
+    heights  = c(1,1)
   ) %>%
     annotate_figure(
-      bottom=text_grob("\nEvent Time", family="lm", hjust=.5, vjust=.5, size=15)
+      bottom=text_grob("Year Relative to Exposure", hjust=.5, vjust=.5, size=15)
     )
 })
 
 # Save plots
 ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
-ggsave(file="Objects/officefrac_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
-ggsave(file="Objects/officeind_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
-ggsave(file="Objects/zip_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
-ggsave(file="Objects/patient_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
-ggsave(file="Objects/claim_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac_prior_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac_noprior_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
+ggsave(file="Objects/officeind_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
+ggsave(file="Objects/zip_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
+ggsave(file="Objects/patient_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_plot.pdf",plot=plots[[7]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
+
+# Save the different plots separately for presentations
+ggsave(file="Objects/Presentation_retire_all.pdf",plot=plots[[1]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_retire_ages.pdf",plot=plots[[1]]$ages, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_frac_prior_all.pdf",plot=plots[[2]]$all, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_frac_noprior_all.pdf",plot=plots[[3]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_office_all.pdf",plot=plots[[4]]$all, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_patients_all.pdf",plot=plots[[6]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_patients_ages.pdf",plot=plots[[6]]$ages, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_claimperpatient_all.pdf",plot=plots[[8]]$all, width=10, height=7, units="in")
+
+
 
 
 #Save plot of patient count dis-aggregated
-ggdid(models[[5]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12, family="lm")) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count")
+ggdid(models[[6]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count", colour=)
+
 ggsave(filename = "Objects/patient_group.pdf", width=10, height=12, units="in")
 
 

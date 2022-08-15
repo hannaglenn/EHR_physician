@@ -51,7 +51,8 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(age=year-birth_year) %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max_age=max(age)) %>%
-  dplyr::ungroup()
+  dplyr::ungroup() %>%
+  filter(age!=24)
 
 # Drop any physicians with less than 70% of patients in hospitals
 Physician_Data <- Physician_Data %>%
@@ -147,6 +148,17 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(work_in_office=ifelse(pos_office>0,1,0))
 
+# Create different fraction variables for whether they worked in an office already or not
+Physician_Data <- Physician_Data %>%
+  mutate(office_yearprior=ifelse(year==minyr_EHR-1 & work_in_office==1, 1, NA)) %>%
+  mutate(office_yearprior=ifelse(year==minyr_EHR-1 & work_in_office==0, 0, office_yearprior)) %>%
+  group_by(DocNPI) %>%
+  fill(office_yearprior, .direction="downup")
+
+Physician_Data <- Physician_Data %>%
+  mutate(pos_office_prior=ifelse(office_yearprior==1,pos_office,NA),
+         pos_office_noprior=ifelse(office_yearprior==0,pos_office,NA))
+
 # Additionally, I can create a variable for whether the physician works in hospitals
 Physician_Data <-Physician_Data %>%
   dplyr::mutate(work_in_hosp=ifelse(pos_inpat>0,1,0))
@@ -157,6 +169,15 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(sum=sum(work_in_office)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(ever_work_in_office=ifelse(sum>0,1,0)) 
+
+
+observe <- Physician_Data %>%
+  filter(is.na(office_yearprior)) %>%
+  select(DocNPI, year, minyr_EHR, work_in_office, office_yearprior)
+  
+  # The NAs that are left in this variable are fine because they only occur when minyr_EHR is either 0
+  # or 2009, and these observations get dropped in the analysis anyway. 
+
 
 
 # ZIP CODES ####
@@ -253,9 +274,10 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(change_zip=ifelse(year==2009,0,change_zip)) 
 
 
+
 # PRODUCTIVITY ####
 
-# For productivity, I will simply use claim count and  patient count as the dependent variable.
+# For productivity, I will simply use claim count,  patient count and claims per patient as the dependent variable.
 # The key for this variable is to limit the sample appropriately. 
 
 Physician_Data <- Physician_Data %>%
@@ -265,6 +287,10 @@ Physician_Data <- Physician_Data %>%
 
 Physician_Data <- Physician_Data %>%
   mutate(npi_unq_benes=ifelse(is.na(npi_unq_benes),0,npi_unq_benes))
+
+Physician_Data <- Physician_Data %>%
+  mutate(claim_per_patient=claim_count_total/npi_unq_benes)
+
 
 
 # Create relative year variables
@@ -282,6 +308,11 @@ Physician_Data <- Physician_Data %>%
          rel_p2=1*(rel_expandyear==2),
          rel_p3=1*(rel_expandyear==3),
          rel_p4=1*(rel_expandyear==4))
+
+# Create age bins to do analysis separately 
+Physician_Data <- Physician_Data %>% ungroup() %>%
+  mutate(age_bins=ntile(age,n=3))
+
 
 
 # Save the data
