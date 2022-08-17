@@ -138,6 +138,7 @@ observe <- Physician_Data %>%
   dplyr::filter(sum>0) %>%
   dplyr::select(DocNPI,year,hosp_patient_count,claim_count_total)
 
+
 # I'm thinking to replace all NAs with 0.
 Physician_Data <- Physician_Data %>%
   dplyr::mutate(claim_count_total=ifelse(is.na(claim_count_total),0,claim_count_total)) %>%
@@ -172,12 +173,23 @@ Physician_Data <- Physician_Data %>%
 
 
 observe <- Physician_Data %>%
-  filter(is.na(office_yearprior)) %>%
-  select(DocNPI, year, minyr_EHR, work_in_office, office_yearprior)
+  filter(office_yearprior==1) %>%
+  select(DocNPI, year, minyr_EHR, pos_office, pos_inpat, work_in_office, office_yearprior, npi_unq_benes, total_office)
   
   # The NAs that are left in this variable are fine because they only occur when minyr_EHR is either 0
   # or 2009, and these observations get dropped in the analysis anyway. 
 
+# Create variable for total number of patients in office
+Physician_Data <- Physician_Data %>%
+  mutate(total_office=pos_office*npi_unq_benes)
+
+Physician_Data <- Physician_Data %>%
+  mutate(total_office_prior=ifelse(office_yearprior==1,total_office,NA),
+         total_office_noprior=ifelse(office_yearprior==0,total_office,NA))
+
+# Create variable for majority patients in office
+Physician_Data <- Physician_Data %>%
+  mutate(majority_in_office=ifelse(pos_office>pos_inpat,1,0))
 
 
 # ZIP CODES ####

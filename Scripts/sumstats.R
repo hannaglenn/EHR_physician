@@ -154,13 +154,13 @@ sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Hospi
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
-ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable)) + 
+ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable, linetype=Variable)) + 
   geom_line() + geom_point() + labs(x="\nYear", y=" ") + 
   scale_colour_manual(values=cbbPalette) + ylim(0,1)  + xlim(2009,2015) +
   theme(legend.key.size=unit(.3,'cm'),
         legend.key.height = unit(.4, 'cm'),
         legend.key.width = unit(.3, 'cm'),
-        text=element_text(size=17, family="lm"))
+        text=element_text(size=25))
 
 ggsave("Objects/sum_stats_year.pdf", width=10, height=7, units="in")
 

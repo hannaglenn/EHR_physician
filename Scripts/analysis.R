@@ -27,7 +27,7 @@ Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office_prior", "pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total", "claim_per_patient")
+varlist <- list("retire", "pos_office_prior", "pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total", "claim_per_patient", "majority_in_office", "total_office_prior", "total_office_noprior")
 
 
 
@@ -202,18 +202,24 @@ ggsave(file="Objects/claim_plot.pdf",plot=plots[[7]], width=10, height=7, units=
 ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
 
 # Save the different plots separately for presentations
-ggsave(file="Objects/Presentation_retire_all.pdf",plot=plots[[1]]$all, width=10, height=7, units="in")
-ggsave(file="Objects/Presentation_retire_ages.pdf",plot=plots[[1]]$ages, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_retire_all.pdf",plot=graphs[[1]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_retire_ages.pdf",plot=graphs[[1]]$ages, width=10, height=7, units="in")
 
-ggsave(file="Objects/Presentation_frac_prior_all.pdf",plot=plots[[2]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_frac_prior_all.pdf",plot=graphs[[2]]$all, width=10, height=7, units="in")
 
-ggsave(file="Objects/Presentation_frac_noprior_all.pdf",plot=plots[[3]]$all, width=10, height=7, units="in")
-ggsave(file="Objects/Presentation_office_all.pdf",plot=plots[[4]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_frac_noprior_all.pdf",plot=graphs[[3]]$all, width=10, height=7, units="in")
 
-ggsave(file="Objects/Presentation_patients_all.pdf",plot=plots[[6]]$all, width=10, height=7, units="in")
-ggsave(file="Objects/Presentation_patients_ages.pdf",plot=plots[[6]]$ages, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_office_all.pdf",plot=graphs[[4]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_office_ages.pdf",plot=graphs[[4]]$ages, width=10, height=7, units="in")
 
-ggsave(file="Objects/Presentation_claimperpatient_all.pdf",plot=plots[[8]]$all, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_zip_all.pdf",plot=graphs[[5]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_zip_ages.pdf",plot=graphs[[5]]$ages, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_patients_all.pdf",plot=graphs[[6]]$all, width=10, height=7, units="in")
+ggsave(file="Objects/Presentation_patients_ages.pdf",plot=graphs[[6]]$ages, width=10, height=7, units="in")
+
+ggsave(file="Objects/Presentation_claimperpatient_all.pdf",plot=graphs[[8]]$all, width=10, height=7, units="in")
 
 
 
