@@ -206,13 +206,9 @@ $\rightarrow$ Younger: 16\% increase in second year
 
 \begin{frame}{Job Setting Variables}
 \begin{enumerate}
-    \item Fraction of patients seen in office 
-                \vspace{3mm}
-    \begin{itemize}
-        \item Broken up by whether the physician already worked in an office pre-EHR
-    \end{itemize}
-                \vspace{3mm}
     \item Indicator for working in office or not
+                    \vspace{3mm}
+    \item Indicator for whether the physician changed zip code
 \end{enumerate}
 \end{frame}
 
@@ -232,29 +228,30 @@ Most physicians will not be induced to retire because of EHRs
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Results: Frac of Patients in Office (Prior Work in Office)}
-\begin{figure}[ht]
-\centering
-\includegraphics[scale=.35]{Objects/Presentation_frac_prior_all.pdf}
-\end{figure}
-$\rightarrow$ Decrease fraction of patients
-\end{frame}
-
-\begin{frame}{Results: Frac of Patients in Office (No Prior Work in Office)}
-\begin{figure}[ht]
-\centering
-\includegraphics[scale=.35]{Objects/Presentation_frac_noprior_all.pdf}
-\end{figure}
-$\rightarrow$ Increase fraction of patients
-\end{frame}
-
-\begin{frame}{Indicator for working in office}
+\begin{frame}{Results: Indicator for Working in Office}
 \begin{figure}[ht]
     \centering
     \includegraphics[scale=.35]{Objects/Presentation_office_all.pdf}
 \end{figure}
 $\rightarrow$ 4.6\% increase relative to the mean\\
 $\rightarrow$ Driven by young physicians
+\end{frame}
+
+\begin{frame}{Results: Indicator for Changing Zip Codes}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=.35]{Objects/Presentation_zip_all.pdf}
+\end{figure}
+$\rightarrow$ Something happening in relative year -3, may be a pre-trend
+\end{frame}
+
+\begin{frame}{Results: Indicator for Changing Zip Codes}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=.35]{Objects/Presentation_zip_ages.pdf}
+\end{figure}
+$\rightarrow$ .043 ppt increase in likelihood of retiring for younger physicians (36\%)
+$\rightarrow$ This effect is persistent
 \end{frame}
 
 
@@ -274,7 +271,7 @@ $\rightarrow$ Driven by young physicians
 
 \begin{frame}{Productivity Variables}
     \begin{enumerate}
-        \item Patient Count
+        \item Patient count
         \vspace{6mm}
         \item Claims per patient
     \end{enumerate}
@@ -298,7 +295,7 @@ We can see how productivity is affected for physicians who don't change behavior
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Patient Count}
+\begin{frame}{Results: Patient Count}
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=.35]{Objects/Presentation_patients_all.pdf}
@@ -320,7 +317,7 @@ $\rightarrow$ Driven by demand?
 $\rightarrow$ Don't see the same increase for older physicians
 \end{frame}
 
-\begin{frame}{Claims per Patient}
+\begin{frame}{Results: Claims per Patient}
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=.35]{Objects/Presentation_claimperpatient_all.pdf}
@@ -334,13 +331,10 @@ $\rightarrow$ Downward trend
 
 
 \begin{frame}{Summary}
-\begin{itemize}
-    \item Evidence that physicians are changing their behavior because of this new technology, specifically through retirement or job switching
-                \vspace{3mm}
-    \item Little evidence of work setting changes
-                \vspace{3mm}
-    \item For physicians who endure through the implementation of the technology, number of patients goes up but not conclusive evidence that claims per patient goes down
-\end{itemize}
+\textcolor{red}{Downside}: evidence that physicians are changing their behavior because of this new technology\\
+                \vspace{6mm}
+\textcolor{teal}{Potential upside}: For physicians who endure through the implementation of the technology, number of patients goes up and claims per patient goes down
+
 \end{frame}
 
 \begin{frame}{Robustness Checks}
