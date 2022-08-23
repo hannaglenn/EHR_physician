@@ -201,7 +201,7 @@ There are several assumptions necessary to identify the parameters of interest, 
     \centering
     \captionsetup{width=.7\linewidth}
     \caption{Hospital EHR Adoption Over Time}
-    \includegraphics[scale=1]{Objects/hosp_treat.pdf}
+    \includegraphics[scale=.5]{Objects/hosp_treat.pdf}
     \label{fig:hosp_treat}
 \end{figure}
 
@@ -314,7 +314,17 @@ Patient count is also driven by demand for health care. A major change in the U.
     \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
 \end{figure}
 
-This outcome, total patient count, is directly related to the fraction of patients seen in an office setting. For younger physicians, since the total number of patients increases in the first couple of years after exposure, the absolute number of patients seen in offices increases as well. That is, it seems that younger physicians are shifting a positive amount of work towards offices but still able to increase productivity in the time spent in the hospital, thus the null effect on fraction of office patients. 
+Since I found in the earlier stages of analysis that physicians may have shifted away from hospitals due to EHR exposure, I also investigate whether this increase in the number of patients seen is due to the decrease in working physicians. For example, if a hospital loses a portion of their physicians, they may divide that physician's patients between the remaining physicians. In the long run, the hospital should hire new physicians to replace those that left, but if this does not happen right away my results could be driven by the retiring physicians instead of EHR use. In Figure 
+
+\begin{figure}[ht]
+    \centering
+    \captionsetup{width=.85\linewidth}
+    \caption{Effect of EHR Exposure on Claim Count}
+    \includegraphics[scale=.6]{Objects/number.pdf}
+    \label{fig:claim}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 4.04 (33.89), 25.77 (31.26), -161.06 (133.35), respectively.}}
+\end{figure}
 
 Next, I consider whether EHR exposure affects claim count. EHRs may affect physician incentives in such a way that billing activity changes differently from patient count. If, for example, EHRs reduce the administrative burden of filing extra claims, then physicians might increase the things they bill for whether the number of patients has changed or not. On average for the entire sample, claim counts are roughly 4 times the number of patients seen in a year. Shown in Figure \ref{fig:claim}, there is not strong evidence for an effect of EHR exposure on claim count for physicians of retirement age. The point estimates indicate a positive effect in the first two years of exposure for younger physicians, but this is not strong evidence. Thus, for hospitalists $>= 60$, it seems EHRs are not making significant changes to practice behavior. However, for those $< 60$, the observed claim count increase is two times the observed patient count increase. Since the average claim count per patient is 4, these results imply that the number of claims per patient is actually decreasing. That is, physicians are billing for less items as they increase the number of patients.   
 
