@@ -131,7 +131,11 @@ graph_data <- lapply(Models_agg, function(x){
   
   data <- rbind(data_allages, data_young, data_old)
   
-  list(data)
+  p_all <- x[["p_all"]]
+  p_young <- x[["p_young"]]
+  p_old <- x[["p_old"]]
+  
+  list(data, p_all, p_young, p_old)
 })
 
 dodge <- position_dodge(width=0.3) 
@@ -151,10 +155,12 @@ graphs <- lapply(graph_data, function(x){
     theme_light() +
     geom_hline(yintercept=0, linetype="dashed") +
     theme(legend.position = "none", text = element_text(size = 15)) +
-    xlab("\n") + ylab("Point Estimate and 95% CI\n") +
+    xlab("") + ylab("Point Estimate and 95% CI\n") +
     geom_vline(xintercept=0, linetype="dashed", color="red") +
     theme(panel.grid.major.x = element_blank() ,
-          panel.grid.major.y = element_line(size=.05, color="lightgray" ))
+          panel.grid.major.y = element_line(size=.05, color="lightgray" )) +
+    labs(caption=paste0("pre-trends test p-value: ",round(x[[2]],2))) + 
+    theme(plot.caption=element_text(hjust = 0))
   
   ages <- ggplot(ages_data, aes(year, att, color=group)) +  
     geom_vline(xintercept="0", linetype="dashed", colour="red") +
@@ -164,12 +170,15 @@ graphs <- lapply(graph_data, function(x){
     theme_light() +
     geom_hline(yintercept=0, linetype="dashed") +
     theme(text = element_text(size = 15)) +
-    xlab("\n") + ylab("Point Estimate and 95% CI\n") +
+    xlab("") + ylab("Point Estimate and 95% CI\n") +
     geom_vline(xintercept=0, linetype="dashed", color="red") +
     theme(panel.grid.major.x = element_blank() ,
           panel.grid.major.y = element_line(size=.05, color="lightgray" )) +
     paletteer::scale_colour_paletteer_d("ggthemes::excel_Badge") +
-    theme(legend.position="bottom") + labs(color='Age Group')
+    theme(legend.position="bottom") + 
+    labs(color='Age Group', caption=paste0("pre-trends test p-value (young): ",round(x[[3]],2),
+                                           "\npre-trends test p-value (old): ", round(x[[4]],2))) + 
+    theme(plot.caption=element_text(hjust = 0))
   
   list(all=all, ages=ages)
 })

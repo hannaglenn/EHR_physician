@@ -1607,4 +1607,193 @@ ggsave(claim_pretrends_plot, file="Objects/claim_pretrends_plot.pdf", height=7, 
 
 
 
+## ANALYSIS ON WHETHER EHR IMPACTS NUMBER OF PHYSICIANS
 
+# Read in data on physician hospital pairs
+data <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
+
+#Read in AHA-NPI crosswalk data
+AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
+
+# Merge crosswalk to main data
+data <- data %>%
+  mutate(HospNPI=as.double(HospNPI)) %>%
+  left_join(AHANPI_cw,by=c("HospNPI"="NPI"))
+
+data <- data %>%
+  filter(!is.na(AHAID))
+
+
+# Read in main AHA survey data
+# I need to think about adding more hospital characteristics to this dataset
+AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
+
+# I define low integration and high integration as in Madison (2004, HSR)
+AHAmainsurvey <- AHAmainsurvey %>%
+  mutate(ID=as.character(ID)) %>%
+  mutate(low_integration=ifelse(IPAHOS==1 | OPHOHOS==1 | CPHOHOS==1,1,0),
+         high_integration=ifelse(GPWWHOS==1 | MSOHOS==1 | ISMHOS==1 | EQMODHOS==1,1,0)) %>%
+  dplyr::rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
+                joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
+  select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
+  select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS,
+         -total_physicians, -joint_phys, -phys_owned)
+
+data <- data %>% ungroup() %>%
+  mutate(AHAID=as.character(AHAID)) %>%
+  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"),na_matches="never")
+
+
+
+# Find out how many hospital years have NA for EHR question (conditional on having an AHA ID)
+num_missing_EHR <- data %>%
+  filter(is.na(EHLTH)) %>%
+  group_by(year) %>%
+  distinct(HospNPI)
+# 7902 missing 
+
+# Find out how many hospitals are missing an answer in every year
+num_always_missing_EHR <- data %>% ungroup() %>%
+  filter(is.na(EHLTH)) %>%
+  mutate(EHLTH=ifelse(is.na(EHLTH),10,EHLTH)) %>%
+  group_by(HospNPI) %>%
+  mutate(always_missing=ifelse(sum(EHLTH)==60,1,0)) %>%
+  filter(always_missing==1) %>%
+  ungroup() %>%
+  distinct(HospNPI, .keep_all = T)
+# There are only 90 hospitals that never answer this question, but they typically have answers to the other questions in the survey
+
+# Fill in missing year for EHR if it's between two years that have the same answer for EHR question
+data <- data %>% group_by(AHAID) %>%
+  mutate(firstyear_0=min(year[EHLTH==0],na.rm=T),lastyear_0=max(year[EHLTH==0],na.rm=T)) %>%
+  mutate(firstyear_0=ifelse(is.infinite(firstyear_0),NA,firstyear_0),lastyear_0=ifelse(is.infinite(lastyear_0),NA,lastyear_0)) %>%
+  mutate(EHLTH=ifelse(firstyear_0<year & year<lastyear_0 & is.na(EHLTH),0,EHLTH))
+
+
+data <- data %>% group_by(AHAID) %>%
+  mutate(firstyear_1=min(year[EHLTH==1],na.rm=T),lastyear_1=max(year[EHLTH==1],na.rm=T)) %>%
+  mutate(firstyear_1=ifelse(is.infinite(firstyear_1),NA,firstyear_1),lastyear_1=ifelse(is.infinite(lastyear_1),NA,lastyear_1)) %>%
+  mutate(EHLTH=ifelse(firstyear_1<year & year<lastyear_1 & is.na(EHLTH),1,EHLTH))
+
+
+data <- data %>% group_by(AHAID) %>%
+  mutate(firstyear_2=min(year[EHLTH==2],na.rm=T),lastyear_2=max(year[EHLTH==2],na.rm=T)) %>%
+  mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
+  mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
+  ungroup()
+# Now down to 6822 missing 
+
+# Get rid of unneeded variables 
+data <- data %>% ungroup() %>%
+  select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
+
+low_beds <- data %>% ungroup() %>%
+  distinct(HospNPI, year, beds) %>%
+  filter(beds<10) %>%
+  distinct(HospNPI) %>%
+  mutate(low_beds=1)
+# 58 hospitals
+
+data <- data %>%
+  left_join(low_beds, by="HospNPI") %>%
+  filter(is.na(low_beds)) %>%
+  select(-low_beds)
+
+data <- data %>%
+  mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) %>%
+  select(-EHLTH)
+
+# In some cases, 2009 or 2015 can be filled in to not have a missing value. 
+# Create dataset to fill in 2009 or 2015 conditionally
+fill_in <- data %>%
+  filter((year==2010 & EHR==0) | (year==2014 & EHR==1)) %>%
+  mutate(change2009=ifelse(year==2010,1,0),
+         change2015=ifelse(year==2014,1,0)) %>%
+  select(HospNPI,DocNPI,year,EHR,change2009,change2015) %>%
+  distinct(HospNPI,year,EHR,change2009,change2015)
+
+fill_in <- fill_in %>%
+  group_by(HospNPI) %>%
+  mutate(change2009=ifelse(sum(change2009)>0,1,0),
+         change2015=ifelse(sum(change2015)>0,1,0)) %>%
+  ungroup() %>%
+  distinct(HospNPI,change2009,change2015)
+
+# Merge it back to original
+data <- data %>%
+  left_join(fill_in,by="HospNPI")
+
+# Fill in the qualifying missing values
+data <- data %>%
+  mutate(EHR=ifelse(year==2009 & change2009==1 & is.na(EHR),0,EHR)) %>%
+  mutate(EHR=ifelse(year==2015 & change2015==1 & is.na(EHR),1,EHR)) %>%
+  select(-change2009, -change2015) %>%
+  ungroup()
+
+# Create number of physicians variable
+data <- data %>%
+  mutate(n=1) %>%
+  group_by(HospNPI,year) %>%
+  mutate(num_phys=sum(n)) %>%
+  ungroup() %>%
+  select(-n)
+
+data <- data %>%
+  distinct(HospNPI, year, EHR, num_phys)
+
+minyr_EHR <- data %>% 
+  filter(EHR>0) %>%
+  group_by(HospNPI) %>%
+  mutate(minyr_EHR=min(year)) %>%
+  ungroup() %>%
+  distinct(HospNPI,minyr_EHR)
+
+data <- data %>% ungroup() %>%
+  left_join(minyr_EHR, by="HospNPI") %>%
+  mutate(minyr_EHR=ifelse(is.na(minyr_EHR),0,minyr_EHR))
+
+
+hosp_analysis <- att_gt(yname = "num_phys",                # LHS Variable
+              gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
+              idname = "HospNPI",               # ID
+              tname = "year",                  # Time Variable
+              xformla = NULL,      
+              data=data,
+              est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+              control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
+              clustervars = "HospNPI",          # Cluster Variables          
+              anticipation=0,
+              base_period = "varying" # can set a number of years to account for anticipation effects
+)
+agg_hosp <- aggte(hosp_analysis, type = "dynamic",na.rm=T)
+
+ggdid(agg_hosp)
+
+
+data_hosp <- as.data.frame(agg_hosp[["egt"]]) %>%
+    dplyr::rename(year=1) %>%
+    cbind(as.data.frame(agg_hosp[["att.egt"]])) %>%
+    dplyr::rename(att=2) %>%
+    cbind(as.data.frame(agg_hosp[["se.egt"]])) %>%
+    dplyr::rename(se=3) %>%
+    mutate(upper=att+(1.96*se),
+           lower=att-(1.96*se),
+           year=as.factor(year))
+
+hosp_plot <- ggplot(data_hosp, aes(year, att)) +  
+  geom_vline(xintercept="0", linetype="dashed", colour="red") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width=.0, size=1.1) +
+  geom_point(size=2.5) +
+  theme_bw() +
+  theme_light() +
+  geom_hline(yintercept=0, linetype="dashed") +
+  theme(legend.position = "none", text = element_text(size = 15)) +
+  xlab("") + ylab("Point Estimate and 95% CI\n") +
+  geom_vline(xintercept=0, linetype="dashed", color="red") +
+  theme(panel.grid.major.x = element_blank() ,
+        panel.grid.major.y = element_line(size=.05, color="lightgray" )) + 
+  theme(plot.caption=element_text(hjust = 0))
+
+ggsave(file="Objects/numberofphysicians_plot.pdf",plot=hosp_plot, width=10, height=7, units="in")
+
+  

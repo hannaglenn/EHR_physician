@@ -48,7 +48,7 @@ sum_stats_fullsample <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0) %>%
                  "Ever Retire"="ever_retire",
                  "Work in an Office"="work_in_office",
                  "Change Zip Codes"="change_zip",
-                 "Claim Count"="claim_count_total"), 
+                 "Claims per Patient"="claim_per_patient"), 
                list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
@@ -73,7 +73,7 @@ knitr::kable(sum_stats_fullsample[c(4,8,12,2,10,3,5,7,1,6,9,11),],
   pack_rows(index = c("Outcomes" = 6, "Treatment" = 2, "Characteristics" = 4))
 
 
-# Summary Stats of all variables by old vs. young vs. those who retire ---------------------------------------------------------
+# Summary Stats of all variables by old vs. young  ---------------------------------------------------------
 means_old <- Physician_Data %>% ungroup() %>%
   filter(minyr_EHR>0) %>%
   filter(max_age>59) %>%
@@ -126,11 +126,10 @@ means_retire <- Physician_Data %>% ungroup() %>%
   dplyr::rename(value_retire=value)
 
 means_bind <- means_old %>%
-  left_join(means_young,by="var") %>%
-  left_join(means_retire,by="var")
+  left_join(means_young,by="var") 
 
 knitr::kable(means_bind[c(9,8,10,11,5,12,7,6,4,2,1,3),], "latex",
-             col.names=c("Variable","Age $>$ 60", "Age $<=$ 60", "Any Who Retire"),
+             col.names=c("Variable","Age $>$ 60", "Age $<=$ 60"),
              digits=2,
              caption="Means by Age Sample",
              booktabs=TRUE,
@@ -393,7 +392,7 @@ AHA_sample <- AHAmainsurvey %>%
 
 
 
-panelview(AHA_sample, Y=NULL,D="EHR", index=c("HospNPI","year"), axis.lab = "time", by.timing=TRUE) +
-  theme(text=element_text(size=10,family="lm"))
+panelview(AHA_sample, Y=NULL,D="EHR", index=c("HospNPI","year"), axis.lab="time", by.timing=TRUE) +
+  theme(text=element_text(size=15))
 
-ggsave("Objects/test.pdf")
+ggsave("Objects/hosp_treat.pdf", width=10, height=12, units = "in")
