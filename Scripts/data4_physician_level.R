@@ -516,10 +516,7 @@ Aggregated_Pairs <- Aggregated_Pairs %>%
   fill(num_hospitals,.direction="downup") %>%
   fill(num_systems,.direction="downup") %>%
   ungroup() %>%
-  mutate(experience=year-grad_year) 
-
-# Create exposure variables
-Aggregated_Pairs <- Aggregated_Pairs %>%
+  mutate(experience=year-grad_year) %>%
   mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0),
          decEHR_exposed=ifelse(minyr_EHR_dec>0 & year>=minyr_EHR_dec,1,0),
          anyEHR_LI_exposed=ifelse(minyr_EHR_int>0 & year>=minyr_EHR_int,1,0),

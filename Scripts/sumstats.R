@@ -396,3 +396,143 @@ panelview(AHA_sample, Y=NULL,D="EHR", index=c("HospNPI","year"), axis.lab="time"
   theme(text=element_text(size=15))
 
 ggsave("Objects/hosp_treat.pdf", width=10, height=12, units = "in")
+
+
+
+
+
+# Histogram of treatment and control for each group
+neg4 <- Physician_Data %>%
+  filter(minyr_EHR==2014 | minyr_EHR==2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR==2014,1,0)) %>%
+  group_by(treat) %>%
+  mutate(count=1) %>%
+  mutate(sum=sum(count)) %>%
+  ungroup() %>%
+  distinct(treat,sum) %>%
+  mutate(time=-4)
+
+neg3 <- Physician_Data %>%
+  filter(minyr_EHR>=2013 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR==2014 | minyr_EHR==2013,1,0),
+         control=ifelse(minyr_EHR>=2014 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=-3)
+
+neg2 <- Physician_Data %>%
+  filter(minyr_EHR>=2012 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR>=2012 & minyr_EHR<=2014,1,0),
+         control=ifelse(minyr_EHR>=2013 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=-2)
+
+neg1 <- Physician_Data %>%
+  filter(minyr_EHR>=2011 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR>=2011 & minyr_EHR<=2014,1,0),
+         control=ifelse(minyr_EHR>=2012 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=-1)
+
+neg <- Physician_Data %>%
+  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2014,1,0),
+         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=0)
+
+pos1 <- Physician_Data %>%
+  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2013,1,0),
+         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=1)
+
+pos2 <- Physician_Data %>%
+  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2012,1,0),
+         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=2)
+
+pos3 <- Physician_Data %>%
+  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2011,1,0),
+         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=3)
+
+pos4 <- Physician_Data %>%
+  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  distinct(DocNPI, minyr_EHR) %>%
+  mutate(treat=ifelse(minyr_EHR==2010,1,0),
+         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+  mutate(count=1) %>%
+  mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
+         sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
+  ungroup() %>%
+  distinct(treat,control, sum) %>%
+  filter(!(control==1 & treat==1)) %>%
+  distinct(treat,sum) %>%
+  mutate(time=4)
+
+control_hist_data <- rbind(neg4, neg3, neg2, neg1, neg, pos1, pos2, pos3, pos4) %>%
+  mutate(treat=ifelse(treat==1,"Treatment", "Control")) %>%
+  rename(Group=treat) %>%
+  mutate(time=as.factor(time))
+
+ggplot(control_hist_data, aes(x=time, y=sum, fill=Group)) + 
+ geom_bar(stat='identity') + theme_bw() +
+  theme_light() + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))  +
+  ylab("Count of Physicians") + xlab("Event Time")
+
+ggsave(plot=last_plot(), file="/Objects/control_histogram.pdf", height=7, width=10, units="in")

@@ -27,7 +27,7 @@ Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office_prior", "pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total", "claim_per_patient", "majority_in_office", "total_office_prior", "total_office_noprior")
+varlist <- list("retire", "pos_office", "pos_office_prior", "pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total", "claim_per_patient", "majority_in_office", "total_office_prior", "total_office_noprior")
 
 
 
@@ -202,13 +202,14 @@ plots <- lapply(graphs, function(x){
 
 # Save plots
 ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
-ggsave(file="Objects/officefrac_prior_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
-ggsave(file="Objects/officefrac_noprior_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
-ggsave(file="Objects/officeind_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
-ggsave(file="Objects/zip_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
-ggsave(file="Objects/patient_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
-ggsave(file="Objects/claim_plot.pdf",plot=plots[[7]], width=10, height=7, units="in")
-ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac__plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac_prior_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac_noprior_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
+ggsave(file="Objects/officeind_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
+ggsave(file="Objects/zip_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
+ggsave(file="Objects/patient_plot.pdf",plot=plots[[7]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[9]], width=10, height=7, units="in")
 
 # Save the different plots separately for presentations
 ggsave(file="Objects/Presentation_retire_all.pdf",plot=graphs[[1]]$all, width=10, height=7, units="in")
