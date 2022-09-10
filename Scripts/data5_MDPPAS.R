@@ -321,9 +321,16 @@ Physician_Data <- Physician_Data %>%
          rel_p3=1*(rel_expandyear==3),
          rel_p4=1*(rel_expandyear==4))
 
-# Create age bins to do analysis separately 
-Physician_Data <- Physician_Data %>% ungroup() %>%
-  mutate(age_bins=ntile(age,n=3))
+
+# Limit to physicians who have majority patients in hospital the year prior to exposure (I don't want to pick up
+# people becoming hospitalists at the time a hospital implements an EHR)
+Physician_Data <- Physician_Data %>%
+  mutate(yearbefore=ifelse(year==minyr_EHR-1,pos_inpat,NA)) %>%
+  group_by(DocNPI) %>%
+  fill(yearbefore,.direction="downup")
+
+Physician_Data <- Physician_Data %>%
+  filter(yearbefore>.5 | is.na(yearbefore))
 
 
 

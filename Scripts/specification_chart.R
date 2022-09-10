@@ -2,9 +2,6 @@ library(tidyr)
 library(readr)
 library(stringr)
 library(dplyr)
-library(plm)
-library(janitor)
-library(lubridate)
 library(did)
 library(ggplot2)
 
@@ -486,6 +483,14 @@ Physician_Data_list <- lapply(Physician_Data_list, function(x){
            max_50=ifelse(max>.5,1,0))%>%
     filter(max_50==1 | max_70==1 | max_90==1)
   
+  data <- data %>%
+    mutate(yearbefore=ifelse(year==minyr_EHR-1,pos_inpat,NA)) %>%
+    group_by(DocNPI) %>%
+    fill(yearbefore,.direction="downup")
+  
+  data <- data %>%
+    filter(yearbefore>.5 | is.na(yearbefore))
+  
   return(data)
 })
 
@@ -906,72 +911,6 @@ legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Int
 
 
 
-# FRACTION IN OFFICE SPECIFICATION CHART: YOUNG --------------------------------------------
-models <- lapply(Subsets_Data_Young, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "pos_office",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["att.egt"]][[5]],
-           se=x[["agg"]][["se.egt"]][[5]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation, limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
-
-schart(chart_data_frame, labels, highlight=117, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-
-
-
-
-
-
-
 
 # OFFICE INDICATOR SPECIFICATION CHART -------------------------------------------
 models <- lapply(Subsets_Data, function(x) {
@@ -1033,71 +972,6 @@ schart(chart_data_frame, labels, highlight=117,
 legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
 
 
-# OFFICE INDICATOR SPECIFICATION CHART: YOUNG -------------------------------------------
-models <- lapply(Subsets_Data_Young, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "work_in_office",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["att.egt"]][[5]],
-           se=x[["agg"]][["se.egt"]][[5]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
-
-schart(chart_data_frame, labels, highlight=117, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-
-
-
-
-
 # CHANGE ZIP SPECIFICATION CHART ---------------------------------------------- ####
 models <- lapply(Subsets_Data, function(x) {
   row <- x[[2]]
@@ -1156,72 +1030,6 @@ schart(chart_data_frame, labels, highlight=117,
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
 legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-# CHANGE ZIP SPECIFICATION CHART: YOUNG ---------------------------------------------- ####
-models <- lapply(Subsets_Data_Young, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "change_zip",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
-
-schart(chart_data_frame, labels, highlight=117, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-
-
-
-
 
 
 # PATIENT COUNT ------------------------------------------------------------- #####
@@ -1291,84 +1099,6 @@ Subsets_Data <- lapply(Subsets_Data, function(x){
     mutate(claim_per_patient=claim_count_total/npi_unq_benes)
 list(data,row)
   })
-
-
-
-# PATIENT COUNT SPECIFICATION CHART: YOUNG ------------------------------------------------------------- #####
-
-models <- lapply(Subsets_Data_Young, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "npi_unq_benes",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0 & never_newnpi==1)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0 & never_newnpi==1)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
-
-schart(chart_data_frame, labels, highlight=117, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-
-
-
-
-# Define claim per patient variable
-Subsets_Data <- lapply(Subsets_Data, function(x){
-  row <- x[[2]]
-  data <- x[[1]] %>%
-    mutate(claim_per_patient=claim_count_total/npi_unq_benes)
-  list(data,row)
-})
-
-
-
 
 
 # CLAIMS PER PATIENT SPECIFICATION CHART ------------------------------------ ####

@@ -113,12 +113,13 @@ par(oma=c(1,0,1,1))
 labels <- list("Rural", "Urban", "Small Hosp.", "Large Hosp.")
 
 source(paste0(function_path,"spec_chart_function.R"))
+
 schart(chart_data_frame, labels, highlight=5, 
        order="asis", heights=c(1,.75),
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00"), c("Main"), inset=.02)
+       ylab="Coefficient and 95% C.I.\n")
+legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -172,8 +173,8 @@ schart(chart_data_frame, labels, highlight=5,
        order="asis", heights=c(1,.75),
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00"), c("Main"), inset=.02)
+       ylab="Coefficient and 95% C.I.\n")
+legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -228,8 +229,8 @@ schart(chart_data_frame, labels, highlight=5,
        order="asis", heights=c(1,.75),
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00"), c("Main"), inset=.02)
+       ylab="Coefficient and 95% C.I.\n")
+legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -284,8 +285,8 @@ schart(chart_data_frame, labels, highlight=5,
        order="asis", heights=c(1,.75),
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00"), c("Main"), inset=.02)
+       ylab="Coefficient and 95% C.I.\n")
+legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -340,8 +341,8 @@ schart(chart_data_frame, labels, highlight=5,
        order="asis", heights=c(1,.75),
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00"), c("Main"), inset=.02)
+       ylab="Coefficient and 95% C.I.\n")
+legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -396,5 +397,5 @@ schart(chart_data_frame, labels, highlight=5,
        order="asis", heights=c(1,.75),
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00"), c("Main"), inset=.02)
+       ylab="Coefficient and 95% C.I.\n")
+legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)

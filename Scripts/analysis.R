@@ -5,6 +5,7 @@ library(readr)
 library(fixest)
 library(did2s)
 library(ggpubr)
+library(tidyr)
 library(extrafont)
 
 
@@ -24,10 +25,11 @@ windowsFonts(A = windowsFont("Times New Roman"))
 Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
 
+
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office", "pos_office_prior", "pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_count_total", "claim_per_patient", "majority_in_office", "total_office_prior", "total_office_noprior")
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_per_patient")
 
 
 
@@ -39,7 +41,7 @@ models <- lapply(varlist, function(x) {
     tname = "year",                  # Time Variable
     # xformla = NULL                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
-    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
+    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
@@ -202,22 +204,15 @@ plots <- lapply(graphs, function(x){
 
 # Save plots
 ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
-ggsave(file="Objects/officefrac__plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
-ggsave(file="Objects/officefrac_prior_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
-ggsave(file="Objects/officefrac_noprior_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
-ggsave(file="Objects/officeind_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
-ggsave(file="Objects/zip_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
-ggsave(file="Objects/patient_plot.pdf",plot=plots[[7]], width=10, height=7, units="in")
-ggsave(file="Objects/claim_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
-ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[9]], width=10, height=7, units="in")
+ggsave(file="Objects/officefrac_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
+ggsave(file="Objects/officeind_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
+ggsave(file="Objects/zip_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
+ggsave(file="Objects/patient_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
 
 # Save the different plots separately for presentations
 ggsave(file="Objects/Presentation_retire_all.pdf",plot=graphs[[1]]$all, width=10, height=7, units="in")
 ggsave(file="Objects/Presentation_retire_ages.pdf",plot=graphs[[1]]$ages, width=10, height=7, units="in")
-
-ggsave(file="Objects/Presentation_frac_prior_all.pdf",plot=graphs[[2]]$all, width=10, height=7, units="in")
-
-ggsave(file="Objects/Presentation_frac_noprior_all.pdf",plot=graphs[[3]]$all, width=10, height=7, units="in")
 
 ggsave(file="Objects/Presentation_office_all.pdf",plot=graphs[[4]]$all, width=10, height=7, units="in")
 ggsave(file="Objects/Presentation_office_ages.pdf",plot=graphs[[4]]$ages, width=10, height=7, units="in")
@@ -235,66 +230,10 @@ ggsave(file="Objects/Presentation_claimperpatient_all.pdf",plot=graphs[[8]]$all,
 
 
 #Save plot of patient count dis-aggregated
-ggdid(models[[6]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count", colour=)
+ggdid(models[[5]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count")
 
 ggsave(filename = "Objects/patient_group.pdf", width=10, height=12, units="in")
 
 
-
-# Create data frame of overall ATT values
-
-ATT_all <- lapply(Models_agg, function(x){
-  c(x[["agg_all"]][["DIDparams"]][["yname"]],
-    round(x[["agg_all"]][["overall.att"]],5), 
-    round(x[["agg_all"]][["overall.se"]], 5),
-    round(x[["agg_all"]][["overall.att"]]-(1.959*x[["agg_all"]][["overall.se"]]),5),
-    round(x[["agg_all"]][["overall.att"]]+(1.959*x[["agg_all"]][["overall.se"]]),5),
-    "Any",
-    "Main")
-})
-
-ATT_young <- lapply(Models_agg, function(x){
-  c(x[["agg_young"]][["DIDparams"]][["yname"]],
-    round(x[["agg_young"]][["overall.att"]],5), 
-    round(x[["agg_young"]][["overall.se"]], 5),
-    round(x[["agg_young"]][["overall.att"]]-(1.959*x[["agg_young"]][["overall.se"]]),5),
-    round(x[["agg_young"]][["overall.att"]]+(1.959*x[["agg_young"]][["overall.se"]]),5),
-    "< 60",
-    "Main")
-})
-
-ATT_old <- lapply(Models_agg, function(x){
-  c(x[["agg_old"]][["DIDparams"]][["yname"]],
-    round(x[["agg_old"]][["overall.att"]],5), 
-    round(x[["agg_old"]][["overall.se"]], 5),
-    round(x[["agg_old"]][["overall.att"]]-(1.959*x[["agg_old"]][["overall.se"]]),5),
-    round(x[["agg_old"]][["overall.att"]]+(1.959*x[["agg_old"]][["overall.se"]]),5),
-    ">= 60",
-    "Main")
-})
-
-# Convert to data frame
-values <- as.data.frame(do.call(rbind, ATT_all)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
-
-values_young <- as.data.frame(do.call(rbind, ATT_young)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
-
-values_old <- as.data.frame(do.call(rbind, ATT_old)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Lower=V4, Upper=V5, Age=V6, Specification=V7)
-
-# Merge all ages and main specification results
-merged <- rbind(values, values_young, values_old) %>%
-  dplyr::mutate(ATT=as.numeric(ATT),
-                Lower=as.numeric(Lower),
-                Upper=as.numeric(Upper)) %>%
-  dplyr::mutate(Variable=ifelse(Variable=="retire","Retire",Variable),
-                Variable=ifelse(Variable=="work_in_office","Prob. Working in Office",Variable),
-                Variable=ifelse(Variable=="pos_office","Frac. Patients in Office",Variable),
-                Variable=ifelse(Variable=="npi_unq_benes","Number Patients",Variable),
-                Variable=ifelse(Variable=="claim_count_total","Claim Count",Variable),
-                Variable=ifelse(Variable=="change_zip","Prob. Change Zip",Variable))
-
-saveRDS(merged,file="CreatedData/main_ATT.rds")
 

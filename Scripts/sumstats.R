@@ -7,15 +7,6 @@ library(readr)
 library(showtext)
 library(panelView)
 
-font_add_google("Cormorant Garamond", "corm")
-
-font_add("lm","C:/Users/hkagele/Downloads/Latin-Modern-Roman/lmroman10-regular.otf")
-
-## Automatically use showtext to render text
-showtext_auto()
-
-
-
 
 options(knitr.kable.NA=" ")
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -163,76 +154,6 @@ ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable, linetype
 
 ggsave("Objects/sum_stats_year.pdf", width=10, height=7, units="in")
 
-# Graph continuous labor variable with lines for each year treated ------------------------------------
-# I don't think I want to include this graph in the paper
-cont_treatment_graph <- data.frame(year=double(), labor=double(), Treatment=character())
-for (i in 2010:2013){
-year <- Physician_Data %>%
-  filter(working_allyears==1) %>%
-  filter(minyr_EHR==i) %>%
-  group_by(year) %>%
-  mutate(labor=mean(hosp_count)) %>%
-  distinct(year,labor) %>%
-  mutate(Treatment=paste0("Treatment Year: ",i))
-
-cont_treatment_graph <- rbind(cont_treatment_graph, year)
-}
-
-never_treated <- Physician_Data %>%
-  filter(working_allyears==1) %>%
-  filter(minyr_EHR==0) %>%
-  group_by(year) %>%
-  mutate(labor=mean(hosp_count)) %>%
-  distinct(year,labor) %>%
-  mutate(Treatment=paste0("Never Treated"))
-
-cont_treatment_graph <- rbind(cont_treatment_graph, never_treated)
-
-cont_treatment_graph <- cont_treatment_graph %>%
-  filter(2009<year & year<2015)
-
-ggplot(cont_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
-  labs(x="\nYear", y="Avergae Number of Patients in Hospitals\n", 
-       title="\nHospital Patient Count by Treatment\n") +
-  scale_colour_manual(values=cbbPalette) 
-  
-ggsave("objects/cont_treatment_graph.pdf", width=8, height=5, units="in")
-
-
-# Graph indicator labor variable with lines for each year treated ------------------------------------
-ind_treatment_graph <- data.frame(year=double(), labor=double(), Treatment=character())
-for (i in 2010:2013){
-  year <- Physician_Data %>%
-    filter(minyr_EHR==i) %>%
-    group_by(year) %>%
-    mutate(labor=mean(nonhosp_ind)) %>%
-    distinct(year,labor) %>%
-    mutate(Treatment=paste0("Treatment Year: ",i))
-  
-  ind_treatment_graph <- rbind(ind_treatment_graph, year)
-}
-
-never_treated_ind <- Physician_Data %>%
-  filter(minyr_EHR==0) %>%
-  group_by(year) %>%
-  mutate(labor=mean(nonhosp_ind)) %>%
-  distinct(year,labor) %>%
-  mutate(Treatment=paste0("Never Treated"))
-
-ind_treatment_graph <- rbind(ind_treatment_graph, never_treated_ind)
-
-ind_treatment_graph <- ind_treatment_graph %>%
-  filter(2009<year)
-
-ggplot(ind_treatment_graph, aes(x=year, y=labor, color=Treatment, shape=Treatment)) +geom_point() + geom_line() +
-  labs(x="\nYear", y="Hospital Patients\n", 
-       title="\nProbability of Positive Patients only Outside of Hospitals\n") +
-  scale_colour_manual(values=cbbPalette) 
-
-ggsave("objects/ind_treatment_graph.pdf", width=8, height=5, units="in")
-
-
-
 
 # Create graph showing the distributions of important variables---------------------------------------------------------
 # year of retirement
@@ -276,7 +197,6 @@ ggplot(filter(Physician_Data, num_hospitals>1), aes(x=minyr_EHR)) + geom_histogr
 
 
 ## Create hospital level implementation graph ---------------------------------------------------
-
 AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
 phys_hosp_pairs <- readRDS(paste0(created_data_path,"phys_hosp_pairs.rds"))
 AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
@@ -401,7 +321,7 @@ ggsave("Objects/hosp_treat.pdf", width=10, height=12, units = "in")
 
 
 
-# Histogram of treatment and control for each group
+# Histogram of treatment and control for each group -------------------------------------------
 neg4 <- Physician_Data %>%
   filter(minyr_EHR==2014 | minyr_EHR==2015) %>%
   distinct(DocNPI, minyr_EHR) %>%
@@ -473,7 +393,7 @@ pos1 <- Physician_Data %>%
   filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
   distinct(DocNPI, minyr_EHR) %>%
   mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2013,1,0),
-         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+         control=ifelse(minyr_EHR>=2012 & minyr_EHR<=2015,1,0)) %>%
   mutate(count=1) %>%
   mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
          sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
@@ -484,10 +404,10 @@ pos1 <- Physician_Data %>%
   mutate(time=1)
 
 pos2 <- Physician_Data %>%
-  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  filter(minyr_EHR!=0) %>%
   distinct(DocNPI, minyr_EHR) %>%
   mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2012,1,0),
-         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+         control=ifelse(minyr_EHR>=2013 & minyr_EHR<=2015,1,0)) %>%
   mutate(count=1) %>%
   mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
          sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
@@ -498,10 +418,10 @@ pos2 <- Physician_Data %>%
   mutate(time=2)
 
 pos3 <- Physician_Data %>%
-  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  filter(minyr_EHR!=2012 & minyr_EHR!=2013) %>%
   distinct(DocNPI, minyr_EHR) %>%
-  mutate(treat=ifelse(minyr_EHR>=2010 & minyr_EHR<=2011,1,0),
-         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+  mutate(treat=ifelse(minyr_EHR==2010 | minyr_EHR==2011,1,0),
+         control=ifelse(minyr_EHR==2014 | minyr_EHR==2015,1,0)) %>%
   mutate(count=1) %>%
   mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
          sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
@@ -512,10 +432,10 @@ pos3 <- Physician_Data %>%
   mutate(time=3)
 
 pos4 <- Physician_Data %>%
-  filter(minyr_EHR>=2010 & minyr_EHR<=2015) %>%
+  filter(minyr_EHR==2010 & minyr_EHR==2015) %>%
   distinct(DocNPI, minyr_EHR) %>%
   mutate(treat=ifelse(minyr_EHR==2010,1,0),
-         control=ifelse(minyr_EHR>=2011 & minyr_EHR<=2015,1,0)) %>%
+         control=ifelse(minyr_EHR==2015,1,0)) %>%
   mutate(count=1) %>%
   mutate(sum=ifelse(treat==1,sum(count[treat==1]),NA),
          sum=ifelse(control==1,sum(count[control==1]),sum)) %>%
@@ -527,7 +447,7 @@ pos4 <- Physician_Data %>%
 
 control_hist_data <- rbind(neg4, neg3, neg2, neg1, neg, pos1, pos2, pos3, pos4) %>%
   mutate(treat=ifelse(treat==1,"Treatment", "Control")) %>%
-  rename(Group=treat) %>%
+  dplyr::rename(Group=treat) %>%
   mutate(time=as.factor(time))
 
 ggplot(control_hist_data, aes(x=time, y=sum, fill=Group)) + 
