@@ -10,7 +10,7 @@
 \usepackage{bbm}
 \usepackage[font=normalsize,labelfont=bf]{caption}
 %\captionsetup{justification=raggedright,singlelinecheck=false}
-
+\usepackage{subcaption}
 
 \usepackage[backend=biber,style=authoryear,
 sorting=ynt,citestyle=authoryear]{biblatex}
@@ -201,7 +201,7 @@ Once I estimate the $ATT(g,t)$ for each group and year, I aggregate the estimate
 
 \subsection{Assumptions}
 
-There are several assumptions necessary to identify the parameters of interest, $ATT(g,t)$. First, I assume that treatment is not reversed once it occurs. That is, once a physician is exposed to an EHR, they cannot be un-exposed. For physicians that do not switch hospitals, this assumption is supported by both the institutional details of hospital EHR implementation and the data itself. An EHR is a costly technology and requires a significant amount of collaboration to implement. A hospital does not have incentive to un-implement an EHR once it is implemented. They may add features or switch vendors, but do not reverse EHR use. This institutional detail is supported by Figure \ref{fig:hosp_treat}, which shows EHR status of a 2\% random sample of hospitals over time.\footnote{Note that out of the 81 hospitals included in the random sample, 4 of them show a reversal of treatment status. Upon further inspection, each of these hospitals show such a reversal due to a discrepancy in the coding of whether the hospital uses an EHR partially or fully. Those who use the EHR partially are coded as not fully implementing an EHR since it is not clear whether physicians in the sample would be exposed yet or not. Hospitals with this discretion arre coded as implementing an EHR in the first year that they answered "fully" to the survey question.} Further, since we think of treatment at the physician level as exposure to the technology, this assumption is satisfied when thought of as whether the physician has ever used an EHR. Once they are exposed to the EHR for the first time, that experience cannot be forgotten. However, when considering the outcomes of patient count and billing activity, it could be that a physician moves from a hospital that uses an EHR to a hospital that does not, affecting the number of claims observed in the data. This is why I limit the sample of physicians for these outcomes to those who remain with the same set of hospitals throughout the entire period. I discuss this limitation to the data further in Section \ref{sec:patientcount}.
+There are several assumptions necessary to identify the parameters of interest, $ATT(g,t)$. First, I assume that treatment is not reversed once it occurs. That is, once a physician is exposed to an EHR, they cannot be un-exposed. For physicians that do not switch hospitals, this assumption is supported by both the institutional details of hospital EHR implementation and the data itself. An EHR is a costly technology and requires a significant amount of collaboration to implement. A hospital does not have incentive to un-implement an EHR once it is implemented. They may add features or switch vendors, but do not reverse EHR use. This institutional detail is supported by Figure \ref{fig:hosp_treat}, which shows EHR status of a 2\% random sample of hospitals over time.\footnote{Note that out of the 81 hospitals included in the random sample, 4 of them show a reversal of treatment status. Upon further inspection, each of these hospitals show such a reversal due to a discrepancy in the coding of whether the hospital uses an EHR partially or fully. Those who use the EHR partially are coded as not fully implementing an EHR since it is not clear whether physicians in the sample would be exposed yet or not. Hospitals with this discretion are coded as implementing an EHR in the first year that they answered "fully" to the survey question.} Further, since we think of treatment at the physician level as exposure to the technology, this assumption is satisfied when thought of as whether the physician has ever used an EHR. Once they are exposed to the EHR for the first time, that experience cannot be forgotten. However, when considering the outcomes of patient count and billing activity, it could be that a physician moves from a hospital that uses an EHR to a hospital that does not, affecting the number of claims observed in the data. This is why I limit the sample of physicians for these outcomes to those who remain with the same set of hospitals throughout the entire period. I discuss this limitation to the data further in Section \ref{sec:patientcount}.
 
 \begin{figure}[ht!]
     \centering
@@ -346,7 +346,14 @@ Next, I consider whether EHR exposure affects claims filed per patient. On avera
 
 \subsection{Late Adopters as Comparison Group}
 
-For the results presented, if EHR exposure affects physician behavior, the effect occurs in the first 0-2 years after exposure. Almost all specifications point to the effect of EHR exposure becmoing null in the 3-4 years after exposure. One reason for this may be the composition of the hospitals which adopt at different times. Consider event time $t+4$. The physician included in the estimation for this coefficient are those exposed in 2010 compared with those who did not adopt until 2015, implying that the underlying hospitals implemented EHRs in either 2010 or 2015. It is likely that the group of hospitals who adopted in 2015 are compositionally different than early adopters, especially if poorer hospitals adopted later. For this reason, I have focused discussion of results on the immediate years after exposure when hospitals the comparison groups are more comprehensive. 
+For the results presented, if EHR exposure affects physician behavior, the effect typically occurs in the first 0-2 years after exposure. Almost all specifications point to the effect of EHR exposure becoming null in the 3-4 years after exposure. One reason for this may be the composition of the hospitals which adopt at different times. Consider event time $t+4$. The physician included in the estimation for this coefficient are those exposed in 2010 compared with those who did not adopt until 2015, implying that the underlying hospitals implemented EHRs in either 2010 or 2015. It is likely that the group of hospitals who adopted in 2015 are compositionally different than early adopters, especially if poorer hospitals adopted later. For this reason, I have focused discussion of results on the immediate years after exposure when hospitals the comparison groups are more comprehensive. 
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=.5]{Objects/control_histogram.pdf}
+    \caption{Caption}
+    \label{fig:my_label}
+\end{figure}
 
 
 \section{Physician Influence of EHR Decision in Hospitals}
@@ -410,7 +417,7 @@ I begin by connecting every National Provider Identifier (NPI)\footnote{Data can
 
 \subsection{CMS Shared Patient Data}\label{sec:sharedpat}
 
-For years 2009-2015, the CMS collected detailed information on the number of Medicare patients shared between any two NPIs within 30, 90, or 180 day intervals\footnote{Data can be dowloaded from \hyperlink{https://www.nber.org/research/data/physician-shared-patient-patterns-data}{https://www.nber.org/research/data/physician-shared-patient-patterns-data}}. I use data that captures shared patient activity in 30 day intervals. I merge the shared patient data to the filtered tax code data created in Section \ref{sec:taxcode} to identify NPIs who are either PCPs or hospitals. I filter the pairs to include one physician and one hospital; there are 12.6 million of these pairs. Some pairs are duplicates from the hospital being listed first or second in the shared patient data. I combine duplicates into one observation, summing the same day count variable. Once duplicated are removed, there are 7.1 million observations. Most of the pairs have very few shared patients, which is not indicative of the physician working inside the hospital. I drop any pairs who do not have at least 30 shared patients in the same day per year the pair appears in the data.\footnote{As a sensitivity analysis, I also consider thresholds of 10 and 60. Results are similar and can be found in Figure ____.} The final list of pairs consists of 1.3 million observations. 
+For years 2009-2015, the CMS collected detailed information on the number of Medicare patients shared between any two NPIs within 30, 90, or 180 day intervals\footnote{Data can be dowloaded from \hyperlink{https://www.nber.org/research/data/physician-shared-patient-patterns-data}{https://www.nber.org/research/data/physician-shared-patient-patterns-data}}. I use data that captures shared patient activity in 30 day intervals. I merge the shared patient data to the filtered tax code data created in Section \ref{sec:taxcode} to identify NPIs who are either PCPs or hospitals. I filter the pairs to include one physician and one hospital; there are 12.6 million of these pairs. Some pairs are duplicates from the hospital being listed first or second in the shared patient data. I combine duplicates into one observation, summing the same day count variable. Once duplicated are removed, there are 7.1 million observations. Most of the pairs have very few shared patients, which is not indicative of the physician working inside the hospital. I drop any pairs who do not have at least 30 shared patients in the same day per year the pair appears in the data.\footnote{As a sensitivity analysis, I also consider thresholds of 10 and 60. Results are similar and can be found in Figure \ref{sec:chart}.} The final list of pairs consists of 1.3 million observations. 
 
 \subsection{Pair-Level Variables}
 
@@ -424,7 +431,7 @@ Finally, I aggregate to the physician level by only keeping variables that do no
 
 \subsection{Physician Labor Market Activity}\label{sec:appmdppas}
 
-Using physician NPI, I merge the physician treatment data to Medicare Data on Provider Practice and Specialty (MD-PPAS)\footnote{Information on data located at \hyperlink{https://resdac.org/cms-data/files/md-ppas}{https://resdac.org/cms-data/files/md-ppas}}, which spans 2009-2017. This data contains variables on physician specialty, Medicare claim counts in various zip codes, unique number of patients seen, fraction of patients seen in specific settings, patient demographics, and physician date of birth. Once the data is merged, I make a further limitation to drop any physicians with less than 70\% of their total patients in a hospital setting.\footnote{I consider different thresholds as a sensitivity analysis. The results are similar, and can be found in Section ____.} This limitation is to continue ensuring that I am focusing on physicians working in hospitals who will be subject to their EHR use. With this limitation, there are 214,000 observations left in the data. 
+Using physician NPI, I merge the physician treatment data to Medicare Data on Provider Practice and Specialty (MD-PPAS)\footnote{Information on data located at \hyperlink{https://resdac.org/cms-data/files/md-ppas}{https://resdac.org/cms-data/files/md-ppas}}, which spans 2009-2017. This data contains variables on physician specialty, Medicare claim counts in various zip codes, unique number of patients seen, fraction of patients seen in specific settings, patient demographics, and physician date of birth. Once the data is merged, I make a further limitation to drop any physicians with less than 70\% of their total patients in a hospital setting.\footnote{I consider different thresholds as a sensitivity analysis. The results are similar, and can be found in Section \ref{sec:chart}} This limitation is to continue ensuring that I am focusing on physicians working in hospitals who will be subject to their EHR use. With this limitation, there are 214,000 observations left in the data. 
 
 Next, I create the dependent variables used in the analysis. The first outcome is whether a physician chooses to retire or not. First, I sum a physicians claim counts across zip codes into one variable for total claim count in a given year. Then, I create a variable that sums up a physicians claims in all future years. In 2009, this variable sums up all claims from 2010-2017, and so on. Then I create a variable for the first year that a physician has a future claim count of zero. However, this counts retirement one year too early. For example, if a physician has no claims from 2014 to 2017, the minimum year variable is set to 2013, but the first year of retirement is 2014. Thus, I add one year to the minimum year variable. I then define the outcome variable, retire, as one if a physician ever retires and the year is equal to the first year of retirement. I utilize a physician level variable for whether they ever retire for sample limitations in analyzing other outcomes. 
 
@@ -524,41 +531,99 @@ Finally, I assess the results found in the main specification for the outcome va
     \caption*{\footnotesize{\textit{Notes:}}}
 \end{figure}
 
+\subsection{Various Changes to Specification}\label{sec:changes}
 
+For each outcome, there are various adjustments I make to the main specification in order to show robustness. Some of these changes address potential endogeneity concerns, while some provide evidence that the results do not depend on thresholds which may be arbitrary. I will outline each of these specification adjustments and then present specification charts which account for different combinations of these changes. 
 
-\subsection{Physician Selection into EHRs}\label{sec:endog}
+\subsubsection{Physician Selection into EHRs}\label{sec:endog}
 
-The main specification of the paper defines a binary treatment variable for whether a physician is exposed to an EHR in any hospital they work in. These results are biased if physicians endogenously select EHR exposure, particularly by participating in the hospital's decision to implement. The results do not indicate that this is a huge issue on average, since we would expect physicians not to respond on the margin of retirement or switching work setting if they are choosing to be exposed to EHRs. Especially in larger hospitals, this is unlikely to occur as an individual physician will not have much input to high level decisions. However, as an attempt to provide more evidence of labor market changes as a result of EHR exposure, I provide results for a specification with an alternate binary treatment variable: whether a physician has been exposed to an EHR in a hospital considered to have low vertical integration with physicians. 
+The main specification of the paper defines a binary treatment variable for whether a physician is exposed to an EHR in any hospital they work in. These results are biased if physicians endogenously select whether they are exposed to EHRs, particularly by participating in the hospital's decision to implement. The results do not indicate that this is a huge issue on average, since we would expect physicians not to respond on the margin of retirement or switching work setting if they are choosing to be exposed to EHRs. Especially in larger hospitals, this is unlikely to occur as an individual physician will not have much input to high level decisions. However, as an attempt to provide more evidence of labor market changes as a result of EHR exposure, I provide results for specifications with an alternate binary treatment variable: whether a physician has been exposed to an EHR in a hospital considered to have low vertical integration with physicians. 
 
 I define a hospital's level of integration based on organizational structure, where independent practice associations (IPAs) and physician-hospital organizations (PHOs) are classified as low vertical integration and other organization types are classified as high vertical integration (\cite{dynan1998assessing}). 
 
-I present a comparison of the average treatment effect in the main specification and the average treatment effect with low-integration exposure as the binary treatment variable in Figure \ref{fig:LI}. For conciseness, I present group time treatment effects to a single ATT value. As expected, the coefficient on retirement is nearly identical to the main specification. However, the coefficient for the probability of working in office based settings completely switches signs, pointing to questions about acquisition of physician practices. In low-integration settings, physicians are less likely to shift to an office after EHR exposure by a small measure. However, when including physicians with more power, the do seem to start office based work. If high-integration hospitals are acquiring smaller practices as EHRs are implemented, physicians from the hospital may be sent to the newly acquired practice for a period of time during transition. This is an important result because it points to physicians shifting according to hospital incentives instead of as a method to avoid EHR implementation. Estimates for other coefficients are more noisy, but similar to the main specification. 
+
+
+\subsubsection{Anticipation}\label{app:anticipation}
+
+While there is evidence to suggest the time it takes to implement an EHR does not exceed one year, there still may be some anticipation if physicians are expecting implementation in the hospitals they work in. Thus, the specification charts that I present in Section \ref{sec:chart} include specifications where one year of anticipation occurs. 
+
+\subsubsection{Limiting Sample Years}\label{app:years}
+
+In the main sample, I define dependent variables using years 2009 to 2017 and drop any physicians who were not exposed to an EHR by 2015 due to data constraints. This leads to estimation based on not yet treated units, because all never treated units are dropped. As a robustness check, I limit sample years to 2009-2015 and use never treated units as the control group. 
+
+\subsubsection{Hiring Data Assistants}
+
+As discussed in the body of the paper, I address potential concerns that the hiring of new employees may be driving the results for productivity and efficiency. Thus, as another specification, I restrict the data to only include physicians who are exposed in hospitals that do not record employing any data assistants. 
+
+\subsubsection{Data Thresholds}
+
+There are two main thresholds I define in the data process that were arbitrarily chosen. Thus, I present alternate specifications that adjust these thresholds. First, when deciding which hospitals a physician is working closely with, I drop any pairs that fall below 30 shared patients per year. The goal of this threshold is to eliminate pairs for which the physician does not have close ties to the hospital. In alternate specifications, I lower the threshold to 10 patients per year and raise the threshold to 60 patients per year. Second, I only want to include hospitalists in the analysis, and thus drop any physicians that fall below 70\% of patients in an inpatient setting. In alternate specifications, I change this threshold to 50\% and 90\%. While these are still arbitrary, they provide some evidence that changing the threshold does not dramatically change the results. 
+
+
+\subsection{Specification Charts}\label{sec:chart}
+
+I present overall average treatment effects for each outcome variable under different combinations of the specification adjustments discussed in Section \ref{sec:changes}. On each chart, the main specification is labeled in green and the average confidence bands across all combinations is shown as an orange band. 
+
+\subsubsection{Retirement}
+
+The specification chart for the retirement outcome is presented in Figure \ref{fig:retire_chart}. The main specification yields an average treatment effect of .0025 (significant at all levels). This coefficient is on the higher end of coefficients from all combinations of specifications. However, almost all of the coefficients are positive. Some noisy estimates are to be expected when there are multiple limitations placed on the data. The average confidence interval for all combinations is (.001,.003), so the main specification lies in this interval. These results are strongly in favor of there being a positive effect of EHR exposure on retirement. 
 
 \begin{figure}[ht]
     \centering
-    \captionsetup{width=.57\linewidth}
-    \caption{Comparison of ATT, Low-Integration Treatment Variable}
-    \includegraphics[scale=.57]{Objects/LI_graph.pdf}
-    \label{fig:LI}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects are shown for each outcome variable, along with 95\% confidence intervals. Low-integration hospitals are defined by hospital management.}}
+    \caption{Outcome: Retire}
+    \includegraphics[scale=.6]{Objects/retire_chart.pdf}
+    \label{fig:retire_chart}
+\end{figure}
+
+\subsubsection{Change Work Setting}
+
+The specification charts for outcomes work in office, fraction of patients seen in office, and changing zip codes are presented in Figures \ref{fig:work_chart}, \ref{fig:fracoffice_chart}, and \ref{fig:zip_chart}, respectively. First, I discuss the overall average treatment effect of EHR exposure on the likelihood of working in an office. While the main specification showed a slight increase in likelihood in the year of exposure, the overall treatment effect is 0. Most of the specifications agree with the main specification, although more coefficients fall below 0 than above 0. The average confidence interval is approximately (-.016, .001), encompassing the main specification.  
+
+\begin{figure}[ht]
+    \centering
+    \caption{Outcome: Work in Office}
+    \includegraphics[scale=.6]{Objects/office_chart.pdf}
+    \label{fig:work_chart}
+\end{figure}
+
+Second, I discuss the results for whether physicians change the fraction of patients seen in an office setting due to EHR exposure. The main specification
+
+\begin{figure}[ht]
+    \centering
+    \caption{Outcome: Fraction of Patients in Office}
+    \includegraphics[scale=.6]{Objects/office_frac_chart.pdf}
+    \label{fig:fracoffice_chart}
+\end{figure}
+
+Finally, I discuss the specification chart regarding a physician's likelihood of changing zip codes due to EHR exposure. These results should be taken in conjunction with Section \ref{sec:pretrends}, which analyzes the extent to which this result is driven by a pre-trend. The main specification yields an average treatment effect of .04 (significant at all levels), which is in the average confidence interval across specifications. One thing to notice in this graph is that there are two changes to specification for which the resulting average treatment effect is grouped towards one end of the distribution or the other. Specifically, when the percent of patients seen in an inpatient setting is 90\%, the coefficient is likely to be higher than when it is 50\% or 70\%. That is, a more strict definition of hospitalist yields a higher estimate for the likelihood of changing zip codes (although the variance of estimates is not particularly high). Further, using the main EHR definition tends to yield lower estimates than the low integration definition. That is, endogeneity is biasing this estimate slightly down. 
+
+\begin{figure}[ht]
+    \centering
+    \caption{Outcome: Change Zip Codes}
+    \includegraphics[scale=.6]{Objects/change_zip_chart.pdf}
+    \label{fig:zip_chart}
 \end{figure}
 
 
 
-\subsection{Anticipation}\label{app:anticipation}
 
-While there is evidence to suggest the time it takes to implement an EHR does not exceed one year, there still may be some anticipation if physicians are expecting implementation in the hospitals they work in. In Figure \ref{fig:anticipation}, I present aggregated estimates in the case of one year of anticipation. The results are virtually identical, just noisier, compared to the estimates from the main specification. 
+\subsubsection{Patient Count and Claims per Patient}
 
 \begin{figure}[ht]
     \centering
-    \captionsetup{width=.57\linewidth}
-    \caption{ATT With Anticipation}
-    \includegraphics[scale=.57]{Objects/anticipation_graph.pdf}
-    \label{fig:anticipation}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects are shown for each outcome variable, along with 95\% confidence intervals.}}
+    \caption{Outcome: Patient Count}
+    \includegraphics[scale=.6]{Objects/patientcount_chart.pdf}
+    \label{fig:pat_chart}
 \end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \caption{Outcome: Claims per Patient}
+    \includegraphics[scale=.6]{Objects/claim_per_patient_chart.pdf}
+    \label{fig:cpp_chart}
+\end{figure}
+
+
 
 \subsection{Alternative Estimators}\label{app:estimators}
 
@@ -593,49 +658,54 @@ One method that addresses issues with the TWFE specification by differencing out
 
 Another estimation method established first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and "clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:esimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
 
-\subsection{Limiting Sample Years}\label{app:years}
 
-I create the retirement outcome variable as a direct function of future claims. Those who retire in the early years of data have zero future claims for multiple years. However, those who retire after 2016 have only one or two years of zero future claims to be flagged as retired. While some of these physicians are likely retiring, it may be that a fraction of them only drop out of the data temporarily due to pregnancy or other factors. Thus, I limit the years in the analysis to 2009-2015 to ensure that those years are not driving the observed results. Results for this specification are shown in Figure \ref{fig:years}. The observed estimators are virtually identical to those in the main specification. 
-
-\begin{figure}[ht]
-    \centering
-    \captionsetup{width=.57\linewidth}
-    \caption{Limited Sample Years}
-    \includegraphics[scale=.57]{Objects/years_graph.pdf}
-    \label{fig:years}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects and 95\% confidence intervals shown for main specification and a limited sample of years.}}
-\end{figure}
-
-\subsection{Physicians not Exposed to Data Assistants}\label{app:DA}
-
-In this section, I present results for the main specification with a data limitation: only including physicians who are exposed in hospitals that do not record employing any data assistants. These physicians may be more likely to respond negatively to EHRs and may be driving results in the main specification. I present these results in Figure \ref{fig:DA}. These results are surprisingly similar to those for exposure in low integration hospitals discussed in Appendix \ref{sec:endog}. Many outcomes have similar coefficients for the effect of EHR exposure, with the exception of probability of working in office settings. Those who are not exposed to data assistants are less likely to begin working in an office, an opposite sign from the specification in the main analysis. The level of integration could be correlated with hiring data assistants, which both may be correlated with the acquisition of smaller physician practices which are considered office based settings.
-
-\begin{figure}[ht]
-    \centering
-    \captionsetup{width=.57\linewidth}
-    \caption{Physicians without Data Assistants}
-    \includegraphics[scale=.57]{Objects/DA_graph.pdf}
-    \label{fig:DA}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects and 95\% confidence intervals shown for main specification and limited sample of physicians who do not work with data assistants.}}
-\end{figure}
 
 
 
 \section{Heterogeneity Analysis}
 
-While the majority of the analysis focuses on senior vs. young physicians, there are other physician characteristics that are also interesting to investigate. Figure \ref{fig:het} presents estimates for different subsets of physicians. These include female physicians,those in rural or urban zip codes, and physicians who see majority white patients relative to the entire sample. Most of the estimates are similar across these characteristics, with some particularly noisy due to low sample sizes (such as physicians in rural settings). The implications implication of this table is that EHRs did in fact lead to behavioral changes in many different physicians, not just a specific subgroup.  
+The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. those who typically work at large hospitals. These average treatment effects are shown in Figure \ref{fig:1}. For most outcomes, the results do not differ along these dimensions. The only outcome for which the estimate changes sign is the indicator for whether the physician works in an office setting. Physicians in an urban area are less likely to work in an office after EHR exposure, while rural physicians are more likely to work in an office after EHR exposure, but the sign switch does not hold when looking at the hospital size parallel. This results is interesting and may be driven by differing physician-hospital relationships. I leave further investigation to future research. 
 
-\begin{figure}[ht]
-    \centering
-    \captionsetup{width=.65\linewidth}
-    \caption{Heterogeneity Analysis}
-    \includegraphics[scale=.65]{Objects/heterogeneity _graph.pdf}
-    \label{fig:het}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Aggregated average treatment effects and 95\% confidence intervals shown for main specification and various limited samples of physicians.}}
+
+\begin{figure}[t!]
+\begin{subfigure}{0.48\textwidth}
+\caption{Retire}
+\includegraphics[width=\linewidth]{Objects/retire_heterog.pdf}
+\label{fig:a}
+\end{subfigure}\hspace*{\fill}
+\begin{subfigure}{0.48\textwidth}
+\caption{Fraction of Patients in Office}
+\includegraphics[width=\linewidth]{Objects/frac_office_heterog.pdf}
+\label{fig:b}
+\end{subfigure}
+
+\medskip
+\begin{subfigure}{0.48\textwidth}
+\caption{Indicator for Office }
+\includegraphics[width=\linewidth]{Objects/office_heterog.pdf}
+ \label{fig:c}
+\end{subfigure}\hspace*{\fill}
+\begin{subfigure}{0.48\textwidth}
+\caption{Change Zip Code} 
+\includegraphics[width=\linewidth]{Objects/change_zip_heterog.pdf}
+\label{fig:d}
+\end{subfigure}
+
+\medskip
+\begin{subfigure}{0.48\textwidth}
+\caption{Patient Count} 
+\includegraphics[width=\linewidth]{Objects/patient_heterog.pdf}
+\label{fig:e}
+\end{subfigure}\hspace*{\fill}
+\begin{subfigure}{0.48\textwidth}
+\caption{Claim per Patient}
+\includegraphics[width=\linewidth]{Objects/claim_per_patient_heterog.pdf}
+ \label{fig:f}
+\end{subfigure}
+
+\caption{Heterogeneity Analysis} \label{fig:1}
 \end{figure}
+
 
 
 
