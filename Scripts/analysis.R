@@ -13,9 +13,6 @@ library(extrafont)
 #                                       Hanna Glenn, Emory University
 #                                       1/31/2022
 
-font_import()
-loadfonts(device="win")
-windowsFonts(A = windowsFont("Times New Roman"))
 
 # This script reads in "Physician_Data.rds" from data5, the final dataset used in my third year paper. 
 # The first portion of the script considers different potential estimators to use as the main specification for the paper.
