@@ -84,7 +84,7 @@ The HITECH Act was passed in 2009, designating \$27 billion in government subsid
     \centering
     \captionsetup{width=.6\linewidth}
     \caption{Hospitals Receiving Meaningful Use Stage 1 Subsidy}
-    \includegraphics[scale=.6]{Objects/QS-Hospitals-Receiving-Payments-for-MU-and-Adoption.png}
+    \includegraphics[scale=.6]{graphics/QS-Hospitals-Receiving-Payments-for-MU-and-Adoption.png}
     \caption*{Source: HealthIT.gov}
     \label{fig:meanuse}
 \end{figure}
@@ -95,8 +95,8 @@ Figure \ref{fig:EPIC} shows two computer screenshots of what physicians might se
     \centering
     \captionsetup{width=.4\linewidth}
     \caption{Screenshot of EHR System}
-    \includegraphics[scale=.4]{Objects/epic-ehr-screenshot.jpg}
-    \includegraphics[scale=.11]{Objects/EHRimage2.jpg}
+    \includegraphics[scale=.4]{graphics/epic-ehr-screenshot.jpg}
+    \includegraphics[scale=.11]{graphics/EHRimage2.jpg}
     \label{fig:EPIC}
 \end{figure}
 
@@ -270,7 +270,7 @@ The previous results is driven by physicians who are not already working in an o
     \centering
     \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Fraction of Patients Seen in Office}
-    \includegraphics[scale=.6]{Objects/officefrac__plot.pdf}
+    \includegraphics[scale=.6]{Objects/officefrac_plot.pdf}
     \label{fig:officesecond}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: -0.0003 (0.004), -0.0007 (0.005), -0.006 (0.018), respectively.}}
@@ -445,7 +445,7 @@ I also create an indicator variable for whether the physician switches zip codes
 
 \subsection{Analyzing Pre-Trends Assumptions}\label{sec:pretrends}
 
-Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) reveals the need to carefully assess the parallel trends assumptions commonly used in difference in difference designs. In my main specification I assume that, conditional on covariates, average outcomes for those treated in group g would have followed a parallel trend as those in groups treated in later periods. I assess this assumption by testing whether the coefficients showing the effect of EHR exposure on an outcome prior to actual treatment are jointly zero. All main specification graphs show p-values from this test. In most analyses, I fail to reject the null that there does not exist a pre-trend. Yet, in some cases, I reject this null. This section utilizes the tools established by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) to demonstrate robustness of the results found in the main specification, and to investigate whether an effect exists in the cases where a pre-trend may be driving results. 
+Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) reveals the need to carefully assess the parallel trends assumptions commonly used in difference in difference designs. In my main specification I assume that, conditional on covariates, average outcomes for those treated in group $g$ would have followed a parallel trend as those in groups treated in later periods. I assess this assumption by testing whether the coefficients showing the effect of EHR exposure on an outcome prior to actual treatment are jointly zero. All main specification graphs show p-values from this test. In most analyses, I fail to reject the null that there does not exist a pre-trend. Yet, in some cases, I reject this null. This section utilizes the tools established by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) to demonstrate robustness of the results found in the main specification, and to investigate whether an effect exists in the cases where a pre-trend may be driving results. 
 
 \subsubsection{Retirement} 
 
@@ -675,14 +675,14 @@ The main analysis focuses on the differential effects of technology for older vs
 \end{subfigure}\hspace*{\fill}
 \begin{subfigure}{0.48\textwidth}
 \caption{Fraction of Patients in Office}
-\includegraphics[width=\linewidth]{Objects/frac_office_heterog.pdf}
+\includegraphics[width=\linewidth]{Objects/office_frac_heterog.pdf}
 \label{fig:b}
 \end{subfigure}
 
 \medskip
 \begin{subfigure}{0.48\textwidth}
 \caption{Indicator for Office }
-\includegraphics[width=\linewidth]{Objects/office_heterog.pdf}
+\includegraphics[width=\linewidth]{Objects/office_ind_heterog.pdf}
  \label{fig:c}
 \end{subfigure}\hspace*{\fill}
 \begin{subfigure}{0.48\textwidth}
