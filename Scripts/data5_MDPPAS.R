@@ -293,11 +293,6 @@ Physician_Data <- Physician_Data %>%
 # The key for this variable is to limit the sample appropriately. 
 
 Physician_Data <- Physician_Data %>%
-  mutate(hosp_patient_count_EHRhosp=ifelse(is.na(hosp_patient_count_EHRhosp),0,hosp_patient_count_EHRhosp),
-         hosp_patient_count_noEHRhosp=ifelse(is.na(hosp_patient_count_noEHRhosp),0,hosp_patient_count_noEHRhosp),
-         hosp_patient_count=ifelse(is.na(hosp_patient_count),0,hosp_patient_count))
-
-Physician_Data <- Physician_Data %>%
   mutate(npi_unq_benes=ifelse(is.na(npi_unq_benes),0,npi_unq_benes))
 
 Physician_Data <- Physician_Data %>%

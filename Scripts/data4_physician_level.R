@@ -179,10 +179,10 @@ data <- data %>%
 VA <- data %>%
   mutate(VA=ifelse(str_detect(Hospital_name,"Veteran"),1,0)) %>%
   filter(VA==1) %>%
-  distinct(ID,VA)
+  distinct(pairID,VA)
 
 data <- data %>%
-  left_join(VA,by="ID") %>%
+  left_join(VA,by="pairID") %>%
   filter(is.na(VA)) %>%
   select(-VA)
 
@@ -492,6 +492,7 @@ data <- data %>%
   mutate(works_with_DA=ifelse(sum>0,1,0)) %>%
   ungroup()
 
+
 # Aggregate the data to the physician level -------------------------------------------------------------
 
 Aggregated_Pairs <- data %>%
@@ -515,6 +516,7 @@ Aggregated_Pairs <- Aggregated_Pairs %>%
   fill(avg_beds,.direction="downup") %>%
   fill(num_hospitals,.direction="downup") %>%
   fill(num_systems,.direction="downup") %>%
+  fill(works_with_DA,.direction="downup") %>%
   ungroup() %>%
   mutate(experience=year-grad_year) %>%
   mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0),
