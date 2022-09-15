@@ -1,14 +1,5 @@
 library(tidyverse)
 library(readr)
-library(showtext)
-
-font_add_google("Cormorant Garamond", "corm")
-
-font_add("lm","C:/Users/hkagele/Downloads/Latin-Modern-Roman/lmroman10-regular.otf")
-
-## Automatically use showtext to render text
-showtext_auto()
-
 
 # --------------------    Assessing the Existence of Data Assistants --------------------------
 #                         Hanna Glenn, Emory University
@@ -24,9 +15,12 @@ npi.taxcodes <- read_csv(paste0(raw_data_path,"npidata_pfile.csv"),
 
 npi.taxcodes <- npi.taxcodes %>%
   dplyr::rename(npi=NPI,t_code='Healthcare Provider Taxonomy Code_1',
-                enum_date='Provider Enumeration Date') %>%
-  select(npi, t_code, enum_date) %>%
-  filter(t_code=="247000000X" | t_code=="246YR1600X" | t_code=="246Y00000X")
+                enum_date='Provider Enumeration Date',
+                state='Provider Business Mailing Address State Name',
+                zip='Provider Business Mailing Address Postal Code') %>%
+  select(npi, t_code, enum_date, state, zip) %>%
+  filter(t_code=="247000000X" | t_code=="246YR1600X" | t_code=="246Y00000X" | t_code=="246YC3301X" |
+           t_code=="2470A2800X")
 
 npi.taxcodes <- npi.taxcodes %>%
   separate(enum_date, sep="/", into = c("month", "day", "enum_year"))
@@ -41,18 +35,21 @@ ggplot(npi.taxcodes, aes(x=enum_year)) +
 ggsave("Objects/dataassistant_histogram.pdf", width=8, height=5 , units = "in")
 
 
-## Create database of hospitals who work with Data Assistants
+## Create database of physicians who work with Data Assistants
 # Read in npi datasets and combine into one------------------
 hosp_npidata <- read_rds(paste0(created_data_path,"hosp_npidata.rds"))
+phys_npidata <- read_rds(paste0(created_data_path,"phys_npidata.rds"))
 
 hosp_npidata <- hosp_npidata %>%
+  dplyr::mutate(DA=0)
+phys_npidata <- phys_npidata %>%
   dplyr::mutate(DA=0)
 
 da_npidata <- npi.taxcodes %>%
   select(npi, t_code) %>%
   mutate(PCP=0, hospital=0, other_type=0, DA=1)
 
-temp_npidata <- rbind(da_npidata, hosp_npidata)
+temp_npidata <- rbind(da_npidata, phys_npidata)
 
 
 
@@ -68,37 +65,35 @@ for (t in 2009:2015){
   
   SP.year<- SP.year %>%
     left_join(temp_npidata, by=c("npi1"="npi")) %>%
-    dplyr::rename(DA1=DA,hospital1=hospital) 
+    dplyr::rename(DA1=DA,PCP1=PCP) 
   
   SP.year <- SP.year %>%
     left_join(temp_npidata, by=c("npi2"="npi")) %>%
-    dplyr::rename(DA2="DA",hospital2="hospital") %>%
-    select(npi1,npi2,year,DA1,DA2,hospital1,hospital2)
+    dplyr::rename(DA2="DA",PCP2="PCP") %>%
+    select(npi1,npi2,year,DA1,DA2,PCP1,PCP2)
   
   # filter so that all is left is hospital-data assistant pairs
   SP.year <- SP.year %>%
-    filter((DA1==1 & hospital2==1) | (hospital1==1 & DA2==1))
+    filter((DA1==1 & PCP2==1) | (PCP1==1 & DA2==1))
   
   assign(paste0("PSPD",t),SP.year)
 }
 
-da_hosp_pairs <- rbind(PSPD2009, PSPD2010, PSPD2011, PSPD2012, PSPD2013, PSPD2014, PSPD2015)
+da_phys_pairs <- rbind(PSPD2009, PSPD2010, PSPD2011, PSPD2012, PSPD2013, PSPD2014, PSPD2015)
 # 75 observations
 
-# Change to DA and hospital npis instead of npi1 and npi2
-da_hosp_pairs <- da_hosp_pairs %>%
+# Change to DA and phys npis instead of npi1 and npi2
+da_phys_pairs <- da_phys_pairs %>%
   mutate(DA1=ifelse(is.na(DA1),0,DA1), DA2=ifelse(is.na(DA2),0,DA2),
-         hospital1=ifelse(is.na(hospital1),0,hospital1), hospital2=ifelse(is.na(hospital2),0,hospital2)) %>%
-  mutate(HospNPI=ifelse(hospital1==1,npi1,npi2),
+         PCP1=ifelse(is.na(PCP1),0,PCP1), PCP2=ifelse(is.na(PCP2),0,PCP2)) %>%
+  mutate(DocNPI=ifelse(PCP1==1,npi1,npi2),
          DANPI=ifelse(DA1==1,npi1,npi2)) %>%
-  select(year,HospNPI,DANPI)
+  select(year,DocNPI,DANPI)
 
 # Aggregate to hospital level
-Hosp_with_DA <- da_hosp_pairs %>%
-  distinct(HospNPI,year)
+Phys_with_DA <- da_phys_pairs %>%
+  distinct(DocNPI,year)
 
 # Save data
-saveRDS(Hosp_with_DA, file=paste0(created_data_path,"/Hosp_with_DA.rds"))
-
-
+saveRDS(Phys_with_DA, file=paste0(created_data_path,"/Phys_with_DA.rds"))
 

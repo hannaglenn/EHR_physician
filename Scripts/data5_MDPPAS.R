@@ -327,7 +327,23 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   filter(yearbefore>.5 | is.na(yearbefore))
 
+# Read in Physicians that works with DA
+Phys_with_DA <- readRDS(paste0(created_data_path,"/Phys_with_DA.rds")) %>%
+  dplyr::mutate(Phys_DA=1)
 
+Physician_Data <- Physician_Data %>%
+  mutate(DocNPI=as.character(DocNPI)) %>%
+  left_join(Phys_with_DA, by=c("year", "DocNPI"))
+
+Physician_Data <- Physician_Data %>%
+  mutate(Phys_DA=ifelse(is.na(Phys_DA),0,Phys_DA)) %>%
+  group_by(DocNPI) %>%
+  mutate(sum=sum(Phys_DA)) %>%
+  ungroup() %>%
+  mutate(ever_Phys_DA=ifelse(sum>0,1,0))
+
+observe <- Physician_Data %>%
+  filter(ever_Phys_DA==1)
 
 # Save the data
 saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))

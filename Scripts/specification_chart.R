@@ -183,10 +183,20 @@ Hosp_with_DA <- Hosp_with_DA %>%
   mutate(DA=1) %>%
   mutate(HospNPI=as.numeric(HospNPI))
 
+Phys_with_DA <- readRDS(paste0(created_data_path,"/Phys_with_DA.rds")) %>%
+  dplyr::mutate(Phys_DA=1)
+
 Data_List <- lapply(Data_List, function(x){
-  data <- x %>%
-    left_join(Hosp_with_DA, by=c("year","HospNPI")) %>%
-    mutate(DA=ifelse(is.na(DA),0,DA))
+    data <- x %>%
+    dplyr::mutate(DocNPI=as.character(DocNPI)) %>%
+    left_join(Phys_with_DA, by=c("year", "DocNPI"))
+  
+  data <- data %>%
+    dplyr::mutate(Phys_DA=ifelse(is.na(Phys_DA),0,Phys_DA)) %>%
+    group_by(DocNPI) %>%
+    dplyr::mutate(sum=sum(Phys_DA)) %>%
+    ungroup() %>%
+    dplyr::mutate(ever_Phys_DA=ifelse(sum>0,1,0))
 })
 
 # Get rid of physicians who only work on VA hospitals
@@ -390,13 +400,7 @@ Data_List <- lapply(Data_List, function(x){
     ungroup() %>%
     mutate(never_newnpi=ifelse(sum==0,1,0)) %>%
     select(-sum)
-  
-  # Create variable for "works with hospital with DA"
-  data <- data %>%
-    group_by(DocNPI,year) %>%
-    mutate(sum=sum(DA)) %>%
-    mutate(works_with_DA=ifelse(sum>0,1,0)) %>%
-    ungroup()
+
   
   return(data)
   
@@ -405,7 +409,7 @@ Data_List <- lapply(Data_List, function(x){
 Aggregated_Pairs_list <- lapply(Data_List, function(x){
   data <- x %>%
     distinct(year, DocNPI,grad_year, avg_beds, experience, 
-             num_hospitals, works_with_DA,
+             num_hospitals, ever_Phys_DA,
              frac_EHR, minyr_EHR, minyr_EHR_int,
              num_systems, 
              newnpi, never_newnpi)
@@ -425,6 +429,7 @@ Aggregated_Pairs_list <- lapply(Aggregated_Pairs_list, function(x){
     fill(avg_beds,.direction="downup") %>%
     fill(num_hospitals,.direction="downup") %>%
     fill(num_systems,.direction="downup") %>%
+    fill(ever_Phys_DA,.direction="downup") %>%
     ungroup() %>%
     mutate(experience=year-grad_year) %>%
     mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0),
@@ -452,6 +457,7 @@ MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPP
 
 Physician_Data_list <- lapply(Aggregated_Pairs_list, function(x){
   Physician_Data <- x %>%
+    mutate(DocNPI=as.numeric(DocNPI)) %>%
     dplyr::left_join(MDPPAS, by=c("DocNPI"="npi", "year"="Year")) %>%
     dplyr::group_by(DocNPI) %>%
     tidyr::fill(sex, .direction="downup") %>%
@@ -716,7 +722,7 @@ Physician_Data_list <- lapply(Physician_Data_list, function(x){
   
   # Create age bins to do analysis separately 
   Physician_Data <- Physician_Data %>% ungroup() %>%
-    select(DocNPI, year, grad_year, minyr_EHR, minyr_EHR_int, never_newnpi, works_with_DA,
+    select(DocNPI, year, grad_year, minyr_EHR, minyr_EHR_int, never_newnpi, ever_Phys_DA,
            pos_office, npi_unq_benes, max_70, max_90, max_50, claim_count_total, retire,
            ever_retire, work_in_office, change_zip, num_hospitals, max_age)
   
@@ -745,7 +751,7 @@ for (k in 1:128){
     subset_data <- Physician_Data_list[[2]] %>%
       {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
       mutate(treat_variable=ifelse(row$main_EHR==TRUE,"minyr_EHR", "minyr_EHR_int")) %>%
-      {if (row$no_DA==TRUE) filter(.,works_with_DA==0) else filter(.,year>2000)} %>%
+      {if (row$no_DA==TRUE) filter(.,ever_Phys_DA==0) else filter(.,year>2000)} %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR' & minyr_EHR==0,1,0)) %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR_int' & minyr_EHR_int==0,1,retiredrop))}
   
@@ -753,7 +759,7 @@ for (k in 1:128){
     subset_data <- Physician_Data_list[[1]] %>%
       {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
       mutate(treat_variable=ifelse(row$main_EHR==TRUE,"minyr_EHR", "minyr_EHR_int")) %>%
-      {if (row$no_DA==TRUE) filter(.,works_with_DA==0) else filter(.,year>2000)}  %>%
+      {if (row$no_DA==TRUE) filter(.,ever_Phys_DA==0) else filter(.,year>2000)}  %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR' & minyr_EHR==0,1,0)) %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR_int' & minyr_EHR_int==0,1,retiredrop))}
     
@@ -762,7 +768,7 @@ for (k in 1:128){
     subset_data <- Physician_Data_list[[3]] %>%
       {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
       mutate(treat_variable=ifelse(row$main_EHR==TRUE,"minyr_EHR", "minyr_EHR_int")) %>%
-      {if (row$no_DA==TRUE) filter(.,works_with_DA==0) else filter(.,year>2000)}  %>%
+      {if (row$no_DA==TRUE) filter(.,ever_Phys_DA==0) else filter(.,year>2000)}  %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR' & minyr_EHR==0,1,0)) %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR_int' & minyr_EHR_int==0,1,retiredrop))}
   
@@ -770,13 +776,6 @@ for (k in 1:128){
 }
 
 saveRDS(Subsets_Data, "CreatedData/Subsets_Data.rds")
-
-Subsets_Data_Young <- lapply(Subsets_Data, function(x){
-  row <- x[[2]]
-  data <- x[[1]] %>%
-    filter(max_age<60)
-  list(data,row)
-})
 
 
 #RETIRE SPECIFICATION CHART ---------------------------------------------------------------------
@@ -829,7 +828,7 @@ source(paste0(function_path,"spec_chart_function.R"))
 labels <- list("Perc. Inpatient Threshold: "=c("50% ", "70% ", "90% "),
                "Shared Patient Threshold: "=c("10 ", "30 ", "60 "),
                "Main EHR Definition ",
-               "Only Hospitals without DA ",
+               "Only Phys. without DA ",
                "Anticipation: 1 year ",
                "Limited Years ")
 
@@ -844,7 +843,7 @@ schart(chart_data_frame, labels, highlight=117,
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
 legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
+pdf(file="retire_chart.pdf", )
 
 
 

@@ -22,7 +22,10 @@ library(extrafont)
 Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
 Physician_Data <- Physician_Data %>%
-  mutate(npi_unq_benes_noDA=npi_unq_benes) 
+  mutate(npi_unq_benes_noDA=npi_unq_benes) %>%
+  mutate(npi_unq_benes_DA=npi_unq_benes) %>%
+  mutate(DocNPI=as.double(DocNPI))
+
 
 
 
@@ -41,7 +44,7 @@ models <- lapply(varlist, function(x) {
     tname = "year",                  # Time Variable
     # xformla = NULL                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
-    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & works_with_DA==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
+    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==0) else if (x=="npi_unq_benes_DA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==1) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
@@ -55,7 +58,7 @@ models <- lapply(varlist, function(x) {
          tname = "year",                  # Time Variable
          # xformla = NULL                 # No covariates
          xformla = ~grad_year,            # Time-invariant controls
-         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age<60) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & works_with_DA==0 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age<60)),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age<60) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age<60) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==0 & max_age<60) else if (x=="npi_unq_benes_DA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==1 & max_age<60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age<60)),
          est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
          control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
          clustervars = "DocNPI",          # Cluster Variables          
@@ -69,7 +72,7 @@ models <- lapply(varlist, function(x) {
          tname = "year",                  # Time Variable
          # xformla = NULL                 # No covariates
          xformla = ~grad_year,            # Time-invariant controls
-         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age>=60) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & works_with_DA==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age>=60)),
+         data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0 & max_age>=60) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & max_age>=60) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==0) else if (x=="npi_unq_benes_DA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==1 & max_age>=60) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & max_age>=60)),
          est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
          control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
          clustervars = "DocNPI",          # Cluster Variables          
