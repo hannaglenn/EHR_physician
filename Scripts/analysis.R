@@ -23,7 +23,7 @@ Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
 Physician_Data <- Physician_Data %>%
   mutate(npi_unq_benes_noDA=npi_unq_benes) %>%
-  mutate(npi_unq_benes_DA=npi_unq_benes) %>%
+  mutate(npi_unq_benes_LI=npi_unq_benes) %>%
   mutate(DocNPI=as.double(DocNPI))
 
 
@@ -32,19 +32,19 @@ Physician_Data <- Physician_Data %>%
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes","npi_unq_benes_noDA", "claim_per_patient")
+varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_per_patient")
 
 
 
 # Get results for ATTGT 
 models <- lapply(varlist, function(x) {
   all <- att_gt(yname = x,                # LHS Variable
-    gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
+    gname = if (x=="npi_unq_benes_LI") "minyr_EHR_int" else "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
     idname = "DocNPI",               # ID
     tname = "year",                  # Time Variable
     # xformla = NULL                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
-    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==0) else if (x=="npi_unq_benes_DA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==1) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
+    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
@@ -204,30 +204,13 @@ plots <- lapply(graphs, function(x){
     )
 })
 
-# Create plot for patient count with both specifications
-patient_count_plot <- ggarrange(
-  graphs[[5]]$all,
-  graphs[[6]]$all,
-  graphs[[5]]$ages,
-  graphs[[6]]$ages,
-  nrow=2,
-  ncol = 2,
-  common.legend = TRUE,
-  legend="right",
-  align="v",
-  heights  = c(1,1)
-) %>%
-  annotate_figure(
-    bottom=text_grob("Year Relative to Exposure", hjust=.5, vjust=.5, size=15)
-  )
-
 
 # Save plots -------------------------
 ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
 ggsave(file="Objects/officefrac_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
 ggsave(file="Objects/officeind_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
 ggsave(file="Objects/zip_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
-ggsave(file="Objects/patient_plot.pdf",plot=patient_count_plot, width=10, height=7, units="in")
+ggsave(file="Objects/patient_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
 ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
 
 # Save the different plots separately for presentations
