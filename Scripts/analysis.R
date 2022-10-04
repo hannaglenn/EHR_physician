@@ -26,13 +26,17 @@ Physician_Data <- Physician_Data %>%
   mutate(npi_unq_benes_LI=npi_unq_benes) %>%
   mutate(DocNPI=as.double(DocNPI))
 
+phys <- Physician_Data %>%
+  ungroup() %>%
+  distinct(DocNPI)
+
 
 
 
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_per_patient")
+varlist <- list("retire", "pos_office","pos_office_prior","pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_per_patient")
 
 
 
@@ -208,10 +212,10 @@ plots <- lapply(graphs, function(x){
 # Save plots -------------------------
 ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
 ggsave(file="Objects/officefrac_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
-ggsave(file="Objects/officeind_plot.pdf",plot=plots[[3]], width=10, height=7, units="in")
-ggsave(file="Objects/zip_plot.pdf",plot=plots[[4]], width=10, height=7, units="in")
-ggsave(file="Objects/patient_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
-ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
+ggsave(file="Objects/officeind_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
+ggsave(file="Objects/zip_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
+ggsave(file="Objects/patient_plot.pdf",plot=plots[[7]], width=10, height=7, units="in")
+ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
 
 # Save the different plots separately for presentations
 ggsave(file="Objects/Presentation_retire_all.pdf",plot=graphs[[1]]$all, width=10, height=7, units="in")
