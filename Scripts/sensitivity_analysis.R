@@ -637,125 +637,24 @@ Physician_Data <- Physician_Data %>%
   filter(sum==0)
 
 
-# LEE (2009) BOUNDS
+# LEE (2009) BOUNDS ------------------------------------------------------------------------------------ #### 
 leebounds <- Physician_Data %>%
   filter(minyr_EHR!=2009) %>%
   mutate(ctrl=ifelse(minyr_EHR==0,1,0),
          treat=ifelse(minyr_EHR>0,1,0),
-         attrition=ifelse(never_newnpi==0 | ever_retire==1,1,0))
+         attrition=ifelse(never_newnpi==0 | ever_retire==1,1,0)) %>%
+  mutate(claim_per_patient=ifelse(attrition==1,NA,claim_per_patient))
 
 observe <- leebounds %>%
-  filter(treat==0)
-summary(observe$attrition)
-
-leebounds_control <- leebounds %>%
-  filter(attrition==0) %>%
-  filter(ctrl==1) %>%
-  mutate(patcount_percentile=ntile(npi_unq_benes,100)) %>%
-  mutate(trim_bottom=ifelse(patcount_percentile<=18,1,0),
-         trim_top=ifelse(patcount_percentile>=82,1,0)) %>%
-  distinct(DocNPI, year, trim_bottom, trim_top)
+  filter(treat==1) 
+summary(observe$claim_per_patient)
 
 leebounds <- leebounds %>%
-  left_join(leebounds_control, by=c("DocNPI", "year")) %>%
-  mutate(trim_bottom=ifelse(is.na(trim_bottom),0,trim_bottom),
-         trim_top=ifelse(is.na(trim_top),0,trim_top)) %>%
-  filter(attrition==0) %>%
-  mutate(DocNPI=as.numeric(DocNPI))
+  mutate(pctile=ntile(npi_unq_benes,100))
 
-# att with trimming bottom
-att_trimbottom <- att_gt(yname = "npi_unq_benes",                # LHS Variable
-                gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                # xformla = NULL                 # No covariates
-                xformla = ~grad_year,
-                data= filter(leebounds, trim_bottom==0),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "nevertreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=0,
-                base_period = "varying" # can set a number of years to account for anticipation effects
-)  
-
-agg_trimbottom <- aggte(att_trimbottom, type = "dynamic",na.rm=T)  
-
-# trim top
-att_trimtop <- att_gt(yname = "npi_unq_benes",                # LHS Variable
-                         gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-                         idname = "DocNPI",               # ID
-                         tname = "year",                  # Time Variable
-                         # xformla = NULL                 # No covariates
-                         xformla = ~grad_year,
-                         data= filter(leebounds, trim_top==0),
-                         est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                         control_group = "nevertreated", # Set the control group to notyettreated or nevertreated
-                         clustervars = "DocNPI",          # Cluster Variables          
-                         anticipation=0,
-                         base_period = "varying" # can set a number of years to account for anticipation effects
-)  
-
-agg_trimtop <- aggte(att_trimtop, type = "dynamic",na.rm=T)  
+observe <- leebounds %>%
+  filter(pctile>22) %>%
+  filter(treat==0)
+summary(observe$claim_per_patient)
 
 
-
-# CLAIM COUNT LEE BOUNDS
-
-leebounds <- Physician_Data %>%
-  filter(minyr_EHR!=2009) %>%
-  mutate(ctrl=ifelse(minyr_EHR==0,1,0),
-         treat=ifelse(minyr_EHR>0,1,0),
-         attrition=ifelse(never_newnpi==0 | ever_retire==1,1,0))
-
-leebounds_control_cc <- leebounds %>%
-  filter(attrition==0) %>%
-  filter(ctrl==1) %>%
-  mutate(cc_percentile=ntile(claim_per_patient,100)) %>%
-  mutate(trim_bottom=ifelse(cc_percentile<=18,1,0),
-         trim_top=ifelse(cc_percentile>=82,1,0)) %>%
-  distinct(DocNPI, year, trim_bottom, trim_top)
-
-leebounds_cc <- leebounds %>%
-  left_join(leebounds_control_cc, by=c("DocNPI", "year")) %>%
-  mutate(trim_bottom=ifelse(is.na(trim_bottom),0,trim_bottom),
-         trim_top=ifelse(is.na(trim_top),0,trim_top)) %>%
-  filter(attrition==0) %>%
-  mutate(DocNPI=as.numeric(DocNPI))
-
-# att with trimming bottom
-att_trimbottom_cc <- att_gt(yname = "claim_per_patient",                # LHS Variable
-                         gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-                         idname = "DocNPI",               # ID
-                         tname = "year",                  # Time Variable
-                         # xformla = NULL                 # No covariates
-                         xformla = ~grad_year,
-                         data= filter(leebounds_cc, trim_bottom==0),
-                         est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                         control_group = "nevertreated", # Set the control group to notyettreated or nevertreated
-                         clustervars = "DocNPI",          # Cluster Variables          
-                         anticipation=0,
-                         base_period = "varying" # can set a number of years to account for anticipation effects
-)  
-
-agg_trimbottom_cc <- aggte(att_trimbottom_cc, type = "dynamic",na.rm=T)  
-
-# trim top
-att_trimtop <- att_gt(yname = "claim_per_patient",                # LHS Variable
-                      gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-                      idname = "DocNPI",               # ID
-                      tname = "year",                  # Time Variable
-                      # xformla = NULL                 # No covariates
-                      xformla = ~grad_year,
-                      data= filter(leebounds_cc, trim_top==0),
-                      est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                      control_group = "nevertreated", # Set the control group to notyettreated or nevertreated
-                      clustervars = "DocNPI",          # Cluster Variables          
-                      anticipation=0,
-                      base_period = "varying" # can set a number of years to account for anticipation effects
-)  
-
-agg_trimtop_cc <- aggte(att_trimtop, type = "dynamic",na.rm=T)  
-
-
-  
-  
