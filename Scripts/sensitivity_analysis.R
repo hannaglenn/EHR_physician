@@ -140,32 +140,33 @@ source(paste0(function_path,"spec_chart_function.R"))
 labels <- list("Stacked Reg.", "Two-Stage DiD", "Main (CS)")
 
 schart(est_retire_data, 
-       order="asis", labels,
+       order="asis", labels = labels,
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n") 
+       ylab="Coefficient and 95% C.I.\n",
+       highlight=3) 
 schart(est_frac_office_data, 
-       order="asis", labels,
+       order="asis", labels, highlight=3,
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
        ylab="Coefficient and 95% C.I.\n") 
 schart(est_indoffice_data, 
-       order="asis", labels,
+       order="asis", labels, highlight=3,
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
        ylab="Coefficient and 95% C.I.\n") 
 schart(est_zip_data, 
-       order="asis", labels,
+       order="asis", labels, highlight=3,
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
        ylab="Coefficient and 95% C.I.\n") 
 schart(est_patient_data, 
-       order="asis", labels,
+       order="asis", labels, highlight=3,
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
        ylab="Coefficient and 95% C.I.\n") 
 schart(est_claim_data, 
-       order="asis", labels,
+       order="asis", labels, highlight=3,
        col.est=c("grey70","#E69F00"),
        col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
        ylab="Coefficient and 95% C.I.\n") 
@@ -373,8 +374,14 @@ retire_all_yr1 <- plot_smooth_year1[[1]][[1]] +
   scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
   theme(legend.position = "none", text = element_text(size = 12)) 
 
+retire_all_yr2 <- plot_smooth_year2[[1]][[1]] + 
+  theme_bw()  +
+  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(size = 12)) 
 
-ggsave(retire_all_yr1, file="Objects/retire_pretrends_plot.pdf", height=3.5, width=5, units="in")  
+
+ggsave(retire_all_yr1, file="Objects/retire_pretrends_plot_yr1.pdf", height=3.5, width=5, units="in")  
+ggsave(retire_all_yr2, file="Objects/retire_pretrends_plot_yr2.pdf", height=3.5, width=5, units="in")  
 
 
 # Work in Office

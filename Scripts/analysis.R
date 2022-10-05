@@ -26,17 +26,11 @@ Physician_Data <- Physician_Data %>%
   mutate(npi_unq_benes_LI=npi_unq_benes) %>%
   mutate(DocNPI=as.double(DocNPI))
 
-phys <- Physician_Data %>%
-  ungroup() %>%
-  distinct(DocNPI)
-
-
-
 
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office","pos_office_prior","pos_office_noprior", "work_in_office", "change_zip", "npi_unq_benes", "claim_per_patient")
+varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient")
 
 
 
