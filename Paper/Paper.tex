@@ -45,7 +45,7 @@ sorting=ynt,citestyle=authoryear]{biblatex}
 \maketitle
 
 \begin{abstract}
-    Technological innovation has affected workers and labor markets for decades. I add to the understanding of technology implementation's affect on highly technical jobs by investigating changes in physician behavior as a result of a major technology shift in U.S. health care, electronic health records (EHRs). I treat EHR implementation in hospitals as an exogenous treatment to physicians within the hospital and estimate average group time treatment effects on various labor market outcomes. I find that physicians are 10\% more likely to retire, and at least 15\% more likely to work in an office due to EHR exposure. Further, for physicians who remain exposed to the technology, the number of patients seen increases. These results point to adverse responses when technology is poorly implemented in technical occupations, but also indicates potential productivity gains for those who do not avoid the technology through labor market behavioral changes. 
+    Technological innovation has affected workers and labor markets for decades. I add to the understanding of technology implementation's affect on highly technical jobs by investigating changes in physician behavior as a result of a major technology shift in U.S. health care, electronic health records (EHRs). I treat EHR implementation in hospitals as an exogenous treatment to physicians within the hospital and estimate average group time treatment effects on various labor market outcomes. I find that physicians are 10\% more likely to retire, and at least 15\% more likely to work in an office due to EHR exposure. Further, for physicians who remain exposed to the technology, the number of patients seen increases. These results point to adverse responses when technology is poorly implemented in technical occupations, but also indicates potential productivity gains for those who do not avoid the technology. 
 \end{abstract}
 
 \vspace{1.5cm}
@@ -309,7 +309,7 @@ While I am investigating the supply side factors of this outcome, patient count 
     \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
 \end{figure}
 
-One concern with my estimates is that EHR exposure affects whether physicians are included in the analysis (since I drop those who retire or move), indicating a nonrandom attrition problem. That is, maybe really productive physicians are the ones who remain in the same hospital after EHR exposure. When including those physicians who are never treated in any year of the sample, the proportion of those who are not included in this analysis is 18\% in the control group and 36\% in the treated group. To investigate whether my results are robust to this issue, I construct average treatment effect bounds as in  \citeauthor{lee2009training} (\citeyear{lee2009training}). For these bounds to be valid, a monotonicity assumption must hold on selection. That is, treatment can only affect selection in one direction. In my case, that means that EHR exposure increases the likelihood of retiring or moving workplace settings and no physicians remain in the sample under treatment who would have retired or moved in the absence of EHR exposure. Since I find in earlier analyses that physicians are more likely to move and retire due to EHRs, this assumption seems reasonable. To compute the bounds, I trim the distribution of patient count in the control group by the difference in attrition rate (18\%). Trimming the bottom (top) provides an upper (lower) bound. The overall average treatment effect falls within 33.08 patients and 66.35 patients, compared to the main result of 28 patients. This indicated selection causes downward bias in the effect of EHR exposure on patient count.  
+One concern with my estimates is that EHR exposure affects whether physicians are included in the analysis (since I drop those who retire or move), indicating a nonrandom attrition problem. That is, maybe really productive physicians are the ones who remain in the same hospital after EHR exposure. When including those physicians who are never treated in any year of the sample, the proportion of those who are not included in this analysis is 18\% in the control group and 36\% in the treated group. To investigate whether my results are robust to this issue, I construct average treatment effect bounds as in  \citeauthor{lee2009training} (\citeyear{lee2009training}). For these bounds to be valid, a monotonicity assumption must hold on selection. That is, treatment can only affect selection in one direction. In my case, that means that EHR exposure increases the likelihood of retiring or moving workplace settings and no physicians remain in the sample under treatment who would have retired or moved in the absence of EHR exposure. Since I find in earlier analyses that physicians are more likely to move and retire due to EHRs, this assumption seems reasonable. To compute the bounds, I trim the distribution of patient count in the control group by the difference in attrition rate. Trimming the bottom (top) and taking the differences in expectation between treatment and trimmed control provides a lower (upper) bound. This bounding yields an interval estimate of 54.6 patients to 125.4 patients, compared to the main result of 28 patients. This indicated selection causes downward bias in the effect of EHR exposure on patient count.  
 
 Similarly, I investigate whether this increase in the number of patients seen is due to the decrease in working physicians. Specifically, if a hospital loses a portion of their physicians, they may divide those patients between the remaining physicians. In the long run, the hospital should hire new physicians to replace those that left, but if this does not happen right away then these estimates could be driven by increased workload instead of EHR use. Just by observing the pattern of the estimates on patient count over time, this could explain why there is a much larger increase in the first year after exposure compared to the magnitudes of the estimates as they level out over time. Using the estimates I found in Section \ref{sec:retire}, I calculate the increase in the number of patients that would occur if all patients from retired physicians were divided between remaining physicians. In the year of exposure the entire increase in patient count is due to EHR use since I find no effect on the likelihood of retirement. In the first year after exposure, I estimate the increase in patients due to retiring physicians to be approximately 20 patients, which is less than the observed patient count estimates presented above. However, the second year after exposure is when I observe that largest effect on retirement, and so I do not rule out that the increase in patient count could be caused by that. After two years, I find no strong evidence for an increase in retirement, so there does seem to be some positive effect on patients seen due to EHR use. 
 
@@ -325,7 +325,7 @@ Finally, I consider whether EHR use affects claims filed per patient. On average
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: .33 (.09), .37 (.08), .05 (.44), respectively.}}
 \end{figure}
 
-I also compute \citeauthor{lee2009training} (\citeyear{lee2009training}) bounds for this outcome due to the limited sample. The computed bounds on the average treatment effect are -.02 claims per patient to .28 claims per patient. This does not rule out the possibility that the true effect of EHR exposure on claims per patient is zero,  and the upper bound is lower than the ATT found in the main specification, indicating that selection is biasing the effect upward. Because of this, I make no strong conclusions about how EHR exposure impacts physician billing activity. 
+I also compute \citeauthor{lee2009training} (\citeyear{lee2009training}) bounds for this outcome due to the limited sample. The computed bounds on the average treatment effect are .45 to .6 claims per patient, compared to the overall effect in the main specification of .33. Similarly to patient count, selection biased the result in the main specification downward.
 
 
 \section{Physician Influence of EHR Decision in Hospitals}
@@ -419,7 +419,7 @@ Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) reveal
 
 \subsubsection{Retirement} 
 
-First, I consider the estimated effect of EHR exposure on retirement. While visually there does not appear to be a strong pre-trend, for the full sample of physicians and physicians $< 60$, the p-value indicates a pre-trend may exist. Since the positive effect seems to be a possibility in event time 1 and event time 2, I present a plot of robust confidence intervals under various possible assumptions of parallel trends violations for these periods in Figure \ref{fig:pre_retire}. The original confidence interval is shown in yellow, and in gray are confidence intervals robust to varying functions of parallel trend violations. When allowing for linear trend violations (M=0), the effect of EHR exposure on retirement is still positive. As I allow for more non-linearity (M$>$0) in these variations, this effect becomes zero. This is true for both event time 1 and event time 2. 
+First, I consider the estimated effect of EHR exposure on retirement. While visually there does not appear to be a strong pre-trend, for the full sample of physicians and physicians $< 60$, the p-value indicates a pre-trend may exist. I present a plot of robust confidence intervals under various possible assumptions of parallel trends violations for one year after exposure in Figure \ref{fig:pre_retire}. The original confidence interval is shown in yellow, and in gray are confidence intervals robust to varying functions of parallel trend violations. As I allow for different assumptions on parallel trends, the confidence intervals become larger and contain zero. Under linearity of pre-trend, the confidence interval contains zero but is more similar to the effect found in the main result. This is true for both event time 1 and event time 2. 
 
 \begin{figure}[ht]
     \centering
@@ -433,7 +433,7 @@ First, I consider the estimated effect of EHR exposure on retirement. While visu
 
 \subsubsection{Work in Office Likelihood}
 
-Next, I examine pre-trends for the outcome variable indicating whether the physician does any work in an office. The p-values do not indicate pre-trends for the full sample or for physicians $< 60$, but I reject no pre-trends for physicians of retirement age. As with retirement as the outcome, I show robust confidence intervals in Figure \ref{fig:pre_work}. However, the main results show up in event time 0 and 1, so I show confidence intervals for these periods. Further, I show these for the full sample of physicians, but also for older physicians separately since the pre-trend seems to differ slightly. When allowing for linear pre-trend violations, I find very similar results to the main specification. For physicians $>= 60$, there is a higher chance that the effect of EHR exposure on the probability of working in an office is positive. This would be theoretically intuitive since older physicians may struggle with the technology more than younger physicians and choose to switch settings. However, I do not make strong conclusions given the null results found in most sensitivity analyses. 
+Next, I examine pre-trends for the outcome variable indicating whether the physician does any work in an office. The p-values do not indicate pre-trends for the full sample or for physicians $< 60$, but I reject no pre-trends for physicians of retirement age. I show robust confidence intervals for the average treatment effect in the first year after exposure in Figure \ref{fig:pre_work}. For various assumptions on the form of pre-trends, the positive effect holds.
 
 \begin{figure}[ht]
     \centering
@@ -447,7 +447,7 @@ Next, I examine pre-trends for the outcome variable indicating whether the physi
 
 \subsubsection{Fraction of Patients in Office}
 
-The next outcome considered is the fraction of patients seen in an office setting. All p-values suggest there are no pre-trends. I show robust confidence intervals for the full sample of physicians in the first and second year of exposure in Figure \ref{fig:pre_frac}. These results hold no matter the assumption on the violation of pre-trends. 
+The next outcome considered is the fraction of patients seen in an office setting. All p-values suggest there are no pre-trends. I show robust confidence intervals for the average treatment effect in the first year after exposure in Figure \ref{fig:pre_frac}. For various assumptions on the form of pre-trends, the positive effect holds.
 
 \begin{figure}[ht]
     \centering
@@ -461,7 +461,7 @@ The next outcome considered is the fraction of patients seen in an office settin
 
 \subsubsection{Patient Count}
 
-Now I examine the sensitivity of the main specification results where the outcome considered is the number of patients seen. None of the p-values indicate a violation of parallel trends, but I present a plot of confidence intervals robust to specified variations in parallel trends as a robustness check in Figure \ref{fig:pre_patient}. These plots indicate that, even under nonlinear deviations in parallel trends, there is a positive effect of EHR exposure on patient count. Under a linear variation in parallel trends, the effect is positive, yet the magnitude is nearly half of the magnitude found in the main specification. 
+Now I examine the sensitivity of the main specification results where the outcome considered is the number of patients seen. None of the p-values indicate a violation of parallel trends, but I present a plot of confidence intervals robust to specified variations in parallel trends as a robustness check in Figure \ref{fig:pre_patient}. This plots indicate that, even under nonlinear deviations in parallel trends, there is a positive effect of EHR exposure on patient count with similar magnitude to that of the main specification.  
 
 \begin{figure}[ht]
     \centering
@@ -475,7 +475,7 @@ Now I examine the sensitivity of the main specification results where the outcom
 
 \subsubsection{Claim Count}
 
-Finally, I assess the results found in the main specification for the outcome variable claim count. The main specification indicates a downward trend in the years leading up to exposure and a positive effect in the year of exposure and the year after exposure for younger physicians, and no effect for older physicians. In Figure \ref{fig:pre_claim}, I show confidence intervals robust to violations in parallel trends for these two age groups. For physicians $>= 60$, this plot shows a null effect just as in the main specification. For physicians $< 60$, there still seems to be a positive effect on both event years, although under exactly linear variations in parallel trends, this effect is smaller or zero.  
+Finally, I assess the results found in the main specification for the outcome variable claim count. The main specification indicates an increase in claims per patient after EHR exposure, but under various specification changes this effect becomes null. Under linear assumptions of a pre-trend form, the effect is similar to that of the main specification. Once more non-linearity is allowed, the effect becomes null. 
 
 \begin{figure}[ht]
     \centering
@@ -522,7 +522,7 @@ I present overall average treatment effects for each outcome variable under diff
 
 \subsubsection{Retirement}
 
-The specification chart for the retirement outcome is presented in Figure \ref{fig:retire_chart}. The main specification yields an average treatment effect of .0025 (significant at all levels). This coefficient is on the higher end of coefficients from all combinations of specifications. However, almost all of the coefficients are positive. Some noisy estimates are to be expected when there are multiple limitations placed on the data. The average confidence interval for all combinations is (.001,.003), so the main specification lies in this interval. These results are strongly in favor of there being a positive effect of EHR exposure on retirement. 
+The specification chart for the retirement outcome is presented in Figure \ref{fig:retire_chart}. The main specification yields an average treatment effect of .0025 (significant at all levels). This coefficient is on the higher end of coefficients from all combinations of specifications. However, almost all of the coefficients are positive. Some noisy estimates are to be expected when there are multiple limitations placed on the data. The average confidence interval for all combinations is (.001,.003), so the main specification lies in this interval. These results support my main finding that EHR exposure positively affects the likelihood of retirement among physicians. 
 
 \begin{figure}[ht]
     \centering
@@ -533,7 +533,9 @@ The specification chart for the retirement outcome is presented in Figure \ref{f
 
 \subsubsection{Change Work Setting}
 
-The specification charts for outcomes work in office, fraction of patients seen in office, and changing zip codes are presented in Figures \ref{fig:work_chart}, \ref{fig:fracoffice_chart}, and \ref{fig:zip_chart}, respectively. First, I discuss the overall average treatment effect of EHR exposure on the likelihood of working in an office. While the main specification showed a slight increase in likelihood in the year of exposure, the overall treatment effect is 0. Most of the specifications agree with the main specification, although more coefficients fall below 0 than above 0. The average confidence interval is approximately (-.016, .001), encompassing the main specification.  
+The specification charts for outcomes work in office and fraction of patients seen in office are presented in Figures \ref{fig:work_chart} and \ref{fig:fracoffice_chart}, respectively. First, I discuss the overall average treatment effect of EHR exposure on the likelihood of working in an office. The main specification yields finding that EHR exposure leads to a .07 ppt increase in the likelihood of working in an office. This is on the high end of all combinations of changes to specification, but all reveal a positive effect. On average, the confidence interval falls between .035 and .06. This supports the finding that EHR exposure positively affects the likelihood of working in an office.  
+
+Specification changes that seem to affect the magnitude of the estimate are whether I limit the sample years and which EHR definition is used as the treatment variable. Neither of these change the sign of the estimate, but both limiting sample years and using the low-integration definition of EHR exposure push the magnitude slightly down.  
 
 \begin{figure}[ht]
     \centering
@@ -542,7 +544,7 @@ The specification charts for outcomes work in office, fraction of patients seen 
     \label{fig:work_chart}
 \end{figure}
 
-Second, I discuss the results for whether physicians change the fraction of patients seen in an office setting due to EHR exposure. The main specification
+Now I discuss the results for whether physicians change the fraction of patients seen in an office setting due to EHR exposure. Similarly, the ATT from the main specification is on the high end of other ATTs found, but all estimates suggest a positive effect. The average of all the confidence intervals found is (.02, .06), suggesting a positive effect on fraction of patients seen in an office. Changes that affect the magnitude of the estimate (but not the sign) are limiting sample years and anticipation. Limiting the years in the sample and allowing for one year of anticipation both push the magnitude of the estimate down. 
 
 \begin{figure}[ht]
     \centering
@@ -554,12 +556,16 @@ Second, I discuss the results for whether physicians change the fraction of pati
 
 \subsubsection{Patient Count and Claims per Patient}
 
+In Figure \ref{fig:pat_chart}, I present estimates and confidence intervals for different combinations of specification changes. The results from the main specification is that EHR exposure increases patient count by 28. While most specifications yield positive estimates, about a third of the specifications have a confidence interval that includes zero. It doesn't seem as though any specific change is driving the null result, so I hypothesize that it is due to the reduction in observations due to data limiting. The average of all of the confidence intervals is 7 to 23, indicating that a positive effect on patient count is reasonable. 
+
 \begin{figure}[ht]
     \centering
     \caption{Outcome: Patient Count}
     \includegraphics[scale=.6]{Objects/patient_chart.pdf}
     \label{fig:pat_chart}
 \end{figure}
+
+Lastly, I examine a chart of estimates for different specifications attempting to capture the effect of EHR exposure on claims per patient. My main finding is that EHR exposure increases claims per patient by around .3. However, various robustness checks reveal that this is overestimated. That is supported in this specification chart as well, where around half of the estimated confidence intervals include zero. Thus, I make no conclusion that EHR exposure increases claims per patient. 
 
 \begin{figure}[ht]
     \centering
@@ -576,7 +582,7 @@ There is a robust recent literature considering the issues with estimating heter
 
 Before I present these estimators, I present results from a two way fixed effects setup that may suffer bias from negative weighting. Specifically, I estimate the following equation:
 $$\text{outcome}_{i,t}=\sum_{j=-4}^{-2} \text{rel\_year}_{j} + \sum_{j=0}^{4} \text{rel\_year}_{j} + \delta_i + \gamma_t,$$
-where outcome$_{i,t}$ is one of the six outcomes discussed previously, rel\_year$_j$ is an indicator equal to 1 if year $t$ is $j$ years relative to expansion, $\delta_i$ are physician fixed effects, and $\gamma_t$ are year fixed effects.
+where outcome$_{i,t}$ is one of the five outcomes discussed previously, rel\_year$_j$ is an indicator equal to 1 if year $t$ is $j$ years relative to expansion, $\delta_i$ are physician fixed effects, and $\gamma_t$ are year fixed effects.
 These results from each outcome are presented in Figure \ref{fig:twfe}. These results show similar patterns to the main specification, with slight variations in magnitude. 
 
 \begin{figure}
@@ -589,43 +595,43 @@ These results from each outcome are presented in Figure \ref{fig:twfe}. These re
     \caption*{\footnotesize{\textit{Notes:} Event study plots from two way fixed effects estimation are shown for each outcome variable.}}
 \end{figure}
 
-One method that addresses issues with the TWFE specification by differencing out fixed effects is established in \citeauthor{gardner2021two} (\citeyear{gardner2021two}). This approach is commonly known as two stage difference in differences and is very clever. However, the approach requires a group of never-treated units as the comparison group, a drawback for my study in that I remove all never-treated units to utilize all years of MD-PPAS data and because never-treated hospitals are likely compositionally different from those treated in the majority of the sample. Nevertheless, I limit the years of data to 2009-2015 and present estimates of this estimator in Figure \ref{fig:esimators}. Generally, the results have the same sign with a slightly larger magnitude, driven by the inclusion of never-treated units. 
+One method that addresses issues with the TWFE specification by differencing out fixed effects is established in \citeauthor{gardner2021two} (\citeyear{gardner2021two}). This approach is commonly known as two stage difference in differences and is very clever. However, the approach requires a group of never-treated units as the comparison group, a drawback for my study in that I remove all never-treated units to utilize all years of MD-PPAS data, and because never-treated hospitals are likely compositionally different from those treated in the majority of the sample. Nevertheless, I limit the years of data to 2009-2015 and present estimates of this estimator in Figure \ref{fig:estimators}. Generally, the results have the same sign with a slightly larger magnitude, driven by the inclusion of never-treated units. 
 
 \begin{figure}[t!]
 \begin{subfigure}{0.48\textwidth}
 \caption{Retire}
 \includegraphics[width=\linewidth]{Objects/retire_est_plot.pdf}
-\label{fig:a}
+\label{fig:a1}
 \end{subfigure}\hspace*{\fill}
 \begin{subfigure}{0.48\textwidth}
 \caption{Fraction of Patients in Office}
-\includegraphics[width=\linewidth]{Objects/frac_office_est_plot.pdf}
-\label{fig:b}
+\includegraphics[width=\linewidth]{Objects/office_frac_est_plot.pdf}
+\label{fig:b1}
 \end{subfigure}
 
 \medskip
 \begin{subfigure}{0.48\textwidth}
 \caption{Indicator for Office }
-\includegraphics[width=\linewidth]{Objects/office_ind_est_plot.pdf}
- \label{fig:c}
+\includegraphics[width=\linewidth]{Objects/office_in_est_plot.pdf}
+ \label{fig:c1}
 \end{subfigure}\hspace*{\fill}
 \begin{subfigure}{0.48\textwidth}
-\caption{Change Zip Code} 
-\includegraphics[width=\linewidth]{Objects/patient_count_est_plot.pdf}
-\label{fig:d}
+\caption{Patient Count} 
+\includegraphics[width=\linewidth]{Objects/patient_est_plot.pdf}
+\label{fig:d1}
 \end{subfigure}
 
 \medskip
 \begin{subfigure}{0.48\textwidth}
-\caption{Patient Count} 
-\includegraphics[width=\linewidth]{Objects/claimperpatient_est_plot.pdf}
-\label{fig:e}
+\caption{Claims Per Patient} 
+\includegraphics[width=\linewidth]{Objects/claim_est_plot.pdf}
+\label{fig:e1}
 \end{subfigure}\hspace*{\fill}
 
 \caption{Different Estimators} \label{fig:estimators}
 \end{figure}
 
-Another estimation method established first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and "clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:esimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
+Another estimation method first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and ``clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:estimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
 
 
 
@@ -633,7 +639,7 @@ Another estimation method established first used by \citeauthor{cengiz2019effect
 
 \section{Heterogeneity Analysis}
 
-The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. those who typically work at large hospitals. These average treatment effects are shown in Figure \ref{fig:1}. For most outcomes, the results do not differ along these dimensions. The only outcome for which the estimate changes sign is the indicator for whether the physician works in an office setting. Physicians in an urban area are less likely to work in an office after EHR exposure, while rural physicians are more likely to work in an office after EHR exposure, but the sign switch does not hold when looking at the hospital size parallel. This results is interesting and may be driven by differing physician-hospital relationships. I leave further investigation to future research. 
+The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. those who typically work at large hospitals. These average treatment effects are shown in Figure \ref{fig:1}. The results do not differ along these dimensions. This is fascinating in that technology is creating these adverse effects across completely different practice environments.
 
 
 \begin{figure}[t!]
@@ -655,22 +661,17 @@ The main analysis focuses on the differential effects of technology for older vs
  \label{fig:c}
 \end{subfigure}\hspace*{\fill}
 \begin{subfigure}{0.48\textwidth}
-\caption{Change Zip Code} 
-\includegraphics[width=\linewidth]{Objects/change_zip_heterog.pdf}
+\caption{Patient Count} 
+\includegraphics[width=\linewidth]{Objects/patient_heterog.pdf}
 \label{fig:d}
 \end{subfigure}
 
 \medskip
 \begin{subfigure}{0.48\textwidth}
-\caption{Patient Count} 
-\includegraphics[width=\linewidth]{Objects/patient_heterog.pdf}
+\caption{Claims Per Patient} 
+\includegraphics[width=\linewidth]{Objects/claim_per_patient_heterog.pdf}
 \label{fig:e}
 \end{subfigure}\hspace*{\fill}
-\begin{subfigure}{0.48\textwidth}
-\caption{Claim per Patient}
-\includegraphics[width=\linewidth]{Objects/claim_per_patient_heterog.pdf}
- \label{fig:f}
-\end{subfigure}
 
 \caption{Heterogeneity Analysis} \label{fig:1}
 \end{figure}
