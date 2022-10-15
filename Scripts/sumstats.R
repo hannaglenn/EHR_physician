@@ -307,12 +307,13 @@ sample <- AHAmainsurvey %>%
 AHA_sample <- AHAmainsurvey %>%
   left_join(sample,by="HospNPI") %>%
   filter(sample==1) %>%
-  select(-sample) 
+  select(-sample) %>%
+  mutate(EHR_partial=ifelse(EHLTH==1 | EHLTH==2,1,0))
 
 
 
 
-panelview(AHA_sample, Y=NULL,D="EHR", index=c("HospNPI","year"), axis.lab="time", by.timing=TRUE) +
+panelview(AHA_sample, Y=NULL,D="EHR_partial", index=c("HospNPI","year"), axis.lab="time", by.timing=TRUE) +
   theme(text=element_text(size=15))
 
 ggsave("Objects/hosp_treat.pdf", width=10, height=12, units = "in")
