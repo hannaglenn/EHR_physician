@@ -9,6 +9,7 @@ library(HonestDiD)
 library(mvtnorm)
 
 
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 
 ### --------------------  Sensitivity Analysis --------------------------
@@ -22,12 +23,14 @@ library(mvtnorm)
 # In this portion, I only consider "retire" as the dependent outcome and I compare estimators. 
 
 # Read in the main data created in "data5_MDPPAS.R"
-Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
+Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds")) %>%
+  mutate(DocNPI=as.numeric(DocNPI))
+
 
 
 
 ## DIFFERENT ESTIMATORS ############################################################################################
-varlist <- list("retire", "pos_office", "work_in_office", "change_zip", "npi_unq_benes", "claim_per_patient")
+varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient")
 
 # Stacked Regression ###
 for (d in 2010:2015){
@@ -50,6 +53,7 @@ models_stacked <- lapply(varlist, function(x){
         data=stacked_data_1)
 })
 
+
 ATT_stacked <- lapply(models_stacked, function(x){
   c(x$fml[[2]],
     round(x[["coefficients"]][["treated_unit:rel_p1"]],5), 
@@ -58,7 +62,12 @@ ATT_stacked <- lapply(models_stacked, function(x){
 })
 
 stacked_values <- as.data.frame(do.call(rbind, ATT_stacked)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Specification=V4)
+  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Specification=V4) %>%
+  mutate(Variable=ifelse(Variable=="retire", "Retire",Variable),
+         Variable=ifelse(Variable=="pos_office", "Frac. Patients in Office",Variable),
+         Variable=ifelse(Variable=="work_in_office", "Work in Office",Variable),
+         Variable=ifelse(Variable=="npi_unq_benes", "Number Patients",Variable),
+         Variable=ifelse(Variable=="claim_per_patient", "Claims per Patient",Variable))
 
 
 # 2sDid #####
@@ -85,92 +94,51 @@ ATT_2sdid <- lapply(agg_2sdid, function(x){
     "Two-Stage DiD")
 })
 
-ATT_2sdid[[1]][[1]] <- "retire"
-ATT_2sdid[[2]][[1]] <- "pos_office"
-ATT_2sdid[[3]][[1]] <- "work_in_office"
-ATT_2sdid[[4]][[1]] <- "change_zip"
-ATT_2sdid[[5]][[1]] <- "npi_unq_benes"
-ATT_2sdid[[6]][[1]] <- "claim_per_patient"
+ATT_2sdid[[1]][[1]] <- "Retire"
+ATT_2sdid[[2]][[1]] <- "Frac. Patients in Office"
+ATT_2sdid[[3]][[1]] <- "Work in Office"
+ATT_2sdid[[4]][[1]] <- "Number Patients"
+ATT_2sdid[[5]][[1]] <- "Claims per Patient"
 
 tsdid_values <- as.data.frame(do.call(rbind, ATT_2sdid)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Specification=V4)
 
 estimators <- rbind(stacked_values, tsdid_values,
-                    c("retire", .0026, .00095, "Main (CS)"),
-                    c("pos_office", .0076, .0035, "Main (CS)"),
-                    c("work_in_office", .070, .0081, "Main (CS)"),
-                    c("change_zip", .039, .0073, "Main (CS)"),
-                    c("npi_unq_benes", 27.93, 4.89, "Main (CS)"),
-                    c("claim_per_patient", .33, .085, "Main (CS)")) %>%
+                    c("Retire", .0026, .00095, "Main (CS)"),
+                    c("Frac. Patients in Office", .0076, .0035, "Main (CS)"),
+                    c("Work in Office", .070, .0081, "Main (CS)"),
+                    c("Number Patients", 27.93, 4.89, "Main (CS)"),
+                    c("Claims per Patient", .33, .085, "Main (CS)")) %>%
   rename(coef=ATT, se=SE) %>%
   mutate(`Stacked Regression`=ifelse(Specification=="Stacked Regression",1,0),
          `Two-Stage DiD`=ifelse(Specification=="Two-Stage DiD",1,0),
          `Main (CS)`=ifelse(Specification=="Main (CS)",1,0)) %>%
   select(-Specification) %>%
   mutate(coef=as.numeric(coef),
-         se=as.numeric(se)) 
+         se=as.numeric(se)) %>%
+  mutate(Estimator=ifelse(`Stacked Regression`==1,"Stacked Regression",NA),
+         Estimator=ifelse(`Two-Stage DiD`==1,"Two-Stage DiD", Estimator),
+         Estimator=ifelse(`Main (CS)`==1,"Main (CS)", Estimator)
+  ) %>%
+  mutate(Variable=as.character(Variable)) %>%
+  mutate(mean=ifelse(Variable=="Retire",.03,NA),
+         mean=ifelse(Variable=="Frac. Patients in Office",.08,mean),
+         mean=ifelse(Variable=="Work in Office",.27,mean),
+          mean=ifelse(Variable=="Number Patients",331,mean),
+         mean=ifelse(Variable=="Claims per Patient",4.09,mean)) %>%
+  mutate(estimate_perc=coef/mean) %>%
+  mutate(upper=(coef+(1.96*se))/mean,
+         lower=(coef-(1.96*se))/mean)
+estimators$Variable <- factor(estimators$Variable, levels=c("Retire", "Frac. Patients in Office", "Work in Office", "Number Patients", "Claims per Patient"))
 
 
-est_retire_data <- estimators %>%
-  filter(Variable=="retire") %>%
-  select(-Variable) 
+dodge <- position_dodge(width=0.5)
+ggplot(data=estimators, aes(x=Variable, y=estimate_perc, color=Estimator)) + geom_point(position = dodge) +
+  geom_errorbar(aes(ymax=upper,ymin=lower, color=Estimator),size=.5, position = dodge, width=.2) + 
+  scale_colour_manual(values=cbbPalette) + theme_bw() + geom_hline(yintercept=0, linetype="dashed") +
+  xlab("\nVariable") + ylab("Estimate and 95% CI\n")
 
-est_frac_office_data <- estimators %>%
-  filter(Variable=="pos_office") %>%
-  select(-Variable)
-
-est_indoffice_data <- estimators %>%
-  filter(Variable=="work_in_office") %>%
-  select(-Variable)
-
-est_zip_data <- estimators %>%
-  filter(Variable=="change_zip") %>%
-  select(-Variable)
-
-est_patient_data <- estimators %>%
-  filter(Variable=="npi_unq_benes") %>%
-  select(-Variable)
-
-est_claim_data <- estimators %>%
-  filter(Variable=="claim_per_patient") %>%
-  select(-Variable)
-
-source(paste0(function_path,"spec_chart_function.R"))
-
-labels <- list("Stacked Reg.", "Two-Stage DiD", "Main (CS)")
-
-schart(est_retire_data, 
-       order="asis", labels = labels,
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n",
-       highlight=3) 
-schart(est_frac_office_data, 
-       order="asis", labels, highlight=3,
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n") 
-schart(est_indoffice_data, 
-       order="asis", labels, highlight=3,
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n") 
-schart(est_zip_data, 
-       order="asis", labels, highlight=3,
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n") 
-schart(est_patient_data, 
-       order="asis", labels, highlight=3,
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n") 
-schart(est_claim_data, 
-       order="asis", labels, highlight=3,
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n") 
-
+ggsave("Objects/estimators_plot.pdf", width=8, height=5, units = "in")
 
 
 ## TWO WAY FIXED EFFECTS ------------------------------------- ####
@@ -214,7 +182,6 @@ coefs <- lapply(twfe_models, function(x){
       mutate(title=ifelse(title=="retire", "Outcome: Retire",title),
              title=ifelse(title=="pos_office", "Outcome: Fraction of Patients Seen in Office",title),
              title=ifelse(title=="work_in_office", "Outcome: Works in an Office",title),
-             title=ifelse(title=="change_zip", "Outcome: Change Zip Codes",title),
              title=ifelse(title=="npi_unq_benes", "Outcome: Number of Patients",title),
              title=ifelse(title=="claim_per_patient", "Outcome: Number of Claims",title))
       
@@ -243,7 +210,6 @@ twfe_finalplot <- ggarrange(graphs[[1]]+ rremove("ylab") + rremove("xlab"),
           graphs[[3]] + rremove("ylab") + rremove("xlab"),
           graphs[[4]] + rremove("ylab") + rremove("xlab"),
           graphs[[5]] + rremove("ylab") + rremove("xlab"),
-          graphs[[6]] + rremove("ylab") + rremove("xlab"),
           ncol=2, nrow=3,
           common.legend = TRUE,
           labels=NULL,

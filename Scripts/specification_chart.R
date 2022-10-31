@@ -835,14 +835,16 @@ labels <- list("Perc. Inpatient Threshold: "=c("50% ", "70% ", "90% "),
 mu  <- mean(chart_data_frame$coef) # mean of all coefficients
 sd  <- sd(chart_data_frame$coef)
 
+
+
 schart(chart_data_frame, labels, highlight=117, 
        order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
+       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
        col.est=c("grey70","#009E73"),
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
+legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
 pdf(file="retire_chart.pdf", )
 
 
@@ -901,12 +903,12 @@ sd  <- sd(chart_data_frame$coef)
 
 schart(chart_data_frame, labels, highlight=117, 
        order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
+       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
        col.est=c("grey70","#009E73"),
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
+legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
 
 
 
@@ -963,12 +965,12 @@ sd  <- sd(chart_data_frame$coef)
 
 schart(chart_data_frame, labels, highlight=117, 
        order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
+       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
        col.est=c("grey70","#009E73"),
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
+legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
 
 
 # CHANGE ZIP SPECIFICATION CHART ---------------------------------------------- ####
@@ -1084,12 +1086,12 @@ sd  <- sd(chart_data_frame$coef)
 
 schart(chart_data_frame, labels, highlight=117, 
        order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
+       band.ref=c(mu+(sd), mu-(sd)),
        col.band.ref="#E69F00",
        col.est=c("grey70","#009E73"),
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
+legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
 
 
 Subsets_Data <- lapply(Subsets_Data, function(x){
@@ -1152,12 +1154,12 @@ sd  <- sd(chart_data_frame$coef)
 
 schart(chart_data_frame, labels, highlight=117, 
        order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
+       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
        col.est=c("grey70","#009E73"),
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
+legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
 
 
 
