@@ -57,18 +57,18 @@ EHRs are computer systems that house digital medical records and have additional
 
 Physicians, as the primary users of EHRs, play an important role in whether the expected benefits come to fruition. Daily tasks change drastically when a new system is put in place; some physicians reported that when using EHRs they are less satisfied with their job and have higher stress levels. Senior physicians in particular “loathe the cumbersome, time-consuming data entry that comes with using EHR.” (\cite{CollierBurnout}). The frustration of using a new technology raises the cost of working in settings that use it, which may lead physicians on the margin to make behavioral changes such as exiting the labor market altogether or shifting towards alternative work settings. However, the extent to which this frustration actually imposes a meaningful cost is unknown, making physician response an empirical question. Using a difference-in-differences research design, I estimate the effect of hospital EHR implementation on individual physician labor market choices, and I highlight the differences in effects for older vs. younger physicians.
 
-I form a panel of physicians who work in hospitals, hereafter referred to as hospitalists or physicians interchangeably, which spans from 2009-2017. Using Centers for Medicare and Medicaid Services (CMS) Shared Patient Data, I identify hospital-physician pairs. Then, I use the American Hospital Association (AHA) Survey to determine which hospitals implement an EHR, and thus connect hospitalists to EHR use. Finally, I use Medicare Data on Provider Practice and Specialty (MD-PPAS) for detailed information on the patients seen by each hospitalist. The independent variable of interest is a binary treatment variable capturing exposure to an EHR. I estimate group time treatment effects of EHR exposure on the following physician decisions: (1) retirement, measured based on zero or missing patients in all future years of the panel, (2) where to physically work, measured by fraction of patients seen in an office setting and location of the physician office, (3) number of patients seen, and (4) claims filed per patient. 
+I use data on a panel of physicians who work in hospitals, hereafter referred to as hospitalists or physicians interchangeably, which spans from 2009-2017. Using Centers for Medicare and Medicaid Services (CMS) Shared Patient Data, I identify hospital-physician pairs. Then, I use the American Hospital Association (AHA) Survey to determine which hospitals implement an EHR, and thus connect hospitalists to EHR use. Finally, I use Medicare Data on Provider Practice and Specialty (MD-PPAS) for detailed information on the patients seen by each hospitalist. The independent variable of interest is a binary treatment variable capturing exposure to an EHR. I estimate group-time treatment effects of EHR exposure on the following physician decisions: (1) retirement, measured based on zero or missing patients in all future years of the panel, (2) where to physically work, measured by fraction of patients seen in an office setting and location of the physician office, (3) number of patients seen, and (4) claims filed per patient. 
 
-This paper contributes to the literature's understanding of how health information technology affects health care. There is robust empirical research examining the effect of EHRs on patient outcomes and hospital costs, but these studies largely use data prior to the subsidization of meaningful EHR use. Despite a large number of case studies that find generally positive effects in improved patient outcomes and decreased cost (surveyed in \cite{Buntin2011TheResults}), empirical work has found a mixture of results: outcomes for median patients do not change as a result of EHRs (\cite{Agha2014TheCare}, \cite{McCullough2016HealthCoordination}, \cite{Meyerhoefer}) while newborns and severe patients experience improvement in health outcomes (\cite{Miller2009}, \cite{Freedman2015}, \cite{McCullough2016HealthCoordination}), and that hospital costs only decrease 6 years after implementation, if at all (\cite{Agha2014TheCare}, \cite{dranove2014trillion}). More relevant to individual physicians' productivity, a number of case studies consider the effect of EHRs on productivity. One study finds that nursing home productivity increases after adopting health IT (\cite{Hitt2016}), but another finds that physician productivity decreases by 11 percent due to EHRs being adopted in primary-care sites (\cite{Meyerhoefer}).  
+This paper contributes to our understanding of how health information technology affects health care. There is robust empirical research examining the effect of EHRs on patient outcomes and hospital costs, but these studies largely use data prior to the subsidization of meaningful EHR use. Despite a large number of case studies that find generally positive effects in improved patient outcomes and decreased cost (surveyed in \cite{Buntin2011TheResults}), economic work has found a mixture of results: outcomes for median patients do not change as a result of EHRs (\cite{Agha2014TheCare}, \cite{McCullough2016HealthCoordination}, \cite{Meyerhoefer}) while newborns and severe patients experience improvement in health outcomes (\cite{Miller2009}, \cite{Freedman2015}, \cite{McCullough2016HealthCoordination}), and that hospital costs only decrease 6 years after implementation, if at all (\cite{Agha2014TheCare}, \cite{dranove2014trillion}). More relevant to individual physicians' productivity, a number of case studies consider the effect of EHRs on productivity. One study finds that nursing home productivity increases after adopting health IT (\cite{Hitt2016}), but another finds that physician productivity decreases by 11 percent due to EHRs being adopted in primary-care sites (\cite{Meyerhoefer}).  
 
 I expand this literature, first by considering physicians as the mechanism by which EHRs do not affect health care, which, to my knowledge, has not yet been examined. This is the first empirical study that connects EHR implementation to physician retirement and practice location, and focuses on the difference in response across age groups. Further, I improve on the health information technology literature by considering the primary time period in which EHRs were rapidly implemented. This provides sufficient variation in the timing of implementation and ensures the EHRs are meaningful and are likely affecting physicians' daily life. Similarly to past studies, I consider EHR implementation as a treatment variable in a difference-in-difference framework. I improve on this strategy by estimating average group time treatment effects for multiple years after implementation, which avoids common problems that arise in typical two way fixed effects estimation with heterogeneous effects, and further provides insight to short vs. long term effects.  
 
-Early research on the inputs to physician retirement decisions found that the most influential factors are personal and financial matters, and that physicians care about their work environment (specifically in the context of managed care organizations), but do not necessarily retire early because of it (\cite{Bahrami2002}). Contrary to this result, I find that EHR implementation led to a 20\% increase relative to the average retirement for this age group. Physicians less than 60 were 7\% more likely to retire after exposure, possibly pointing to career switching. For those who did not retire, I find that physicians were 30\% more likely to see patients in an office setting the same year as EHR exposure. I find that patient count increases by at least 20 patients per year, and the increase is large enough that it is not entirely driven by a redistribution of patients from those who retired. 
+Early research on the inputs to physician retirement decisions found that the most influential factors are personal and financial matters, and that physicians care about their work environment (specifically in the context of managed care organizations), but do not necessarily retire early because of it (\cite{Bahrami2002}). Contrary to this result, I find that EHR implementation led to a 20\% increase in retirement relative to the average retirement for this age group. Physicians less than 60 were 7\% more likely to retire after exposure, possibly pointing to career switching. For those who did not retire, I find that physicians were 30\% more likely to see patients in an office setting the same year as EHR exposure. I find that the patient count increases by at least 20 patients per year, and the increase is large enough that it is not entirely driven by a redistribution of patients from those who retired. 
 
 Two key assumptions underlie the main analysis. First, I assume that physicians are constrained to use the technology implemented in their work setting. To test this assumption, I investigate the existence of hospital employees with the purpose of using an EHR on behalf of a physician, which I refer to as data assistants. If data assistants are used to ease the burden of EHR use for physicians, the results are at least partially driven by their existence. I find that the majority of hiring of data assistants took place in 2013-2014, a two year delay from the vast amount of EHR implementation. My main results are not sensitive to the exclusion of these years, and estimating the effect of EHR implementation only in hospitals without data assistants yields noisy, but similar, results. Second, I assume the decision for hospitals to implement EHRs is exogenous to individual physicians. That is, a physician does not choose their own EHR exposure. While this assumption is reasonable in many settings, there may be instances where a physician is involved in hospital decision making. For this reason, I also consider a sensitivity analysis in which I limit the sample only to hospitals where vertical integration between physician and the hospital is low, as this indicates a low likelihood that EHR implementation is endogenous. The results of the additional analyses indicate that for most outcomes, my main findings are not sensitive to endogeneity concerns stemming from joint EHR decision making among physicians and hospitals.
 
 
-The results suggest that EHR implementation may have intensified access to care issues for patients, and that there was a surge of experienced physicians who left the labor force and were no longer available to influence early career physicians. Physicians are also likely to change their behavior due to adverse work environments. Given the unintended consequences found here, policymakers should carefully consider how workers may respond to policies that affect their work environment. 
+The results suggest that there was a surge of experienced physicians who left the labor force or hospitals and were no longer available to influence early career physicians. Thus, EHR implementation may have intensified access to care issues for patients. The unintended consequences highlight the need for careful consideration of policies that affect work environment.  
 
 
 
@@ -76,7 +76,7 @@ The results suggest that EHR implementation may have intensified access to care 
 \section{Institutional Details}
 
 \subsection{Background on EHRs}
-EHRs have been an important feature of health care since the 1980s. Early in the technology's existence, health care professionals perceived the technology as a complement to paper records, primarily deployed by large academic medical centers to improve efficiency in billing and/or scheduling. Physicians did not interact directly with these early-generation EHRs, and thus were not drastically affected by their implementation. As innovation made computers more portable, the usability of EHRs increased, creating what is known as the ``physician workspace": a computer station for a physician to interface directly with an EHR to record patient updates. Despite usability, physicians kept the view that EHRs were purely complementary to paper due to burdensome data entry. Automation in data entry was non-existent, making it extremely time consuming for the user. 
+EHRs have been an important feature of health care since the 1980s. Early in the technology's existence, health care professionals perceived the technology as a complement to paper records, primarily deployed by large academic medical centers to improve efficiency in billing and/or scheduling. Physicians did not interact directly with these early-generation EHRs, and thus were not drastically affected by their implementation. As innovation made computers more portable, the usability of EHRs increased, creating what is known as the ``physician workspace": a computer station for a physician to interface directly with an EHR to record patient updates. Despite usability, physicians kept the view that EHRs were purely complementary to paper due to burdensome data entry. Automation in data entry was non-existent, making it extremely time consuming for the user (\cite{evans2016electronic}). 
 
 The HITECH Act was passed in 2009, designating \$27 billion in government subsidies to entities who used EHRs according to certain guidelines. The guidelines included having at least 80\% of patients in the system, regularly recording answers to specific questions, and ensuring privacy. The U.S. allocated subsidies according to stages: stage 1 (2011) focused on data collection, stage 2 (2012) extended to using the EHR for care support, stage 3 (2014) extended to data sharing between practices. This program was successful in  spurring EHR adoption, shown in a 75 percentage point increase in the number of hospitals with EHRs from 2009 to 2015 (\cite{stats}). Figure \ref{fig:meanuse} shows a geographical comparison of U.S. hospitals who have received stage 1 of the meaningful use subsidy in 2011 vs. 2013, revealing the nationwide and rapid expansion of technology. 
 
@@ -84,21 +84,12 @@ The HITECH Act was passed in 2009, designating \$27 billion in government subsid
     \centering
     \captionsetup{width=.6\linewidth}
     \caption{Hospitals Receiving Meaningful Use Stage 1 Subsidy}
-    \includegraphics[scale=.6]{graphics/QS-Hospitals-Receiving-Payments-for-MU-and-Adoption.png}
+    \includegraphics[scale=.5]{graphics/QS-Hospitals-Receiving-Payments-for-MU-and-Adoption.png}
     \caption*{Source: HealthIT.gov}
     \label{fig:meanuse}
 \end{figure}
 
-On a daily basis, a physician spends approximately 23.7\%, 17\%, and 15.5\% of their time on documentation, chart review, and inbox management, respectively which are the most time consuming portions of EHR use (\cite{arndt2017tethered}). In all, if a physician works for 12 hours, they spend roughly 3.2 hours with patients and 5.9 hours interfacing with an EHR, an example of which is shown in Figure \ref{fig:EPIC}. Despite a large amount of time spent with them, physicians still continue to report frustration over EHR use. The most time consuming functions are also reported as the most frustrating (\cite{dymek2021building}). A physician still likely spends almost 2 hours a day managing their inbox: deleting duplicate messages, sifting through messages meant for other members of a care team, and searching relevant information (\cite{dymek2021building}). Another common issue physicians face is the lack of usability of EHR systems, that functions either take minutes to locate or load. Hospitals often provide training upon adoption, but rapid system upgrades and changes make familiarity with the system difficult. 
-
-\begin{figure}[ht]
-    \centering
-    \captionsetup{width=.4\linewidth}
-    \caption{Screenshot of EHR System}
-    \includegraphics[scale=.4]{graphics/epic-ehr-screenshot.jpg}
-    \includegraphics[scale=.11]{graphics/EHRimage2.jpg}
-    \label{fig:EPIC}
-\end{figure}
+On a daily basis, a physician spends approximately 23.7\%, 17\%, and 15.5\% of their time on documentation, chart review, and inbox management, respectively, which are the most time consuming portions of EHR use (\cite{arndt2017tethered}). In all, if a physician works for 12 hours, they spend roughly 3.2 hours with patients and 5.9 hours interfacing with an EHR. Despite a large amount of time spent with them, physicians still continue to report frustration over EHR use. The most time consuming functions are also reported as the most frustrating (\cite{dymek2021building}). A physician still likely spends almost 2 hours a day managing their inbox: deleting duplicate messages, sifting through messages meant for other members of a care team, and searching relevant information (\cite{dymek2021building}). Another common issue physicians face is the lack of usability of EHR systems, that functions either take minutes to locate or load. Hospitals often provide training upon adoption, but rapid system upgrades and changes make familiarity with the system difficult. 
 
 
 \subsection{EHR and Physician Labor Markets}
@@ -109,7 +100,7 @@ This section serves to outline the potential responses of hospitalists to EHRs b
 
 Workers in developed countries tend to plan for formal retirement well in advance. Generally, an exogenous shock to a worker's environment is not expected to change retirement age due to the amount of planning necessary to formally leave the labor force. Classic retirement models structure the decision of retirement by maximizing expected lifetime utility based on future earnings and retirement benefits, or choosing to prolong retirement only if the expected earnings gain from doing so is positive (\cite{gustman1986disaggregated}, \cite{stock1990pension}). However, physicians typically make this decision differently than workers in other industries. Most physicians plan to retire at age 60, but do not actually retire until age 69 (\cite{collier2017challenges}). When the time to retire comes, many physicians hesitate to abandon patients they have seen over the course of their career. The decision to delay retirement is not financial, but altruistic. Thus, retiring may be in a physician's choice set years before the realized decision to leave the labor force. 
 
-It is important to note that age is the most important factor in the decision to retire, implying that a 35 year old physician has very different incentives than a 65 year old physician, and a technology shock will affect the age groups differently. First, I consider physicians already of retirement age ($>=60$) when a new technology is implemented. While payment schemes, wealth, and retirement benefits certainly impact retirement since, on average, those in this age group have already prepared financially to retire. Then, a physician will only retire if the utility from working is less than the utility from retiring, where utility depends on job satisfaction and personal life factors. Exogenous EHR implementation affects the decision to retire through job satisfaction. If EHRs impose a burden on daily tasks, there is an inverse relationship between EHR exposure and utility from continuing to work. If EHRs make daily tasks easier, there is a positive relationship. Thus, for a physician indifferent between retiring and continuing to work, EHRs induce retirement if they impose a cost in terms of job satisfaction, or induce continued working life if they impose a benefit to job satisfaction. Media articles focusing on interviews with physicians suggest that the implementation of EHRs did in fact lead to retirement in older physicians (\cite{ringel_2019}, \cite{loria_2020}). 
+It is important to note that age is the most important factor in the decision to retire, implying that a 35 year old physician has very different incentives than a 65 year old physician, and a technology shock will affect the age groups differently. First, I consider physicians already of retirement age ($>=60$) when a new technology is implemented. While payment schemes, wealth, and retirement benefits certainly impact retirement since, on average, those in this age group have already prepared financially to retire. Then, a physician will only retire if the utility from working is less than the utility from retiring, where utility depends on job satisfaction and personal life factors. Exogenous EHR implementation affects the decision to retire through job satisfaction. If EHRs impose a burden on daily tasks, there is an inverse relationship between EHR exposure and utility from continuing to work. If EHRs make daily tasks easier, there is a positive relationship. Thus, for a physician indifferent between retiring and continuing to work, EHRs induce retirement if they impose a cost in terms of job satisfaction, or induce continued working life if they impose a benefit to job satisfaction. Additionally, if EHRs cause physicians to substitute time away from patients and they receive less reimbursement, leisure becomes relatively cheaper, leading to retirement. Media articles focusing on interviews with physicians suggest that the implementation of EHRs did in fact lead to retirement in older physicians (\cite{ringel_2019}, \cite{loria_2020}). 
 
 Formal retirement (leaving the labor force altogether) is not the only way for physicians to transition out of a clinical role. There are opportunities for physicians of any age to switch careers towards administrative roles, teaching, consulting, or hospital management. While it is unlikely that early career physicians are formally retiring, physicians of any age could be career switching. This decision is impacted similarly to the above discussion regarding formal retirement, where a physician who is indifferent between clinical work and career switching can be affected one way or the other based on how an EHR impacts job satisfaction. As I discuss in Section \ref{sec:data}, I only observe whether a physician stops seeing Medicare patients, not whether they retire or career switch. Thus, the term retirement for the purpose of this paper indicates no longer seeing patients, and makes no assertion about what the physician does afterwards. A physician is said to retire in a given year only if it is the first year in which the physician has no future Medicare claims.
 
@@ -139,7 +130,7 @@ I construct a physician-level panel spanning from 2009-2017 which measures physi
 
 \subsection{Sample Construction}
 
-The Medicare Data on Provider Practice and Specialty (MD-PPAS) is a database of physicians which details claim counts, physician specialty, and practice location from 2009-2017. Variables included are physician NPI, primary and secondary specialties, patient count and total billing counts, and fraction of patients seen in different settings. I only include physicians who reported their primary specialty as hospitalist (physician who self-identifies as hospitalist or has 90\% of patients in inpatient setting), internal medicine, general practice or family practice in at least one year. Since the focus of the analysis is physicians working in hospitals, I also drop physicians with less than 70\% of patients in a hospital setting in all years, and I drop physicians with insufficient claim counts to show indications of behavior. I use this data to construct the dependent variables for my analysis. Generally, these include the decision to retire (leave clinical work), switch to a different work setting, number of patients seen, and overall billing activity. I describe these outcome variables and their construction in detail in Section \ref{sec:outcome}.
+The Medicare Data on Provider Practice and Specialty (MD-PPAS) is a database of physicians which details claim counts, physician specialty, and practice location from 2009-2017. Variables included are physician NPI, primary and secondary specialties, patient count and total billing counts, and fraction of patients seen in different settings. I only include physicians who reported their primary specialty as hospitalist (physician who self-identifies as hospitalist or has 90\% of patients in inpatient setting), internal medicine, general practice or family practice in at least one year. Since the focus of the analysis is physicians working in hospitals, I also drop physicians with less than 70\% of patients in a hospital setting in all years (I investigate this threshold in Appendix \ref{sec:changes}), and I drop physicians with insufficient claim counts to show indications of behavior. I use this data to construct the dependent variables for my analysis. Generally, these include the decision to retire (leave clinical work), switch to a different work setting, number of patients seen, and overall billing activity. I describe these outcome variables and their construction in detail in Section \ref{sec:outcome}.
 
 
 CMS Shared Patient data records annual information on frequency of billing associated with the same patient across providers within a given time period. These data are available from 2009 to 2015. For example, if a primary care physician refers a patient to a specialist, then those two physicians have that particular shared patient in common. The number of shared patients are collected in 30, 90, or 180 day intervals. I focus on the 30 day interval, and I employ this data to detect physicians who work closely with hospitals. I limit the entities by tax-code to only include shared patients for physician-hospital pairs, where the physicians in these pairs match the physicians from MD-PPAS. The types of physicians are already limited to primary care, but there still may be office-based primary care physicians in the shared patient data. Therefore, I limit the sample of pairs based on a threshold of same day patients which depends on the number of years the physician appears in the data. I only include physician-hospital pairs who have non-missing data with at least 30 shared patients per year.
@@ -155,7 +146,7 @@ The first dependent variable I consider is the decision for a physician to stop 
 $$\text{retire}_{it}=\mathbbm{1}\{FC_{it}=0 \text{ and retire}_{i,t-1}=0\}, $$
 where $FC_{it}=\sum\limits_{j=t+1}^T\text{(claim count)}_{ij}$ is all future claims for physician $i$ in year $t$. Retire is therefore an indicator variable set to one in the first year that a physician has no claim counts at any point in the future. \footnote{Alternatively, I could also define retirement using future number of patients. I use claim count for a more conservative measure of retirement, but using patient count yields identical results. In Appendix \ref{sec:changes}, I limit the sample years to 2009-2015 to assess the robustness of the main retirement definition.}
 
-Next, I consider whether physicians exhibit behavior that suggests they have shifted setting or location of work. I consider the fraction of patients a physician sees in an office-based setting, which is directly available in the data. Then, I construct an indicator variable equal to one if a physician sees any number of patients in an office-based setting, which offers less variation but captures the extensive margin of working in an office. Finally, I consider outcome variables which explore productivity and efficiency, the number of patients seen and claims filed per patient.
+Next, I consider whether physicians exhibit behavior that suggests they have shifted setting or location of work. I consider the fraction of patients a physician sees in an office-based setting, which is directly available in the data. Then, I construct an indicator variable equal to one if a physician sees any positive number of patients in an office-based setting, which offers less variation but captures the extensive margin of working in an office. Finally, I consider outcome variables which explore productivity and efficiency, the number of patients seen and claims filed per patient.
 
 
 \subsection{Summary Statistics}
@@ -175,7 +166,7 @@ In Figure \ref{fig:treatmentgraph}, I present a graph of the variation in treatm
 \centering
 \captionsetup{width=.45\linewidth}
     \caption{Treatment Variables Over Time}
-    \includegraphics[scale=.5]{Objects/sum_stats_year.pdf}
+    \includegraphics[scale=.4]{Objects/sum_stats_year.pdf}
     \label{fig:treatmentgraph}
 \end{figure}
 
@@ -191,15 +182,7 @@ I aggregate the group time estimates over groups to a more familiar event study 
 
 \subsection{Identification Assumptions}
 
-There are several assumptions necessary to identify the parameters of interest, $ATT(g,t)$. First, I assume that treatment is not reversed. That is, once a physician is exposed to an EHR, they cannot be un-exposed. For physicians that do not switch hospitals, this assumption is supported by both the institutional details of hospital EHR implementation and the data itself. An EHR is a costly technology and requires a significant amount of collaboration to implement. A hospital does not have incentive to un-implement an EHR once it is implemented. They may add features or switch vendors, but do not reverse EHR use. This institutional detail is supported by Figure \ref{fig:hosp_treat}, which shows EHR status of a 2\% random sample of hospitals over time.\footnote{Note that out of the 81 hospitals included in the random sample, 4 of them show a reversal of treatment status. Upon further inspection, each of these hospitals show such a reversal due to a discrepancy in the coding of whether the hospital uses an EHR partially or fully. Those who use the EHR partially are coded as not fully implementing an EHR since it is not clear whether physicians in the sample would be exposed yet or not. Hospitals with this discretion are coded as implementing an EHR in the first year that they answered "fully" to the survey question.} When considering the outcomes of patient count and billing activity, it could be that a physician moves from a hospital that uses an EHR to a hospital that does not, affecting the number of claims observed in the data. Thus, I limit the sample of physicians for these outcomes to those who remain with the same set of hospitals throughout the entire period. I discuss this limitation to the data further in Section \ref{sec:patientcount}.
-
-\begin{figure}[ht!]
-    \centering
-    \captionsetup{width=.7\linewidth}
-    \caption{Hospital EHR Adoption Over Time}
-    \includegraphics[scale=.5]{Objects/hosp_treat.pdf}
-    \label{fig:hosp_treat}
-\end{figure}
+There are several assumptions necessary to identify the parameters of interest, $ATT(g,t)$. First, I assume that treatment is not reversed. That is, once a physician is exposed to an EHR, they cannot be un-exposed. For physicians that do not switch hospitals, this assumption is supported by the institutional details of hospital EHR implementation. An EHR is a costly technology and requires a significant amount of collaboration to implement. A hospital does not have incentive to un-implement an EHR once it is implemented. They may add features or switch vendors, but do not reverse EHR use. However, when considering the outcomes of patient count and billing activity, it could be that a physician moves from a hospital that uses an EHR to a hospital that does not, affecting the number of claims observed in the data. Thus, I limit the sample of physicians for these outcomes to those who remain with the same set of hospitals throughout the entire period. I discuss this limitation to the data further in Section \ref{sec:patientcount}.
 
 Second, I assume physicians do not anticipate EHR exposure prior to occurrence. This may be a concern if physicians learn that the system will be implemented and change their behavior beforhand. Generally, even a complex EHR system can be completely set up within a year, and most systems take 6 to 9 months (\cite{uzialko_2021}). Therefore, I proceed in the main specification assuming no anticipation. However, I explore and present results for a one year anticipation period in the specification charts in Appendix \ref{sec:changes}, and I find that accounting for one year of anticipation does not drastically change my findings.  
 
@@ -219,22 +202,40 @@ To interpret these estimators as the causal effect of EHR exposure on various la
 \subsection{Retirement}\label{sec:retire}
 
 
-I present aggregated group time treatment effects of being exposed to an EHR on the likelihood of retirement for the full sample of physicians, as well as split samples for those at least 60 (typical retirement age) and less than 60 years of age in Figure \ref{fig:retirefirst}.\footnote{Alternatively, one could estimate the effect for more age groups and observe the relationship between the overall ATT and age. However, the data is not ideal for more than two age groups since the sample sizes decrease dramatically for certain groups.} These effects are a weighted average of the $ATT(g,t)$ parameters discussed in Section \ref{sec:empstrat}. Being exposed to an EHR leads to a .002 ppt increase in the likelihood of retiring in the first year after exposure, and a .005 ppt increase in the second year after exposure. While numerically small, these effects are statistically and economically meaningful relative to the proportion of physicians who retire in the sample, .03. That is, the effect represents a 7\% (16\% in the second year) increase in the likelihood of retirement relative to the mean. 
+I present aggregated group time treatment effects of being exposed to an EHR on the likelihood of retirement for the full sample of physicians, as well as split samples for those at least 60 (typical retirement age) and less than 60 years of age in Figure \ref{fig:retirefirst}.\footnote{Alternatively, one could estimate the effect for more age groups and observe the relationship between the overall ATT and age. However, the data is not ideal for more than two age groups since the sample sizes decrease dramatically for certain groups.} These effects are a weighted average of the $ATT(g,t)$ parameters discussed in Section \ref{sec:empstrat}. Being exposed to an EHR leads to a .2 ppt increase in the likelihood of retiring in the first year after exposure, and a .5 ppt increase in the second year after exposure. While numerically small, these effects are statistically and economically meaningful relative to the proportion of physicians who retire in the sample, .03. That is, the effect represents a 7\% (16\% in the second year) increase in the likelihood of retirement relative to the mean. 
 
 Even though there is no visual indication of a violation of the parallel trends assumption in the pre-periods, the p-value of a Wald test for pre-trends indicates some evidence for such a violation. In Appendix \ref{sec:pretrends}, I present confidence intervals robust to various specifications of a violation in parallel trends. Due to the rarity of retirement in the sample, the estimate becomes null with any specified variation in the parallel trend assumption. Since the pre-trend does not look strong in the first place, this is not too concerning. I present estimates for the overall $ATT$ under various specifications of the data in Appendix \ref{sec:chart}. The estimate found here falls in the upper range of estimates. All estimates are positive, yet some have confidence intervals that include zero. Closer examination into these estimates reveals that stricter thresholds on the data yield many of the null results. Even with additional noise in the estimates, the average of the upper and lower confidence intervals still indicates a positive effect of EHR exposure of retirement. Thus, the main finding is robust to various specifications.   
+
+\begin{figure}[H]
+\centering
+   \begin{subfigure}[b]{0.3\textwidth}
+   \includegraphics[width=0.8\textwidth]{retire_plot_ages}
+   \caption{}
+   \label{fig:Ng1} 
+\end{subfigure}
+
+\\
+
+\begin{subfigure}[b]{0.3\textwidth}
+   \includegraphics[width=0.8\textwidth]{Nvariousg2}
+   \caption{}
+   \label{fig:Ng2}
+\end{subfigure}
+\caption{(a) Numerical solutions for the small-time system with a constant-curvature body shape showing the scaled leading-order veritcal reaction force $N_0$ versus the scaled body mass $M$ for various values of $g$. Again, $I=M$ for definiteness and $A=0.7$. (b) As for (a) but over a wider range of values of $M,I$.}
+\end{figure}
 
 \begin{figure}[ht!]
     \centering
     \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Retirement}
-    \includegraphics[scale=.6]{Objects/retire_plot.pdf}
+    \includegraphics[scale=.5]{Objects/retire_plot.pdf}
     \label{fig:retirefirst}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 0.003 (0.0009), 0.002 (0.001), 0.006 (0.003), respectively.}}
 \end{figure}
 
 
-Next, I examine how the results differ when considering physicians in different age brackets: pre-retirement ($<= 60$) and typical retirement age ($> 60$). Interestingly, senior physicians are driving the positive estimate in the year after exposure, while younger physicians are driving the result for the second year after exposure. A retirement age physician is .01 ppts more likely to retire after being exposed to an EHR, a 25\% increase relative to the mean. In comparison, physicians less than 60 are not more likely to retire in the first year after exposure, but are approximately 16\% more likely to retire two years after exposure. There are two potential reasons for the different response time that relate to formal retirement vs. career switching. First, if younger physicians are leaving clinical work for administrative or consulting roles, the preparation time for this type of switch (preparing a resume, applying for new jobs, etc.) could be longer than one year, whereas formal retirement can be decided and executed within one year. Similarly, younger physicians may attempt to learn complex EHRs for a longer period of time before deciding the cost is too high. 
+Next, I examine how the results differ when considering physicians in different age brackets: pre-retirement ($<= 60$) and typical retirement age ($> 60$). Interestingly, senior physicians are driving the positive estimate in the year after exposure, and younger physicians only retire in the second year after exposure. A retirement age physician is 1 ppt more likely to retire after being exposed to an EHR, a 25\% increase relative to the mean. In comparison, physicians less than 60 are not more likely to retire in the first year after exposure, but are approximately 16\% more likely to retire two years after exposure. There are two potential reasons for the different response time that relate to formal retirement vs. career switching. First, if younger physicians are leaving clinical work for administrative or consulting roles, the preparation time for this type of switch (preparing a resume, applying for new jobs, etc.) could be longer than one year, whereas formal retirement can be decided and executed within one year. Similarly, younger physicians may attempt to learn complex EHRs for a longer period of time before deciding the cost is too high. 
 
 A potential concern is that physicians are not leaving a clinical setting, but only see patients with private insurance. While EHR use should not be directly correlated with Medicare patients, there may be an unobserved event leading physicians to stop seeing Medicare patients that aligns with EHR implementation. CMS publishes a list of physicians who have officially opted out of seeing Medicare patients and none of the physicians in my sample have selected into this option. Additionally, hospitalists do not have complete control over their composition of patients.  
 
@@ -243,9 +244,9 @@ A potential concern is that physicians are not leaving a clinical setting, but o
 
 I investigate another dimension by which physicians could change behavior: the extent to which they work in an office and whether this changes due to EHR exposure. The outcomes I consider are (1) an indicator variable equal to 1 if the physician has any positive number of patients in an office in a given year, shown in Figure \ref{fig:officefirst}, and (2) the fraction of patients a physician sees in an office in a given year, shown in Figure \ref{fig:officesecond}. This analysis does not include individuals who retire at any point in the sample, as a zero could indicate dropping out of the data instead of working solely in a hospital. 
 
-EHR exposure increases the likelihood of working in an office by at least .04 ppts in every year after being exposed, where the effect increases over time (up to .1 ppts four years after exposure). This estimate is equivalent to a 15-38\% increase relative to the average proportion of physicians who work in an office. That is, physicians working only in a hospital are more likely to start working in an office after being exposed to an EHR, and these effects are just as large as those on retirement. However, unlike the estimated retirement effects, the increased likelihood of working in an office is persistent over time, which suggests that EHRs impact work environment in hospitals for several years after implementation. 
+EHR exposure increases the likelihood of working in an office by at least 4 ppts in every year after being exposed, where the effect increases over time (up to 10 ppts four years after exposure). This estimate is equivalent to a 15-38\% increase relative to the average proportion of physicians who work in an office. That is, physicians working only in a hospital are more likely to start working in an office after being exposed to an EHR, and these effects are just as large as those on retirement. However, unlike the estimated retirement effects, the increased likelihood of working in an office is persistent over time, which suggests that EHRs impact work environment in hospitals for several years after implementation. 
 
-I consider the robustness of these results to various violations in the parallel trends assumption in Appendix \ref{sec:pretrends}, where the findings are similar. Further, I compare this finding with various specifications to data thresholds and variable definitions with an estimate chart in Appendix \ref{sec:chart}. I find consistently positive and significant coefficients ranging from .02-.08 percentage points. Thus, the main finding is on the high end of the range of estimates. While all estimates are positive, some variations that drive the estimate down slightly are limiting years to 2009-2015, and using the low integration definition of EHR exposure. I discuss this further in Appendix \ref{sec:changes}, and confirm that my finding is robust to specification changes. 
+I consider the robustness of these results to various violations in the parallel trends assumption in Appendix \ref{sec:pretrends}, where the findings are similar. Further, I compare this finding with various specifications to data thresholds and variable definitions with an estimate chart in Appendix \ref{sec:chart}. I find consistently positive and significant coefficients ranging from 2-8 percentage points. Thus, the main finding is on the high end of the range of estimates. While all estimates are positive, some variations that drive the estimate down slightly are limiting years to 2009-2015, and using the low integration definition of EHR exposure. I discuss this further in Appendix \ref{sec:changes}, and confirm that my finding is robust to specification changes. 
 
 
 
@@ -253,7 +254,7 @@ I consider the robustness of these results to various violations in the parallel
     \centering
     \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Likelihood of Working in Office}
-    \includegraphics[scale=.6]{Objects/officeind_plot.pdf}
+    \includegraphics[scale=.5]{Objects/officeind_plot.pdf}
     \label{fig:officefirst}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: .07 (0.008), .06 (0.008), 0.12 (0.03), respectively.}}
@@ -268,13 +269,13 @@ The previous results are driven by physicians who are not already working in an 
     \centering
     \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Fraction of Patients Seen in Office}
-    \includegraphics[scale=.6]{Objects/officefrac_plot.pdf}
+    \includegraphics[scale=.5]{Objects/officefrac_plot.pdf}
     \label{fig:officesecond}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: .08 (0.003), .07 (0.003), 0.13 (0.01), respectively.}}
 \end{figure}
 
-I also investigate pre-trends for this outcome in Appendix \ref{sec:pretrends}, where I find that under various assumptions of the form of violation in parallel trends, the estimate remains positive and significant of similar magnitude. Further, under different combinations of data specifications I find consistently positive and significant results, as shown in Appendix \ref{sec:changes}. However, the range of magnitudes is large: .01 to .1 percentage points. Thus, the main finding is large relative to these other estimates. Both accounting for anticipation and limiting sample years push the magnitude of the estimate down. Taking the average of these confidence intervals shows that the positive effect of EHR exposure on the fraction of patients seen in the office is robust to many combinations of data thresholds. 
+I also investigate pre-trends for this outcome in Appendix \ref{sec:pretrends}, where I find that under various assumptions of the form of violation in parallel trends, the estimate remains positive and significant of similar magnitude. Further, under different combinations of data specifications I find consistently positive and significant results, as shown in Appendix \ref{sec:changes}. However, the range of magnitudes is large: 1 to 10 percentage points. Thus, the main finding is large relative to these other estimates. Both accounting for anticipation and limiting sample years push the magnitude of the estimate down. Taking the average of these confidence intervals shows that the positive effect of EHR exposure on the fraction of patients seen in the office is robust to many combinations of data thresholds. 
 
 The increasing trend over time remains the same for physicians of different age groups. However, senior physicians have larger estimated magnitudes in each year after exposure. Since senior physicians have more patients in an office on average, the percentage change is similar between the two age groups. 
 
@@ -292,7 +293,7 @@ Again, I present a sensitivity analysis considering the parallel trends assumpti
     \centering
     \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Patient Count}
-    \includegraphics[scale=.6]{Objects/patient_plot.pdf}
+    \includegraphics[scale=.5]{Objects/patient_plot.pdf}
     \label{fig:patient}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 28 (5.0), 25.6 (5.2), 40.4 (15.0), respectively.}}
@@ -304,7 +305,7 @@ While I am investigating the supply side factors of this outcome, patient count 
     \centering
     \captionsetup{width=.6\linewidth}
     \caption{Effect of EHR Exposure on Patient Count by Group}
-    \includegraphics[scale=.47]{Objects/patient_group.pdf}
+    \includegraphics[scale=.4]{Objects/patient_group.pdf}
     \label{fig:patientgroup}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
@@ -323,7 +324,7 @@ There is no evidence of a pre-trend driving this result, and I also show robustn
     \centering
     \captionsetup{width=.85\linewidth}
     \caption{Effect of EHR Exposure on Claims per Patient}
-    \includegraphics[scale=.6]{Objects/claim_per_patient_plot.pdf}
+    \includegraphics[scale=.5]{Objects/claim_per_patient_plot.pdf}
     \label{fig:claim}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: .33 (.09), .37 (.08), .05 (.44), respectively.}}
@@ -343,7 +344,7 @@ First, using NPPES data on all NPIs and their tax information, I analyze the exi
 \centering
 \captionsetup{width=.5\linewidth}
 \caption{Frequency of Data Assistant Enumeration by Year}
-\includegraphics[scale=.5]{Objects/dataassistant_histogram.pdf}
+\includegraphics[scale=.4]{Objects/dataassistant_histogram.pdf}
 \label{fig:dataassistant_histogram}
 \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} Histtogram uses NPPES data on the enumeration of certain types of NPIs to estimate the number of new data assistants being hired in each year of my sample.}}
@@ -521,7 +522,7 @@ The specification chart for the retirement outcome is presented in Figure \ref{f
 \begin{figure}[ht]
     \centering
     \caption{Outcome: Retire}
-    \includegraphics[scale=.7]{Objects/retire_chart.pdf}
+    \includegraphics[scale=.6]{Objects/retire_chart.pdf}
     \label{fig:retire_chart}
 \end{figure}
 
@@ -534,7 +535,7 @@ Specification changes that seem to affect the magnitude of the estimate are whet
 \begin{figure}[ht]
     \centering
     \caption{Outcome: Work in Office}
-    \includegraphics[scale=.7]{Objects/office_ind_chart.pdf}
+    \includegraphics[scale=.6]{Objects/office_ind_chart.pdf}
     \label{fig:work_chart}
 \end{figure}
 
@@ -543,7 +544,7 @@ Now I discuss the results for whether physicians change the fraction of patients
 \begin{figure}[ht]
     \centering
     \caption{Outcome: Fraction of Patients in Office}
-    \includegraphics[scale=.7]{Objects/office_frac_chart.pdf}
+    \includegraphics[scale=.6]{Objects/office_frac_chart.pdf}
     \label{fig:fracoffice_chart}
 \end{figure}
 
@@ -555,7 +556,7 @@ In Figure \ref{fig:pat_chart}, I present estimates and confidence intervals for 
 \begin{figure}[ht]
     \centering
     \caption{Outcome: Patient Count}
-    \includegraphics[scale=.7]{Objects/patient_chart.pdf}
+    \includegraphics[scale=.6]{Objects/patient_chart.pdf}
     \label{fig:pat_chart}
 \end{figure}
 
@@ -564,7 +565,7 @@ Lastly, I examine a chart of estimates for different specifications attempting t
 \begin{figure}[ht]
     \centering
     \caption{Outcome: Claims per Patient}
-    \includegraphics[scale=.7]{Objects/claim_chart.pdf}
+    \includegraphics[scale=.6]{Objects/claim_chart.pdf}
     \label{fig:cpp_chart}
 \end{figure}
 
@@ -583,7 +584,7 @@ These results from each outcome are presented in Figure \ref{fig:twfe}. These re
     \centering
     \captionsetup{width=.8\linewidth}
     \caption{Results: Two Way Fixed Effects}
-    \includegraphics[scale=.8]{Objects/twfe_plot.pdf}
+    \includegraphics[scale=.6]{Objects/twfe_plot.pdf}
     \label{fig:twfe}
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} Event study plots from two way fixed effects estimation are shown for each outcome variable.}}
@@ -594,7 +595,7 @@ One method that addresses issues with the TWFE specification by differencing out
 \begin{figure}
     \centering
     \caption{Alternative Estimators}
-    \includegraphics[scale=.7]{Objects/estimators_plot.pdf}
+    \includegraphics[scale=.6]{Objects/estimators_plot.pdf}
     \label{fig:estimators}
 \end{figure}
 
@@ -606,43 +607,15 @@ Another estimation method first used by \citeauthor{cengiz2019effect} (\citeyear
 
 \section{Heterogeneity Analysis}
 
-The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. those who typically work at large hospitals. These average treatment effects are shown in Figure \ref{fig:1}. The results do not differ along these dimensions. This is fascinating in that technology is creating these adverse effects across completely different practice environments.
+The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. those who typically work at large hospitals. These average treatment effects are shown in Figure \ref{fig:heter}. The results do not differ along these dimensions. This is fascinating in that technology is creating these adverse effects across completely different practice environments.
 
 
-\begin{figure}[t!]
-\begin{subfigure}{0.48\textwidth}
-\caption{Retire}
-\includegraphics[width=\linewidth]{Objects/retire_heterog.pdf}
-\label{fig:a}
-\end{subfigure}\hspace*{\fill}
-\begin{subfigure}{0.48\textwidth}
-\caption{Fraction of Patients in Office}
-\includegraphics[width=\linewidth]{Objects/office_frac_heterog.pdf}
-\label{fig:b}
-\end{subfigure}
-
-\medskip
-\begin{subfigure}{0.48\textwidth}
-\caption{Indicator for Office }
-\includegraphics[width=\linewidth]{Objects/office_ind_heterog.pdf}
- \label{fig:c}
-\end{subfigure}\hspace*{\fill}
-\begin{subfigure}{0.48\textwidth}
-\caption{Patient Count} 
-\includegraphics[width=\linewidth]{Objects/patient_heterog.pdf}
-\label{fig:d}
-\end{subfigure}
-
-\medskip
-\begin{subfigure}{0.48\textwidth}
-\caption{Claims Per Patient} 
-\includegraphics[width=\linewidth]{Objects/claim_per_patient_heterog.pdf}
-\label{fig:e}
-\end{subfigure}\hspace*{\fill}
-
-\caption{Heterogeneity Analysis} \label{fig:1}
+\begin{figure}
+    \centering
+    \caption{Heterogeneity Analysis}
+    \includegraphics[scale=.6]{Objects/heterog_plot.pdf}
+    \label{fig:heter}
 \end{figure}
-
 
 
 
