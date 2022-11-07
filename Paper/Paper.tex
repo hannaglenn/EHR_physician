@@ -206,32 +206,23 @@ I present aggregated group time treatment effects of being exposed to an EHR on 
 
 Even though there is no visual indication of a violation of the parallel trends assumption in the pre-periods, the p-value of a Wald test for pre-trends indicates some evidence for such a violation. In Appendix \ref{sec:pretrends}, I present confidence intervals robust to various specifications of a violation in parallel trends. Due to the rarity of retirement in the sample, the estimate becomes null with any specified variation in the parallel trend assumption. Since the pre-trend does not look strong in the first place, this is not too concerning. I present estimates for the overall $ATT$ under various specifications of the data in Appendix \ref{sec:chart}. The estimate found here falls in the upper range of estimates. All estimates are positive, yet some have confidence intervals that include zero. Closer examination into these estimates reveals that stricter thresholds on the data yield many of the null results. Even with additional noise in the estimates, the average of the upper and lower confidence intervals still indicates a positive effect of EHR exposure of retirement. Thus, the main finding is robust to various specifications.   
 
-\begin{figure}[H]
+\begin{figure}[ht!]
 \centering
-   \begin{subfigure}[b]{0.3\textwidth}
-   \includegraphics[width=0.8\textwidth]{retire_plot_ages}
+    \captionsetup{width=.85\linewidth}
+    \caption{Effect of EHR Exposure on Retirement}
+   \begin{subfigure}[]{.8\textwidth}
+   \includegraphics[scale=.5]{Objects/retire_plot_all.pdf}
    \caption{}
    \label{fig:Ng1} 
 \end{subfigure}
 
-\\
-
-\begin{subfigure}[b]{0.3\textwidth}
-   \includegraphics[width=0.8\textwidth]{Nvariousg2}
+\begin{subfigure}[]{.8\textwidth}
+   \includegraphics[scale=.5]{Objects/retire_plot_ages.pdf}
    \caption{}
    \label{fig:Ng2}
 \end{subfigure}
-\caption{(a) Numerical solutions for the small-time system with a constant-curvature body shape showing the scaled leading-order veritcal reaction force $N_0$ versus the scaled body mass $M$ for various values of $g$. Again, $I=M$ for definiteness and $A=0.7$. (b) As for (a) but over a wider range of values of $M,I$.}
-\end{figure}
-
-\begin{figure}[ht!]
-    \centering
-    \captionsetup{width=.85\linewidth}
-    \caption{Effect of EHR Exposure on Retirement}
-    \includegraphics[scale=.5]{Objects/retire_plot.pdf}
-    \label{fig:retirefirst}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 0.003 (0.0009), 0.002 (0.001), 0.006 (0.003), respectively.}}
+\vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Panel (a) shows average group time treatment effects aggregated over groups to an event study plot. Panel (b) shows these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 0.003 (0.0009), 0.002 (0.001), 0.006 (0.003), respectively.}}
 \end{figure}
 
 
