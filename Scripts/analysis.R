@@ -186,6 +186,20 @@ graphs <- lapply(graph_data, function(x){
   list(all=all, ages=ages)
 })
 
+# Save plots -------------------------
+ggsave(file="Objects/retire_plot_all.pdf",plot=graphs[[1]][["all"]], width=10, height=3.5, units="in")
+ggsave(file="Objects/retire_plot_ages.pdf",plot=graphs[[1]][["ages"]], width=10, height=4, units="in")
+ggsave(file="Objects/officefrac_plot_all.pdf",plot=graphs[[2]][["all"]], width=10, height=3.5, units="in")
+ggsave(file="Objects/officefrac_plot_ages.pdf",plot=graphs[[2]][["ages"]], width=10, height=4, units="in")
+ggsave(file="Objects/officeind_plot_all.pdf",plot=graphs[[3]][["all"]], width=10, height=3.5, units="in")
+ggsave(file="Objects/officeind_plot_ages.pdf",plot=graphs[[3]][["ages"]], width=10, height=4, units="in")
+ggsave(file="Objects/patient_plot_all.pdf",plot=graphs[[4]][["all"]], width=10, height=3.5, units="in")
+ggsave(file="Objects/patient_plot_ages.pdf",plot=graphs[[4]][["ages"]], width=10, height=4, units="in")
+ggsave(file="Objects/claim_per_patient_plot_all.pdf",plot=graphs[[5]][["all"]], width=10, height=3.5, units="in")
+ggsave(file="Objects/claim_per_patient_plot_ages.pdf",plot=graphs[[5]][["ages"]], width=10, height=4, units="in")
+
+
+
 
 plots <- lapply(graphs, function(x){
   ggarrange(

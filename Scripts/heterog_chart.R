@@ -14,7 +14,8 @@ library(readxl)
 ### HETEROGENEITY GRAPHS ------------------------------------------- ####
 
 # Read in the main data created in "data5_MDPPAS.R"
-Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
+Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds")) %>%
+  mutate(DocNPI=as.numeric(DocNPI))
 
 
 # Read in rural zip code data
@@ -104,22 +105,9 @@ chart_data <- lapply(models_agg, function(x) {
 chart_data_frame <- t(as.data.frame(chart_data))
 rownames(chart_data_frame) <- NULL
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, rural, urban, small, large) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-labels <- list("Rural", "Urban", "Small Hosp.", "Large Hosp.")
-
-source(paste0(function_path,"spec_chart_function.R"))
-
-schart(chart_data_frame, labels, highlight=5, 
-       order="asis", heights=c(1,.75),
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n")
-legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
+retire_data_frame <- as.data.frame(chart_data_frame) %>%
+  select(coef, se, rural, urban, small, large) %>%
+  mutate(Outcome="Retire")
 
 
 
@@ -162,19 +150,10 @@ chart_data <- lapply(models_agg, function(x) {
 chart_data_frame <- t(as.data.frame(chart_data))
 rownames(chart_data_frame) <- NULL
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, rural, urban, small, large) 
+fracoffice_data_frame <- as.data.frame(chart_data_frame) %>%
+  select(coef, se, rural, urban, small, large) %>%
+  mutate(Outcome="Frac. Patients in Office")
 
-par(oma=c(1,0,1,1))
-
-# Create plot
-source(paste0(function_path,"spec_chart_function.R"))
-schart(chart_data_frame, labels, highlight=5, 
-       order="asis", heights=c(1,.75),
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n")
-legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -218,75 +197,9 @@ chart_data <- lapply(models_agg, function(x) {
 chart_data_frame <- t(as.data.frame(chart_data))
 rownames(chart_data_frame) <- NULL
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, rural, urban, small, large) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-source(paste0(function_path,"spec_chart_function.R"))
-schart(chart_data_frame, labels, highlight=5, 
-       order="asis", heights=c(1,.75),
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n")
-legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
-
-
-
-
-# CHANGE ZIP ------------------------------------------
-models <- lapply(Het_Data, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "change_zip",                # LHS Variable
-                gname ="minyr_EHR",          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data= dplyr::filter(x[[1]],minyr_EHR>0 & ever_retire==0),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=0,
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, rural, urban, small, large) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-source(paste0(function_path,"spec_chart_function.R"))
-schart(chart_data_frame, labels, highlight=5, 
-       order="asis", heights=c(1,.75),
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n")
-legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
+indoffice_data_frame <- as.data.frame(chart_data_frame) %>%
+  select(coef, se, rural, urban, small, large)%>%
+  mutate(Outcome="Work in Office")
 
 
 
@@ -330,19 +243,10 @@ chart_data <- lapply(models_agg, function(x) {
 chart_data_frame <- t(as.data.frame(chart_data))
 rownames(chart_data_frame) <- NULL
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, rural, urban, small, large) 
+patcount_data_frame <- as.data.frame(chart_data_frame) %>%
+  select(coef, se, rural, urban, small, large) %>%
+  mutate(Outcome="Number Patients")
 
-par(oma=c(1,0,1,1))
-
-# Create plot
-source(paste0(function_path,"spec_chart_function.R"))
-schart(chart_data_frame, labels, highlight=5, 
-       order="asis", heights=c(1,.75),
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n")
-legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
 
 
 
@@ -386,16 +290,37 @@ chart_data <- lapply(models_agg, function(x) {
 chart_data_frame <- t(as.data.frame(chart_data))
 rownames(chart_data_frame) <- NULL
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, rural, urban, small, large) 
+cpp_data_frame <- as.data.frame(chart_data_frame) %>%
+  select(coef, se, rural, urban, small, large) %>%
+  mutate(Outcome="Claims per Patient")
 
-par(oma=c(1,0,1,1))
 
-# Create plot
-source(paste0(function_path,"spec_chart_function.R"))
-schart(chart_data_frame, labels, highlight=5, 
-       order="asis", heights=c(1,.75),
-       col.est=c("grey70","#E69F00"),
-       col.dot=c("grey70", "grey90", "#E69F00", "#E69F00"),
-       ylab="Coefficient and 95% C.I.\n")
-legend("bottomleft", lwd=2, col=c("#E69F00"), c("Main"), inset=.02)
+
+# Create Chart
+plot_data <- rbind(retire_data_frame, fracoffice_data_frame, indoffice_data_frame,
+                   patcount_data_frame, cpp_data_frame) %>%
+  mutate(mean=ifelse(Outcome=="Retire",.03,NA),
+         mean=ifelse(Outcome=="Frac. Patients in Office",.08,mean),
+         mean=ifelse(Outcome=="Work in Office",.27,mean),
+         mean=ifelse(Outcome=="Number Patients",331,mean),
+         mean=ifelse(Outcome=="Claims per Patient",4.09,mean)) %>%
+  mutate(Sample=ifelse(rural==1, "Rural", NA),
+         Sample=ifelse(urban==1, "Urban", Sample),
+         Sample=ifelse(small==1, "Small Hosp.", Sample),
+         Sample=ifelse(large==1, "Large Hosp.", Sample),
+         Sample=ifelse(is.na(Sample),"Main", Sample)) %>%
+  select(-rural, -urban, -small, -large) %>%
+  mutate(estimate_perc=coef/mean) %>%
+  mutate(upper=(coef+(1.96*se))/mean,
+         lower=(coef-(1.96*se))/mean)
+plot_data$Outcome <- factor(plot_data$Outcome, levels=c("Retire", "Frac. Patients in Office", "Work in Office", "Number Patients", "Claims per Patient"))
+
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+dodge <- position_dodge(width=0.5)
+ggplot(data=plot_data, aes(x=Outcome, y=estimate_perc, color=Sample)) + geom_point(position = dodge) +
+  geom_errorbar(aes(ymax=upper,ymin=lower, color=Sample),size=.5, position = dodge, width=.2) + 
+  scale_colour_manual(values=cbbPalette) + theme_bw() + geom_hline(yintercept=0, linetype="dashed") +
+  xlab("\nVariable") + ylab("Estimate and 95% CI\n")
+
+ggsave("Objects/heterog_plot.pdf", width=8, height=5, units = "in")
+
