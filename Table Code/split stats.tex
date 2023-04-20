@@ -1,30 +1,27 @@
- \renewcommand{\thetable}{2}
-\begin{table}[ht]
-
-\caption{Means by Age \label{tab:splitstats}}
+\begin{table}[h]
+\small
+\caption{Means by Age, Exit Sample}
 \centering
 \begin{tabular}[t]{lcc}
 \toprule
-Variable & Age $>$ 60 & Age $<=$ 60\\
+Variable & Age $<=$ 60 & Age $>$ 60\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{3}{l}{\textbf{Outcomes}}\\
-\hspace{1em}Ever Retire & 0.04 & 0.03\\
-\hspace{1em}Fraction Patients in Office & 0.12 & 0.07\\
-\hspace{1em}Work in an Office & 0.44 & 0.25\\
-\hspace{1em}Change Zip Codes & 0.10 & 0.12\\
-\hspace{1em}Number of Patients & 340 & 330\\
-\hspace{1em}Claim Count & 1,692 & 1,296\\
+\hspace{1em}Ever Retire & 0.03 & 0.04\\
+\hspace{1em}Work in an Office & 0.26 & 0.45\\
+\hspace{1em}Fraction Patients in Office & 0.08 & 0.13\\
+\hspace{1em}Number of Patients & 326.99 & 338.25\\
+\hspace{1em}Claims Per Patient & 3.96 & 5.35\\
 \addlinespace[0.3em]
 \multicolumn{3}{l}{\textbf{Treatment}}\\
-\hspace{1em}Exposure to an EHR & 0.78 & 0.76\\
-\hspace{1em}Fraction of Hospitals with EHR & 0.60 & 0.65\\
+\hspace{1em}Year of EHR Exposure & 2010.82 & 2010.53\\
 \addlinespace[0.3em]
 \multicolumn{3}{l}{\textbf{Characteristics}}\\
-\hspace{1em}Age & 60.23 & 42.59\\
-\hspace{1em}Female & 0.18 & 0.36\\
-\hspace{1em}Number of Hospitals Worked With & 1.63 & 1.47\\
-\hspace{1em}Number of Systems Worked With & 1.39 & 1.30\\
+\hspace{1em}Age & 42.60 & 60.24\\
+\hspace{1em}Female & 0.36 & 0.18\\
+\hspace{1em}Number of Hospitals Worked With & 1.46 & 1.62\\
+\hspace{1em}Number of Systems Worked With & 1.29 & 1.38\\
 \bottomrule
 \end{tabular}
 \end{table}
