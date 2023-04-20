@@ -17,7 +17,7 @@ library(lubridate)
 for (i in 2009:2017) {
   year <- read_csv(paste0(raw_data_path,"/MDPPAS/PhysicianData_",i,".csv"))
   year <- year %>%
-    dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_1, -spec_prim_2,
+    dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_2,
                   -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
                   -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
                   -claim_count12, -spec_prim_2_name, -tin1_legal_name, -tin2_legal_name,
@@ -29,7 +29,7 @@ MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPP
 
 
 # Read in Aggregated Pairs data from "data4_physician_level.R"
-Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs.rds"))
+Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs2.rds"))
 
 
 # Merge MDPPAS to main dataset and fill time invariant variables
@@ -58,8 +58,8 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
-  dplyr::filter(max>.7)
-  # 214k obs
+  dplyr::filter(max>.7) 
+  # 240k obs
 
 
 ## Read in Medicare Opt-Out Data
@@ -192,101 +192,6 @@ Physician_Data <- Physician_Data %>%
   mutate(majority_in_office=ifelse(pos_office>pos_inpat,1,0))
 
 
-# ZIP CODES ####
-Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-  dplyr::mutate(multiple_zip=ifelse(is.na(phy_zip2),0,1),
-                claim_count1=ifelse(is.na(claim_count1),0,claim_count1)) 
-
-for (i in 1:9){
-zipyear <- Physician_Data %>%
-  dplyr::filter(year==2008+i) %>%
-  dplyr::mutate(zip_list=ifelse(year==2008+i & is.na(phy_zip2),phy_zip1,NA),
-                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip3),
-                                    str_c(phy_zip1,phy_zip2,sep = ),zip_list),
-                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip4),
-                                    str_c(phy_zip1,phy_zip2,phy_zip3),zip_list),
-                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip5),
-                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4),zip_list),
-                zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip6),
-                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4,phy_zip5),zip_list),
-                zip_list=ifelse(is.na(zip_list) & year==2008+i,
-                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4,phy_zip5,phy_zip6),zip_list)) %>%
-  dplyr::select(DocNPI,zip_list)
-
-assign(paste0("zip",i+2008),zipyear)
-
-}
-
-zip2009 <- zip2009 %>%
-  dplyr::rename(zip_list2009=zip_list)
-zip2010 <- zip2010 %>%
-  dplyr::rename(zip_list2010=zip_list)
-zip2011 <- zip2011 %>%
-  dplyr::rename(zip_list2011=zip_list)
-zip2012 <- zip2012 %>%
-  dplyr::rename(zip_list2012=zip_list)
-zip2013 <- zip2013 %>%
-  dplyr::rename(zip_list2013=zip_list)
-zip2014 <- zip2014 %>%
-  dplyr::rename(zip_list2014=zip_list)
-zip2015 <- zip2015 %>%
-  dplyr::rename(zip_list2015=zip_list)
-zip2016 <- zip2016 %>%
-  dplyr::rename(zip_list2016=zip_list)
-zip2017 <- zip2017 %>%
-  dplyr::rename(zip_list2017=zip_list)
-
-Physician_Data <- Physician_Data %>%
-  dplyr::left_join(zip2009,by="DocNPI") %>%
-  dplyr::left_join(zip2010,by="DocNPI") %>%
-  dplyr::left_join(zip2011,by="DocNPI") %>%
-  dplyr::left_join(zip2012,by="DocNPI") %>%
-  dplyr::left_join(zip2013,by="DocNPI") %>%
-  dplyr::left_join(zip2014,by="DocNPI") %>%
-  dplyr::left_join(zip2015,by="DocNPI") %>%
-  dplyr::left_join(zip2016,by="DocNPI") %>%
-  dplyr::left_join(zip2017,by="DocNPI")
-
-Physician_Data <- Physician_Data %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(change_zip=ifelse(year==2010 & !(str_detect(zip_list2009,zip_list2010)[1] |
-                                                   str_detect(zip_list2010,zip_list2009)[1]) ,1,NA)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2010 & is.na(change_zip) & !(is.na(zip_list2009) | 
-                                                                       is.na(zip_list2010)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2011 & !(str_detect(zip_list2010,zip_list2011)[1] |
-                                                   str_detect(zip_list2011,zip_list2010)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2011 & is.na(change_zip) & !(is.na(zip_list2010) |
-                                                                       is.na(zip_list2011)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2012 & !(str_detect(zip_list2011,zip_list2012)[1] |
-                                                   str_detect(zip_list2012,zip_list2011)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2012 & is.na(change_zip) & !(is.na(zip_list2011) | 
-                                                                       is.na(zip_list2012)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2013 & !(str_detect(zip_list2012,zip_list2013)[1] |
-                                                   str_detect(zip_list2013,zip_list2012)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2013 & is.na(change_zip) & !(is.na(zip_list2012) | 
-                                                                       is.na(zip_list2013)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2014 & !(str_detect(zip_list2013,zip_list2014)[1] |
-                                                   str_detect(zip_list2014,zip_list2013)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2014 & is.na(change_zip) & !(is.na(zip_list2013) |
-                                                                       is.na(zip_list2014)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2015 & !(str_detect(zip_list2014,zip_list2015)[1] |
-                                                   str_detect(zip_list2015,zip_list2014)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2015 & is.na(change_zip) & !(is.na(zip_list2014) | 
-                                                                       is.na(zip_list2015)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2016 & !(str_detect(zip_list2015,zip_list2016)[1] |
-                                                   str_detect(zip_list2016,zip_list2015)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2016 & is.na(change_zip) & !(is.na(zip_list2015) | 
-                                                                       is.na(zip_list2016)),0,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2017 & !(str_detect(zip_list2016,zip_list2017)[1] |
-                                                   str_detect(zip_list2017,zip_list2016)[1]) ,1,change_zip)) %>%
-  dplyr::mutate(change_zip=ifelse(year==2017 & is.na(change_zip) & !(is.na(zip_list2016) | is.na(zip_list2017)),0,change_zip))
-
-
-Physician_Data <- Physician_Data %>%
-  dplyr::mutate(change_zip=ifelse(year==2009,0,change_zip)) 
-
-
-
 # PRODUCTIVITY ####
 
 # For productivity, I will simply use claim count,  patient count and claims per patient as the dependent variable.
@@ -327,27 +232,8 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   filter(yearbefore>.5 | is.na(yearbefore))
 
-# Read in Physicians that works with DA
-Phys_with_DA <- readRDS(paste0(created_data_path,"/Phys_with_DA.rds")) %>%
-  dplyr::mutate(Phys_DA=1)
-
-Physician_Data <- Physician_Data %>%
-  mutate(DocNPI=as.character(DocNPI)) %>%
-  left_join(Phys_with_DA, by=c("year", "DocNPI"))
-
-Physician_Data <- Physician_Data %>%
-  mutate(Phys_DA=ifelse(is.na(Phys_DA),0,Phys_DA)) %>%
-  group_by(DocNPI) %>%
-  mutate(sum=sum(Phys_DA)) %>%
-  ungroup() %>%
-  mutate(ever_Phys_DA=ifelse(sum>0,1,0))
-
-observe <- Physician_Data %>%
-  filter(ever_Phys_DA==1)
-
 # Save the data
-saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
-write.csv(Physician_Data,file=paste0(created_data_path,"Physician_Data.csv"))
+saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data2.rds"))
 
 
 

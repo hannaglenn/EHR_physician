@@ -22,38 +22,63 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 # The data used is created in "Final_Pairs.R"
 
 # Read in Final_Pairs_Variables.rds
-Physician_Data <- read_rds(paste0(created_data_path,"Physician_data.rds"))
+Physician_Data <- read_rds(paste0(created_data_path,"Physician_data2.rds"))
 
 
 
 # General Summary Stats Tables:  ----------------------------------------------------------------
 
 # Physician Level
-sum_stats_fullsample <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0) %>%
+sum_stats_exit <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
-                 "Number of Patients"="npi_unq_benes","Fraction of Hospitals with EHR"="frac_EHR",
-                 "Exposure to an EHR"="anyEHR_exposed",
-                 "Fraction Patients in Office"="pos_office",
-                 "Ever Retire"="ever_retire",
-                 "Work in an Office"="work_in_office",
-                 "Change Zip Codes"="change_zip",
-                 "Claims per Patient"="claim_per_patient"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))), na.rm=TRUE) %>%
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Ever Exit Clinical Work"="ever_retire"), 
+               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))/9), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
   relocate(variable,n,m,sd,min,max) 
 
+sum_stats_office <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0 & ever_retire==0) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Fraction Patients in Office"="pos_office",
+                 "Work in an Office"="work_in_office"), 
+               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))/9), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,n,m,sd,min,max) 
+
+sum_stats_prod <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0 & ever_retire==0 & never_newnpi==1) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Number of Patients"="npi_unq_benes",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Claims per Patient"="claim_per_patient"), 
+               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))/9), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,n,m,sd,min,max) 
+
+sum_stats <- rbind(sum_stats_exit, sum_stats_office, sum_stats_prod)
 
 
 
-knitr::kable(sum_stats_fullsample[c(4,8,12,2,10,3,5,7,1,6,9,11),],
+
+knitr::kable(sum_stats[c(2,6,1,3,4,5,12,9,13,7,8,10,11,18,15,20,14,16,17,19),],
              format="latex",
              table.envir="table",
-             col.names=c("Variable","N","Mean","Std. Dev.", "Min", "Max"),
+             col.names=c("Variable","No. Hospitalists","Mean","Std. Dev.", "Min", "Max"),
              digits=2,
              caption="Summary Statistics",
              booktabs=TRUE,
@@ -61,7 +86,7 @@ knitr::kable(sum_stats_fullsample[c(4,8,12,2,10,3,5,7,1,6,9,11),],
              align=c("l","c","c","c","c","c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
-  pack_rows(index = c("Outcomes" = 6, "Treatment" = 2, "Characteristics" = 4))
+  pack_rows(index = c("Exit Sample" = 6, "Office Setting Sample" = 7, "Productivity Sample" = 7))
 
 
 # Summary Stats of all variables by old vs. young  ---------------------------------------------------------

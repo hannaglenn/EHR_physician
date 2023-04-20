@@ -19,11 +19,9 @@ library(extrafont)
 # In this portion, I only consider "retire" as the dependent outcome and I compare estimators. 
 
 # Read in the main data created in "data5_MDPPAS.R"
-Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
+Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data2.rds"))
 
 Physician_Data <- Physician_Data %>%
-  mutate(npi_unq_benes_noDA=npi_unq_benes) %>%
-  mutate(npi_unq_benes_LI=npi_unq_benes) %>%
   mutate(DocNPI=as.double(DocNPI))
 
 
@@ -32,17 +30,15 @@ Physician_Data <- Physician_Data %>%
 
 varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient")
 
-
-
 # Get results for ATTGT 
 models <- lapply(varlist, function(x) {
   all <- att_gt(yname = x,                # LHS Variable
-    gname = if (x=="npi_unq_benes_LI") "minyr_EHR_int" else "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
+    gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
     idname = "DocNPI",               # ID
     tname = "year",                  # Time Variable
     # xformla = NULL                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
-    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="pos_office_prior" | x=="pos_office_noprior" | x=="work_in_office" | x=="change_zip" | x=="pos_opd") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else if (x=="npi_unq_benes_noDA") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1 & ever_Phys_DA==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
+    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="work_in_office") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
@@ -221,7 +217,6 @@ plots <- lapply(graphs, function(x){
 ggsave(file="Objects/retire_plot.pdf",plot=plots[[1]], width=10, height=7, units="in")
 ggsave(file="Objects/officefrac_plot.pdf",plot=plots[[2]], width=10, height=7, units="in")
 ggsave(file="Objects/officeind_plot.pdf",plot=plots[[5]], width=10, height=7, units="in")
-ggsave(file="Objects/zip_plot.pdf",plot=plots[[6]], width=10, height=7, units="in")
 ggsave(file="Objects/patient_plot.pdf",plot=plots[[7]], width=10, height=7, units="in")
 ggsave(file="Objects/claim_per_patient_plot.pdf",plot=plots[[8]], width=10, height=7, units="in")
 
