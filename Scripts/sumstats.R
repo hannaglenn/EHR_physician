@@ -73,8 +73,6 @@ sum_stats_prod <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0 & ever_ret
 sum_stats <- rbind(sum_stats_exit, sum_stats_office, sum_stats_prod)
 
 
-
-
 knitr::kable(sum_stats[c(2,6,1,3,4,5,12,9,13,7,8,10,11,18,15,20,14,16,17,19),],
              format="latex",
              table.envir="table",
@@ -96,13 +94,12 @@ means_old <- Physician_Data %>% ungroup() %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
-                 "Number of Patients"="npi_unq_benes","Fraction of Hospitals with EHR"="frac_EHR",
-                 "Exposure to an EHR"="anyEHR_exposed",
+                 "Number of Patients"="npi_unq_benes",
+                 "Year of EHR Exposure"="minyr_EHR",
                  "Fraction Patients in Office"="pos_office",
                  "Ever Retire"="ever_retire",
                  "Work in an Office"="work_in_office",
-                 "Change Zip Codes"="change_zip",
-                 "Claim Count"="claim_count_total"), list(mean), na.rm=TRUE) %>%
+                 "Claims Per Patient"="claim_per_patient"), list(mean), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
   gather(key=var,value=value) %>%
   dplyr::rename(value_old=value)
@@ -113,39 +110,21 @@ means_young <- Physician_Data %>% ungroup() %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
-                 "Number of Patients"="npi_unq_benes","Fraction of Hospitals with EHR"="frac_EHR",
-                 "Exposure to an EHR"="anyEHR_exposed",
+                 "Number of Patients"="npi_unq_benes",
+                 "Year of EHR Exposure"="minyr_EHR",
                  "Fraction Patients in Office"="pos_office",
                  "Ever Retire"="ever_retire",
                  "Work in an Office"="work_in_office",
-                 "Change Zip Codes"="change_zip",
-                 "Claim Count"="claim_count_total"), list(mean), na.rm=TRUE) %>%
+                 "Claims Per Patient"="claim_per_patient"), list(mean), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
   gather(key=var,value=value) %>%
   dplyr::rename(value_young=value)
 
-means_retire <- Physician_Data %>% ungroup() %>%
-  filter(minyr_EHR>0) %>%
-  filter(ever_retire==1) %>%
-  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
-                 "Female"="female", "Number of Systems Worked With"="num_systems",
-                 "Age"="age",
-                 "Number of Patients"="npi_unq_benes","Fraction of Hospitals with EHR"="frac_EHR",
-                 "Exposure to an EHR"="anyEHR_exposed",
-                 "Fraction Patients in Office"="pos_office",
-                 "Ever Retire"="ever_retire",
-                 "Work in an Office"="work_in_office",
-                 "Change Zip Codes"="change_zip",
-                 "Claim Count"="claim_count_total"), list(mean), na.rm=TRUE) %>%
-  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.)) %>%
-  gather(key=var,value=value) %>%
-  dplyr::rename(value_retire=value)
+means_bind <- means_young %>%
+  left_join(means_old,by="var") 
 
-means_bind <- means_old %>%
-  left_join(means_young,by="var") 
-
-knitr::kable(means_bind[c(9,8,10,11,5,12,7,6,4,2,1,3),], "latex",
-             col.names=c("Variable","Age $>$ 60", "Age $<=$ 60"),
+knitr::kable(means_bind[c(8,9,7,5,10,6,4,2,1,3),], "latex",
+             col.names=c("Variable","Age $<=$ 60", "Age $>$ 60"),
              digits=2,
              caption="Means by Age Sample",
              booktabs=TRUE,
@@ -153,29 +132,30 @@ knitr::kable(means_bind[c(9,8,10,11,5,12,7,6,4,2,1,3),], "latex",
              align=c("l","c","c","c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
-  pack_rows(index = c("Outcomes" = 6, "Treatment" = 2, "Characteristics" = 4))
+  pack_rows(index = c("Outcomes" = 5, "Treatment" = 1, "Characteristics" = 4))
 
 
 # EHR Info at the Physician Level (by year) -----------------------------------------------------------------
 sum_stats_year <- Physician_Data %>% filter(minyr_EHR>0) %>% group_by(year) %>%
-  summarise_at(c("Hospitals using EHR"="frac_EHR", 
-                 "Phys. Exposed to EHR"="anyEHR_exposed"), list(mean), na.rm=T) 
+  summarise_at(c("Percent of Hospitals using EHR"="frac_EHR", 
+                 "Percent of Hospitalists Exposed to EHR"="anyEHR_exposed"), list(mean), na.rm=T) 
 
 
 # Create a dataframe out of the summary stats to put in a ggplot
 sum_stats_year <- as.data.frame(sum_stats_year)
-sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Hospitals using EHR",
-                                                                          "Phys. Exposed to EHR"))
+sum_stats_year <- melt(sum_stats_year, id.vars = "year", measure.vars = c("Percent of Hospitals using EHR",
+                                                                          "Percent of Hospitalists Exposed to EHR"))
 sum_stats_year <- sum_stats_year %>%
   dplyr::rename("Variable"="variable")
 
-ggplot(sum_stats_year,aes(x=year,y=value,shape=Variable,color=Variable, linetype=Variable)) + 
-  geom_line() + geom_point() + labs(x="\nYear", y=" ") + 
-  scale_colour_manual(values=cbbPalette) + ylim(0,1)  + xlim(2009,2015) +
-  theme(legend.key.size=unit(.3,'cm'),
-        legend.key.height = unit(.4, 'cm'),
-        legend.key.width = unit(.3, 'cm'),
-        text=element_text(size=25))
+ggplot(sum_stats_year,aes(x=year,y=value,color=Variable, linetype=Variable)) + 
+  geom_line(size=1.2) + geom_point(size=2) + labs(x="\nYear", y=" ") + 
+  scale_colour_manual(values=cbbPalette) + ylim(0,1)  + xlim(2009,2015) + theme_bw() +
+  theme(legend.key.height = unit(1, 'cm'),
+        legend.key.width = unit(4, "line"),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        text=element_text(size=20)) 
 
 ggsave("Objects/sum_stats_year.pdf", width=10, height=7, units="in")
 
