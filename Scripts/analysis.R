@@ -159,7 +159,7 @@ graphs <- lapply(graph_data, function(x){
     theme(panel.grid.major.x = element_blank() ,
           panel.grid.major.y = element_line(size=.05, color="lightgray" )) +
     labs(caption=paste0("pre-trends test p-value: ",round(x[[2]],2))) + 
-    theme(plot.caption=element_text(hjust = 0))
+    theme(plot.caption=element_text(hjust = 0, size=15))
   
   ages <- ggplot(ages_data, aes(year, att, color=group)) +  
     geom_vline(xintercept="0", linetype="dashed", colour="red") +
@@ -177,22 +177,22 @@ graphs <- lapply(graph_data, function(x){
     theme(legend.position="bottom") + 
     labs(color='Age Group', caption=paste0("pre-trends test p-value (young): ",round(x[[3]],2),
                                            "\npre-trends test p-value (old): ", round(x[[4]],2))) + 
-    theme(plot.caption=element_text(hjust = 0))
+    theme(plot.caption=element_text(hjust = 0, size=15))
   
   list(all=all, ages=ages)
 })
 
 # Save plots -------------------------
-ggsave(file="Objects/retire_plot_all.pdf",plot=graphs[[1]][["all"]], width=10, height=3.5, units="in")
-ggsave(file="Objects/retire_plot_ages.pdf",plot=graphs[[1]][["ages"]], width=10, height=4, units="in")
-ggsave(file="Objects/officefrac_plot_all.pdf",plot=graphs[[2]][["all"]], width=10, height=3.5, units="in")
-ggsave(file="Objects/officefrac_plot_ages.pdf",plot=graphs[[2]][["ages"]], width=10, height=4, units="in")
-ggsave(file="Objects/officeind_plot_all.pdf",plot=graphs[[3]][["all"]], width=10, height=3.5, units="in")
-ggsave(file="Objects/officeind_plot_ages.pdf",plot=graphs[[3]][["ages"]], width=10, height=4, units="in")
-ggsave(file="Objects/patient_plot_all.pdf",plot=graphs[[4]][["all"]], width=10, height=3.5, units="in")
-ggsave(file="Objects/patient_plot_ages.pdf",plot=graphs[[4]][["ages"]], width=10, height=4, units="in")
-ggsave(file="Objects/claim_per_patient_plot_all.pdf",plot=graphs[[5]][["all"]], width=10, height=3.5, units="in")
-ggsave(file="Objects/claim_per_patient_plot_ages.pdf",plot=graphs[[5]][["ages"]], width=10, height=4, units="in")
+ggsave(file="Objects/retire_plot_all.pdf",plot=graphs[[1]][["all"]], width=10, height=4, units="in")
+ggsave(file="Objects/retire_plot_ages.pdf",plot=graphs[[1]][["ages"]], width=10, height=4.5, units="in")
+ggsave(file="Objects/officefrac_plot_all.pdf",plot=graphs[[2]][["all"]], width=10, height=4, units="in")
+ggsave(file="Objects/officefrac_plot_ages.pdf",plot=graphs[[2]][["ages"]], width=10, height=4.5, units="in")
+ggsave(file="Objects/officeind_plot_all.pdf",plot=graphs[[3]][["all"]], width=10, height=4, units="in")
+ggsave(file="Objects/officeind_plot_ages.pdf",plot=graphs[[3]][["ages"]], width=10, height=4.5, units="in")
+ggsave(file="Objects/patient_plot_all.pdf",plot=graphs[[4]][["all"]], width=10, height=4, units="in")
+ggsave(file="Objects/patient_plot_ages.pdf",plot=graphs[[4]][["ages"]], width=10, height=4.5, units="in")
+ggsave(file="Objects/claim_per_patient_plot_all.pdf",plot=graphs[[5]][["all"]], width=10, height=4, units="in")
+ggsave(file="Objects/claim_per_patient_plot_ages.pdf",plot=graphs[[5]][["ages"]], width=10, height=4.5, units="in")
 
 
 

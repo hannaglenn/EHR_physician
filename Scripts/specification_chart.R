@@ -176,29 +176,6 @@ Data_List <- lapply(Data_List, function(x){
     select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
 })
 
-# Read in hospitals with data assistants
-Hosp_with_DA <- readRDS(paste0(created_data_path,"/Hosp_with_DA.rds"))
-
-Hosp_with_DA <- Hosp_with_DA %>%
-  mutate(DA=1) %>%
-  mutate(HospNPI=as.numeric(HospNPI))
-
-Phys_with_DA <- readRDS(paste0(created_data_path,"/Phys_with_DA.rds")) %>%
-  dplyr::mutate(Phys_DA=1)
-
-Data_List <- lapply(Data_List, function(x){
-    data <- x %>%
-    dplyr::mutate(DocNPI=as.character(DocNPI)) %>%
-    left_join(Phys_with_DA, by=c("year", "DocNPI"))
-  
-  data <- data %>%
-    dplyr::mutate(Phys_DA=ifelse(is.na(Phys_DA),0,Phys_DA)) %>%
-    group_by(DocNPI) %>%
-    dplyr::mutate(sum=sum(Phys_DA)) %>%
-    ungroup() %>%
-    dplyr::mutate(ever_Phys_DA=ifelse(sum>0,1,0))
-})
-
 # Get rid of physicians who only work on VA hospitals
 
 Data_List <- lapply(Data_List, function(x){
@@ -236,11 +213,74 @@ Data_List <- lapply(Data_List, function(x){
   return(data)
 })
 
+# Read in HIMSS data for additional EHR information
+for (t in 2009:2017){
+  year <- readxl::read_xlsx(paste0(raw_data_path,"/HIMSS/HostedSoftware",t,".xlsx")) %>%
+    mutate(year=t) %>%
+    select(HAEntityId, SurveyId, VendorName, year)
+  
+  assign(paste0("HostedSoftware",t),year)
+}
+
+HostedSoftware <- rbind(HostedSoftware2009, HostedSoftware2010, HostedSoftware2011, HostedSoftware2012, HostedSoftware2013, HostedSoftware2014, HostedSoftware2015, HostedSoftware2016, HostedSoftware2017)
+rm(HostedSoftware2009, HostedSoftware2010, HostedSoftware2011, HostedSoftware2012, HostedSoftware2013, HostedSoftware2014, HostedSoftware2015, HostedSoftware2016, HostedSoftware2017)
+
+# Remove duplicates in Hosted Software
+HostedSoftware <- HostedSoftware %>%
+  distinct()
+
+for (t in 2009:2017){
+  year <- readxl::read_xlsx(paste0(raw_data_path,"/HIMSS/HAEntity",t,".xlsx")) %>%
+    mutate(year=t) %>%
+    select(HAEntityId, SurveyId, ParentId, UniqueId, year, HAEntityType, MedicareNumber)
+  
+  assign(paste0("HAEntity",t),year)
+}
+
+HAEntity <- rbind(HAEntity2009, HAEntity2010, HAEntity2011, HAEntity2012, HAEntity2013, HAEntity2014, HAEntity2015, HAEntity2016, HAEntity2017)
+rm(HAEntity2009, HAEntity2010, HAEntity2011, HAEntity2012, HAEntity2013, HAEntity2014, HAEntity2015, HAEntity2016, HAEntity2017)
+
+# Merge HIMSS data sets into one
+HIMSS <- HAEntity %>%
+  left_join(HostedSoftware, by=c("HAEntityId","SurveyId", "year"), na.matches="never") 
+# This created repeats because some hospitals have multiple EHR systems.
+
+# Convert HIMSS from long to wide in Vendor name
+HIMSS <- HIMSS %>%
+  distinct() %>%
+  mutate(VendorName=ifelse(VendorName %in% c("ALLSCRIPTS", "CERNER CORPORATION", "eClinicalWorks",
+                                             "ECLIPSYS CORPORATION", "EPIC", "ATHENAHEALTH",
+                                             "MCKESSON PROVIDER TECHNOLOGIES", "MEDITECH", "NEXTGEN HEALTHCARE",
+                                             "QUADRAMED", "SAGE", "SAGE SOFTWARE INC.", "SIEMENS HEALTHCARE",
+                                             "SELF-DEVELOPED"), VendorName, NA)) %>%
+  filter(!is.na(VendorName) & !is.na(MedicareNumber)) %>%
+  group_by(MedicareNumber, year) %>%
+  mutate(num=row_number()) %>%
+  ungroup() %>%
+  select(year, MedicareNumber, VendorName, num) %>%
+  filter(num<4)
+
+HIMSS <- HIMSS %>% ungroup() %>%
+  mutate(EHR_HIMSS1=ifelse(num==1, VendorName, NA)) %>%
+  mutate(EHR_HIMSS2=ifelse(num==2, VendorName, NA)) %>%
+  mutate(EHR_HIMSS3=ifelse(num==3, VendorName, NA)) %>%
+  group_by(MedicareNumber, year) %>%
+  fill(EHR_HIMSS1, .direction="downup") %>%
+  fill(EHR_HIMSS2, .direction="downup") %>%
+  fill(EHR_HIMSS3, .direction="downup") %>%
+  select(-VendorName, -num) %>%
+  distinct() %>%
+  select(year, MedicareNumber, EHR_HIMSS1)
+
+rm(HAEntity, HostedSoftware, year, observe)
+
+
 # EHR Variables
 Data_List <- lapply(Data_List, function(x){
   data <- x %>%
-    mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) %>%
-    select(-EHLTH)
+    left_join(HIMSS, by=c("year","MCRNUM"="MedicareNumber"), na_matches="never") %>%
+    mutate(EHR=ifelse(EHLTH==2 | !is.na(EHR_HIMSS1),1,0)) %>%
+    select(-EHLTH, -EHR_HIMSS1)
   
   # In some cases, 2009 or 2015 can be filled in to not have a missing value. 
   # Create dataset to fill in 2009 or 2015 conditionally
@@ -409,7 +449,7 @@ Data_List <- lapply(Data_List, function(x){
 Aggregated_Pairs_list <- lapply(Data_List, function(x){
   data <- x %>%
     distinct(year, DocNPI,grad_year, avg_beds, experience, 
-             num_hospitals, ever_Phys_DA,
+             num_hospitals,
              frac_EHR, minyr_EHR, minyr_EHR_int,
              num_systems, 
              newnpi, never_newnpi)
@@ -429,7 +469,6 @@ Aggregated_Pairs_list <- lapply(Aggregated_Pairs_list, function(x){
     fill(avg_beds,.direction="downup") %>%
     fill(num_hospitals,.direction="downup") %>%
     fill(num_systems,.direction="downup") %>%
-    fill(ever_Phys_DA,.direction="downup") %>%
     ungroup() %>%
     mutate(experience=year-grad_year) %>%
     mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0),
@@ -722,7 +761,7 @@ Physician_Data_list <- lapply(Physician_Data_list, function(x){
   
   # Create age bins to do analysis separately 
   Physician_Data <- Physician_Data %>% ungroup() %>%
-    select(DocNPI, year, grad_year, minyr_EHR, minyr_EHR_int, never_newnpi, ever_Phys_DA,
+    select(DocNPI, year, grad_year, minyr_EHR, minyr_EHR_int, never_newnpi,
            pos_office, npi_unq_benes, max_70, max_90, max_50, claim_count_total, retire,
            ever_retire, work_in_office, change_zip, num_hospitals, max_age)
   
@@ -731,7 +770,7 @@ Physician_Data_list <- lapply(Physician_Data_list, function(x){
 })
 
 data_coms <- crossing(inpat_70=c(TRUE, FALSE), inpat_90=c(TRUE, FALSE),
-                      inpat_50=c(TRUE, FALSE), main_EHR=c(TRUE, FALSE), no_DA=c(TRUE, FALSE),
+                      inpat_50=c(TRUE, FALSE), main_EHR=c(TRUE, FALSE),
                       sp_30=c(TRUE,FALSE), sp_10=c(TRUE,FALSE), sp_60=c(TRUE,FALSE),
                       anticipation=c(TRUE,FALSE), limit_years=c(TRUE,FALSE)) %>%
   filter((inpat_70==FALSE & inpat_50==FALSE & inpat_90==TRUE) |
@@ -744,14 +783,13 @@ data_coms <- crossing(inpat_70=c(TRUE, FALSE), inpat_90=c(TRUE, FALSE),
 Subsets_Data <- list()
 
 
-for (k in 1:128){
+for (k in 1:64){
   row <- data_coms[k,]
   
   if (row$sp_30==TRUE){
     subset_data <- Physician_Data_list[[2]] %>%
       {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
       mutate(treat_variable=ifelse(row$main_EHR==TRUE,"minyr_EHR", "minyr_EHR_int")) %>%
-      {if (row$no_DA==TRUE) filter(.,ever_Phys_DA==0) else filter(.,year>2000)} %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR' & minyr_EHR==0,1,0)) %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR_int' & minyr_EHR_int==0,1,retiredrop))}
   
@@ -759,7 +797,6 @@ for (k in 1:128){
     subset_data <- Physician_Data_list[[1]] %>%
       {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
       mutate(treat_variable=ifelse(row$main_EHR==TRUE,"minyr_EHR", "minyr_EHR_int")) %>%
-      {if (row$no_DA==TRUE) filter(.,ever_Phys_DA==0) else filter(.,year>2000)}  %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR' & minyr_EHR==0,1,0)) %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR_int' & minyr_EHR_int==0,1,retiredrop))}
     
@@ -768,16 +805,15 @@ for (k in 1:128){
     subset_data <- Physician_Data_list[[3]] %>%
       {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
       mutate(treat_variable=ifelse(row$main_EHR==TRUE,"minyr_EHR", "minyr_EHR_int")) %>%
-      {if (row$no_DA==TRUE) filter(.,ever_Phys_DA==0) else filter(.,year>2000)}  %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR' & minyr_EHR==0,1,0)) %>%
       mutate(retiredrop=ifelse(treat_variable=='minyr_EHR_int' & minyr_EHR_int==0,1,retiredrop))}
   
   Subsets_Data[[k]] <- list(subset_data,row)
 }
 
-saveRDS(Subsets_Data, "CreatedData/Subsets_Data.rds")
+saveRDS(Subsets_Data, paste0(created_data_path,"/Subsets_Data2.rds"))
 
-
+Subsets_Data <- Subsets_Data2
 #RETIRE SPECIFICATION CHART ---------------------------------------------------------------------
 models <- lapply(Subsets_Data, function(x) {
   row <- x[[2]]
@@ -819,7 +855,7 @@ rownames(chart_data_frame) <- NULL
 
 chart_data_frame <- as.data.frame(chart_data_frame) %>%
   select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation, limit_years) 
+         sp_10, sp_30, sp_60, main_EHR, anticipation, limit_years) 
 
 par(oma=c(1,0,1,1))
 source(paste0(function_path,"spec_chart_function.R"))
@@ -828,7 +864,6 @@ source(paste0(function_path,"spec_chart_function.R"))
 labels <- list("Perc. Inpatient Threshold: "=c("50% ", "70% ", "90% "),
                "Shared Patient Threshold: "=c("10 ", "30 ", "60 "),
                "Main EHR Definition ",
-               "Only Phys. without DA ",
                "Anticipation: 1 year ",
                "Limited Years ")
 
@@ -836,8 +871,7 @@ mu  <- mean(chart_data_frame$coef) # mean of all coefficients
 sd  <- sd(chart_data_frame$coef)
 
 
-
-schart(chart_data_frame, labels, highlight=117, 
+schart(chart_data_frame, labels, highlight=61, 
        order="increasing", heights=c(1,.75),
        band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
@@ -845,7 +879,7 @@ schart(chart_data_frame, labels, highlight=117,
        col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
        ylab="Coefficient and 95% C.I.")
 legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-pdf(file="retire_chart.pdf", )
+pdf(file="retire_chart.pdf")
 
 
 
@@ -893,15 +927,15 @@ rownames(chart_data_frame) <- NULL
 
 chart_data_frame <- as.data.frame(chart_data_frame) %>%
   select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation, limit_years) 
+         sp_10, sp_30, sp_60, main_EHR, anticipation, limit_years) 
 
 par(oma=c(1,0,1,1))
 
 # Create plot
 mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
+sd  <- mean(chart_data_frame$se)
 
-schart(chart_data_frame, labels, highlight=117, 
+schart(chart_data_frame, labels, highlight=61, 
        order="increasing", heights=c(1,.75),
        band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
@@ -954,16 +988,16 @@ rownames(chart_data_frame) <- NULL
 
 chart_data_frame <- as.data.frame(chart_data_frame) %>%
   select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
+         sp_10, sp_30, sp_60, main_EHR, anticipation,
          limit_years) 
 
 par(oma=c(1,0,1,1))
 
 # Create plot
 mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
+sd  <- mean(chart_data_frame$se)
 
-schart(chart_data_frame, labels, highlight=117, 
+schart(chart_data_frame, labels, highlight=61, 
        order="increasing", heights=c(1,.75),
        band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
@@ -1075,16 +1109,16 @@ rownames(chart_data_frame) <- NULL
 
 chart_data_frame <- as.data.frame(chart_data_frame) %>%
   select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
+         sp_10, sp_30, sp_60, main_EHR, anticipation,
          limit_years) 
 
 par(oma=c(1,0,1,1))
 
 # Create plot
 mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
+sd  <- mean(chart_data_frame$se)
 
-schart(chart_data_frame, labels, highlight=117, 
+schart(chart_data_frame, labels, highlight=61, 
        order="increasing", heights=c(1,.75),
        band.ref=c(mu+(sd), mu-(sd)),
        col.band.ref="#E69F00",
@@ -1143,16 +1177,16 @@ rownames(chart_data_frame) <- NULL
 
 chart_data_frame <- as.data.frame(chart_data_frame) %>%
   select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
+         sp_10, sp_30, sp_60, main_EHR, anticipation,
          limit_years) 
 
 par(oma=c(1,0,1,1))
 
 # Create plot
 mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
+sd  <- mean(chart_data_frame$se)
 
-schart(chart_data_frame, labels, highlight=117, 
+schart(chart_data_frame, labels, highlight=61, 
        order="increasing", heights=c(1,.75),
        band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
        col.band.ref="#E69F00",
