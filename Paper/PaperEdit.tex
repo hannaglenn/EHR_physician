@@ -394,7 +394,7 @@ The next outcome variables consider level of labor market activity in office set
 
 \subsection{Analyzing Pre-Trends Assumptions}\label{sec:pretrends}
 
-Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) reveals the need to carefully assess the parallel trends assumptions commonly used in difference-in-differences. In my main specification I assume that, conditional on covariates, average outcomes for those treated in group $g$ would have followed a parallel trend as those in groups treated in later periods. I assess this assumption by testing whether the coefficients showing the effect of EHR exposure on an outcome prior to actual treatment are jointly zero. All main specification graphs show p-values from this test. In most analyses, I fail to reject the null that there does not exist a pre-trend. Yet, in some cases, I reject this null. This section utilizes the tools established by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) to demonstrate robustness of the results found in the main specification, and to investigate whether an effect exists in the cases where a pre-trend may be driving results. 
+Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) points to the need to carefully assess the parallel trends assumptions commonly used in difference-in-differences. In my main specification I assume that, conditional on covariates, average outcomes for those treated in group $g$ would have followed a parallel trend as those in groups treated in later periods. I assess this assumption by testing whether the coefficients showing the effect of EHR exposure on an outcome prior to actual treatment are jointly zero. All main specification graphs show p-values from this test. In most analyses, I fail to reject the null that there does not exist a pre-trend. Yet, in some cases, I reject this null. This section utilizes the tools established by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) to demonstrate robustness of the results found in the main specification, and to investigate whether an effect exists in the cases where a pre-trend may be driving results. 
 
 \subsubsection{No Longer Seeing Patients} 
 
@@ -470,15 +470,7 @@ Finally, I assess the results found in the main specification for the outcome va
 
 For each outcome, there are various adjustments I make to the main specification in order to show robustness. Some of these changes address potential endogeneity concerns, while some provide evidence that the results do not depend on thresholds which may be arbitrary. I will outline each of these adjustments and then present specification charts which account for different combinations of these changes. 
 
-
-First, I assess the assumption that exposure to an EHR is exogenous to the physician. The main specification of the paper defines a binary treatment variable for whether a physician is exposed to an EHR in any hospital they work in. These results are biased if physicians endogenously select whether they are exposed to EHRs, particularly by participating in the hospital's decision to implement. The results do not indicate that this is a huge issue on average, since we would expect physicians not to respond on the margin of retirement or switching work setting if they are choosing to be exposed to EHRs. Especially in larger hospitals, this is unlikely to occur as an individual physician will not have much input to high level decisions. However, as an attempt to provide more evidence of labor market changes as a result of EHR exposure, I provide results for specifications with an alternate binary treatment variable: whether a physician has been exposed to an EHR in a hospital considered to have low vertical integration with physicians. 
-
-I define a hospital's level of integration based on organizational structure, where independent practice associations (IPAs) and physician-hospital organizations (PHOs) are classified as low vertical integration and other organization types are classified as high vertical integration (\cite{dynan1998assessing}). 
-
-
-
 While there is evidence to suggest the time it takes to implement an EHR does not exceed one year, there still may be some anticipation if physicians are expecting implementation in the hospitals they work in. Thus, the specification charts that I present in Section \ref{sec:chart} include specifications where one year of anticipation occurs. 
-
 
 In the main sample, I define dependent variables using years 2009 to 2017 and drop any physicians who were not exposed to an EHR by 2015 due to data constraints. This leads to estimation based on not yet treated units, because all never treated units are dropped. As a robustness check, I limit sample years to 2009-2015 and use never treated units as the control group. 
 
@@ -489,57 +481,50 @@ There are two main thresholds I define in the data process that were arbitrarily
 
 I present overall average treatment effects for each outcome variable under different combinations of the specification adjustments discussed in Section \ref{sec:changes}. On each chart, the main specification is labeled in green and the average confidence bands across all combinations is shown as an orange band. 
 
-\subsubsection{Retirement}
+\subsubsection{Leaving Clinical Setting}
 
-The specification chart for the retirement outcome is presented in Figure \ref{fig:retire_chart}. The main specification yields an average treatment effect of .0025 (significant at all levels). This coefficient is on the higher end of coefficients from all combinations of specifications. However, almost all of the coefficients are positive. Some noisy estimates are to be expected when there are multiple limitations placed on the data. The average confidence interval for all combinations is (.001,.003), so the main specification lies in this interval. These results support my main finding that EHR exposure positively affects the likelihood of retirement among physicians. 
+The specification chart for the exiting outcome is presented in Figure \ref{fig:retire_chart}. The main specification yields a statistically significant average treatment effect of .0025. This coefficient is on the higher end of coefficients from all combinations of specifications. However, almost all of the coefficients are positive. Some noisy estimates are to be expected when there are multiple limitations placed on the data. These results support the main finding that EHR exposure positively affects the likelihood of leaving a clinical setting among hospitalists. 
 
 \begin{figure}[ht]
-    \centering
-    \caption{Outcome: Retire}
-    \includegraphics[scale=.6]{Objects/retire_chart.pdf}
+    \caption{Outcome: Exit Clinical Setting}
+    \includegraphics[scale=.7]{Objects/retire_chart.pdf}
     \label{fig:retire_chart}
 \end{figure}
 
 \subsubsection{Change Work Setting}
 
-The specification charts for outcomes work in office and fraction of patients seen in office are presented in Figures \ref{fig:work_chart} and \ref{fig:fracoffice_chart}, respectively. First, I discuss the overall average treatment effect of EHR exposure on the likelihood of working in an office. The main specification yields finding that EHR exposure leads to a .07 ppt increase in the likelihood of working in an office. This is on the high end of all combinations of changes to specification, but all reveal a positive effect. On average, the confidence interval falls between .035 and .06. This supports the finding that EHR exposure positively affects the likelihood of working in an office.  
-
-Specification changes that seem to affect the magnitude of the estimate are whether I limit the sample years and which EHR definition is used as the treatment variable. Neither of these change the sign of the estimate, but both limiting sample years and using the low-integration definition of EHR exposure push the magnitude slightly down.  
+The specification charts for outcomes work in office and fraction of patients seen in office are presented in Figures \ref{fig:work_chart} and \ref{fig:fracoffice_chart}, respectively. First, I discuss the overall average treatment effect of EHR exposure on the likelihood of working in an office. The main specification yields finding that EHR exposure leads to a .07 ppt increase in the likelihood of working in an office. This is on the high end of all combinations of changes to specification, but all reveal a positive effect.   
 
 \begin{figure}[ht]
-    \centering
     \caption{Outcome: Work in Office}
-    \includegraphics[scale=.6]{Objects/office_ind_chart.pdf}
+    \includegraphics[scale=.7]{Objects/office_ind_chart.pdf}
     \label{fig:work_chart}
 \end{figure}
 
-Now I discuss the results for whether physicians change the fraction of patients seen in an office setting due to EHR exposure. Similarly, the ATT from the main specification is on the high end of other ATTs found, but all estimates suggest a positive effect. The average of all the confidence intervals found is (.02, .06), suggesting a positive effect on fraction of patients seen in an office. Changes that affect the magnitude of the estimate (but not the sign) are limiting sample years and anticipation. Limiting the years in the sample and allowing for one year of anticipation both push the magnitude of the estimate down. 
+Now I discuss the results for whether hospitalists change the fraction of patients seen in an office setting due to EHR exposure. Similarly, the ATT from the main specification is on the high end of other ATTs found, but all estimates suggest a positive effect. The average of all the confidence intervals found is (.02, .06), suggesting a positive effect on fraction of patients seen in an office. Changes that affect the magnitude of the estimate (but not the sign) are limiting sample years and anticipation. Limiting the years in the sample and allowing for one year of anticipation both push the magnitude of the estimate down. 
 
 \begin{figure}[ht]
-    \centering
     \caption{Outcome: Fraction of Patients in Office}
-    \includegraphics[scale=.6]{Objects/office_frac_chart.pdf}
+    \includegraphics[scale=.7]{Objects/office_frac_chart.pdf}
     \label{fig:fracoffice_chart}
 \end{figure}
 
 
 \subsubsection{Patient Count and Claims per Patient}
 
-In Figure \ref{fig:pat_chart}, I present estimates and confidence intervals for different combinations of specification changes. The results from the main specification is that EHR exposure increases patient count by 28. While most specifications yield positive estimates, about a third of the specifications have a confidence interval that includes zero. It doesn't seem as though any specific change is driving the null result, so I hypothesize that it is due to the reduction in observations due to data limiting. The average of all of the confidence intervals is 7 to 23, indicating that a positive effect on patient count is reasonable. 
+In Figure \ref{fig:pat_chart}, I present estimates and confidence intervals for different combinations of specification changes. The result from the main specification is that EHR exposure increases patient count by 28. While most specifications yield positive estimates, about a third of the specifications have a confidence interval that includes zero. It doesn't seem as though any specific change is driving the null result, so I hypothesize that it is due to the reduction in observations due to data limiting. The average of all of the confidence intervals is 7 to 23, indicating that a positive effect on patient count is reasonable. 
 
 \begin{figure}[ht]
-    \centering
     \caption{Outcome: Patient Count}
-    \includegraphics[scale=.6]{Objects/patient_chart.pdf}
+    \includegraphics[scale=.7]{Objects/patient_chart.pdf}
     \label{fig:pat_chart}
 \end{figure}
 
 Lastly, I examine a chart of estimates for different specifications attempting to capture the effect of EHR exposure on claims per patient. My main finding is that EHR exposure increases claims per patient by around .3. However, various robustness checks reveal that this is overestimated. That is supported in this specification chart as well, where around half of the estimated confidence intervals include zero. Thus, I make no conclusion that EHR exposure increases claims per patient. 
 
 \begin{figure}[ht]
-    \centering
     \caption{Outcome: Claims per Patient}
-    \includegraphics[scale=.6]{Objects/claim_chart.pdf}
+    \includegraphics[scale=.7]{Objects/claim_chart.pdf}
     \label{fig:cpp_chart}
 \end{figure}
 
