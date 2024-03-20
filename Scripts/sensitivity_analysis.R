@@ -7,6 +7,9 @@ library(did2s)
 library(readxl)
 library(HonestDiD)
 library(mvtnorm)
+library(eventstudyr)
+library(dplyr)
+library(modelsummary)
 
 
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -46,12 +49,13 @@ for (d in 2010:2015){
 
 stacked_data_1 <- rbind(subgroup_2010, subgroup_2011,subgroup_2012,subgroup_2013,subgroup_2014, subgroup_2015)
 
-
-models_stacked <- lapply(varlist, function(x){
-  feols(xpd(..lhs ~ treated_unit:rel_m1 + treated_unit:rel_0 + treated_unit:rel_p1 + experience | DocNPI:minyr_EHR, ..lhs = x),
+models_stacked_IV <- lapply(varlist, function(x){
+  feols(xpd(..lhs ~ 1 | DocNPI + year | anyEHR_exposed ~ weightedavg_exposure, ..lhs = x),
         cluster="DocNPI",
         data=stacked_data_1)
 })
+
+etable(models_stacked_IV[[1]], stage=1, fitstat='ivf', tex=TRUE)
 
 
 ATT_stacked <- lapply(models_stacked, function(x){
@@ -622,5 +626,21 @@ observe <- leebounds %>%
   filter(pctile>22) %>%
   filter(treat==0)
 summary(observe$claim_per_patient)
+
+
+
+# EVENT STUDY WITH LEAST WIGGLY CONFOUNDER
+wiggly <- lapply(varlist, function(x){
+  es <- EventStudy(estimator = "OLS",
+                   data = dplyr::filter(Physician_Data, minyr_EHR>0 & minyr_EHR!=2009),
+                   outcomevar = x,
+                   policyvar = "anyEHR_exposed",
+                   idvar = "DocNPI",
+                   timevar = "year",
+                   pre = 0, post = 2)
+  plot <- EventStudyPlot(estimates = es)
+  return(plot=plot)
+})
+
 
 

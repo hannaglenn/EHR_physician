@@ -19,7 +19,7 @@ library(extrafont)
 # In this portion, I only consider "retire" as the dependent outcome and I compare estimators. 
 
 # Read in the main data created in "data5_MDPPAS.R"
-Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data2.rds"))
+Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds"))
 
 Physician_Data <- Physician_Data %>%
   mutate(DocNPI=as.double(DocNPI))
@@ -28,7 +28,7 @@ Physician_Data <- Physician_Data %>%
 ## ANALYSIS ---------------------------------------------- #########
 ## Write results for each variable in a loop and create graphs ----- ##
 
-varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient")
+varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient", "only_office")
 
 # Get results for ATTGT 
 models <- lapply(varlist, function(x) {
@@ -38,7 +38,7 @@ models <- lapply(varlist, function(x) {
     tname = "year",                  # Time Variable
     # xformla = NULL                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
-    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="work_in_office") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
+    data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="work_in_office" | x=="only_office") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
     control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
     clustervars = "DocNPI",          # Cluster Variables          
@@ -244,6 +244,117 @@ ggdid(models[[5]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), valu
   theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count")
 
 ggsave(filename = "Objects/patient_group.pdf", width=10, height=12, units="in")
+
+
+## analysis of specific types of claims (only for 2013-2015)
+varlist <- list("initial_hosp_inpat", "subs_hosp_inpat", "hosp_disch_day", "new_patient_office", "est_patient_office", "hosp_obs_care",
+                "subs_obs_care", "crit_care_delivery")
+
+subset_years_data <- Physician_Data %>%
+  filter(year>=2013 & year<=2015)
+
+# Get results for ATTGT 
+models <- lapply(varlist, function(x) {
+  all <- att_gt(yname = x,                # LHS Variable
+                gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
+                idname = "DocNPI",               # ID
+                tname = "year",                  # Time Variable
+                # xformla = NULL                 # No covariates
+                xformla = ~grad_year,            # Time-invariant controls
+                data= dplyr::filter(subset_years_data, ever_retire==0),
+                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
+                control_group = "nevertreated", # Set the control group to notyettreated or nevertreated
+                clustervars = "DocNPI",          # Cluster Variables          
+                anticipation=0,
+                base_period = "varying" # can set a number of years to account for anticipation effects
+  )
+  list(all=all)
+})
+
+
+# Aggregate the previous results
+Models_agg <- lapply(models, function(x){
+  agg_all <- aggte(x$all, type = "dynamic",na.rm=T)
+  p_all <- x$all$Wpval
+  
+  list(agg_all=agg_all, p_all=p_all)
+})
+
+graph_data <- lapply(Models_agg, function(x){
+  data_allages <- as.data.frame(x[["agg_all"]][["egt"]]) %>%
+    dplyr::rename(year=1) %>%
+    cbind(as.data.frame(x[["agg_all"]][["att.egt"]])) %>%
+    dplyr::rename(att=2) %>%
+    cbind(as.data.frame(x[["agg_all"]][["se.egt"]])) %>%
+    dplyr::rename(se=3) %>%
+    mutate(upper=att+(1.96*se),
+           lower=att-(1.96*se),
+           group="All",
+           year=as.factor(year)
+    )
+  
+  
+  data <- data_allages
+  
+  p_all <- x[["p_all"]]
+  
+  list(data, p_all)
+})
+
+dodge <- position_dodge(width=0.3) 
+graphs <- lapply(graph_data, function(x){
+  
+  all_data <- x[[1]] %>%
+    filter(group=="All")
+  
+  all <- ggplot(all_data, aes(year, att)) +  
+    geom_vline(xintercept="0", linetype="dashed", colour="red") +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width=.0, size=1.1) +
+    geom_point(size=2.5) +
+    theme_bw() +
+    theme_light() +
+    geom_hline(yintercept=0, linetype="dashed") +
+    theme(legend.position = "none", text = element_text(size = 15)) +
+    xlab("") + ylab("Point Estimate and 95% CI\n") +
+    geom_vline(xintercept=0, linetype="dashed", color="red") +
+    theme(panel.grid.major.x = element_blank() ,
+          panel.grid.major.y = element_line(size=.05, color="lightgray" )) +
+    labs(caption=paste0("pre-trends test p-value: ",round(x[[2]],2))) + 
+    theme(plot.caption=element_text(hjust = 0, size=15))
+  
+  list(all=all)
+})
+
+chart_data <- data.frame(est=as.numeric(), upper = as.numeric(), lower=as.numeric(), outcome = as.character())
+for (j in 1:length(Models_agg)){
+  est <- Models_agg[[j]][["agg_all"]][["overall.att"]]
+  se <- Models_agg[[j]][["agg_all"]][["overall.se"]]
+  outcome <- Models_agg[[j]][["agg_all"]][["DIDparams"]][["yname"]]
+  
+  upper <- est+(1.96*se)
+  lower <- est-(1.96*se)
+  
+  chart_data <- chart_data %>%
+    add_row(est=est, upper=upper, lower=lower, outcome=outcome) %>%
+    mutate(outcome = ifelse(outcome=="crit_care_delivery", "Critical Care Delivery", outcome),
+           outcome = ifelse(outcome=="est_patient_office", "Established Patient: Office", outcome),
+           outcome = ifelse(outcome=="hosp_disch_day", "Discharge: Hospital", outcome),
+           outcome = ifelse(outcome=="hosp_obs_care", "Observation: Hospital", outcome),
+           outcome = ifelse(outcome=="initial_hosp_inpat", "Initial Care: Hospital", outcome),
+           outcome = ifelse(outcome=="new_patient_office", "New Patient: Office", outcome),
+           outcome = ifelse(outcome=="subs_hosp_inpat", "Subsequent Care: Hospital", outcome),
+           outcome = ifelse(outcome=="subs_obs_care", "Subsequent Observation: Hospital", outcome))
+}
+
+chart <- ggplot(chart_data, aes(y=outcome, x=est)) + geom_point() + geom_vline(xintercept = 0, color="red", linetype = "dashed") +
+  geom_errorbar(aes(xmin = lower, xmax = upper), width=.0, size=1.1) + 
+  theme_bw() + theme_light() + theme(text = element_text(size = 15)) +
+  ylab("Type of Claim as Fraction of all Claims") + xlab("\nEstimate and 95% CI") +
+  theme(panel.grid.major.x = element_blank(), panel.grid.major.y = element_line(size=.05, color="lightgray" ))
+
+ggsave(chart, filename = "Objects/claim_type_results.pdf")
+
+
 
 
 

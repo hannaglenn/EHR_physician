@@ -27,9 +27,53 @@ for (i in 2009:2017) {
 
 MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
 
+# Read in Physician Utilization Files for 2013-2015
+for (i in 13:15){
+  year <- read_csv(paste0(raw_data_path,"/MUP_PHY/MUP_PHY_R19_P04_V10_D",i,"_Prov_Svc_zip",".csv")) %>%
+    mutate(year=2000+i)
+  assign(paste0("MUP_PHY",i),year)
+}
+
+MUP_PHY <- rbind(MUP_PHY13, MUP_PHY14, MUP_PHY15)
+rm(MUP_PHY13, MUP_PHY14, MUP_PHY15, year, MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
+
+# summarize the public use data to the physician level for specific claims I need
+MUP_PHY <- MUP_PHY %>%
+  group_by(Rndrng_NPI, year) %>%
+  mutate(total_claims = sum(Tot_Srvcs, na.rm=T)) %>%
+  ungroup()
+
+MUP_PHY <- MUP_PHY %>%
+  filter(str_detect(HCPCS_Cd, "^992"))
+
+# group HCPCS codes that are the same (with varied time components)
+MUP_PHY <- MUP_PHY %>%
+  mutate(group = ifelse(str_detect(HCPCS_Desc, "Critical care delivery critically ill or injured patient"), "crit_care_delivery", NA),
+         group = ifelse(str_detect(HCPCS_Desc, "Established patient office or other outpatient"), "est_patient_office", group),
+         group = ifelse(str_detect(HCPCS_Desc, "Hospital discharge day management"), "hosp_disch_day", group),
+         group = ifelse(str_detect(HCPCS_Desc, "Hospital observation"), "hosp_obs_care", group),
+         group = ifelse(str_detect(HCPCS_Desc, "Initial hospital inpatient care"), "initial_hosp_inpat", group),
+         group = ifelse(str_detect(HCPCS_Desc, "New patient office or other outpatient visit"), "new_patient_office", group),
+         group = ifelse(str_detect(HCPCS_Desc, "Subsequent hospital inpatient care"), "subs_hosp_inpat", group),
+         group = ifelse(str_detect(HCPCS_Desc, "Subsequent observation care"), "subs_obs_care", group))
+
+MUP_PHY <- MUP_PHY %>%
+  filter(!is.na(group)) %>%
+  group_by(Rndrng_NPI, group, year) %>%
+  mutate(num_services = sum(Tot_Srvcs, na.rm=T)) %>%
+  ungroup() %>%
+  distinct(year, Rndrng_NPI, group, num_services, total_claims, Rndrng_Prvdr_State_Abrvtn)
+
+# long to wide
+MUP_PHY_wide <- MUP_PHY %>%
+  mutate(frac_services = num_services/total_claims) %>%
+  select(-num_services, -total_claims) %>%
+  pivot_wider(id_cols = c("Rndrng_NPI", "year", "Rndrng_Prvdr_State_Abrvtn"), names_from = "group", values_from = "frac_services") %>%
+  mutate_if(is.numeric, funs(ifelse(is.na(.),0,.)))
+
 
 # Read in Aggregated Pairs data from "data4_physician_level.R"
-Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs2.rds"))
+Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs.rds"))
 
 
 # Merge MDPPAS to main dataset and fill time invariant variables
@@ -59,7 +103,11 @@ Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
   dplyr::filter(max>.7) 
-  # 240k obs
+  # 178k obs
+
+# join public use file 
+Physician_Data <- Physician_Data %>%
+  left_join(MUP_PHY_wide, by=c("DocNPI"="Rndrng_NPI", "year"))
 
 
 ## Read in Medicare Opt-Out Data
@@ -170,11 +218,6 @@ Physician_Data <- Physician_Data %>%
   dplyr::mutate(sum=sum(work_in_office)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(ever_work_in_office=ifelse(sum>0,1,0)) 
-
-
-observe <- Physician_Data %>%
-  filter(office_yearprior==1) %>%
-  select(DocNPI, year, minyr_EHR, pos_office, pos_inpat, work_in_office, office_yearprior, npi_unq_benes, total_office)
   
   # The NAs that are left in this variable are fine because they only occur when minyr_EHR is either 0
   # or 2009, and these observations get dropped in the analysis anyway. 
@@ -202,6 +245,10 @@ Physician_Data <- Physician_Data %>%
 
 Physician_Data <- Physician_Data %>%
   mutate(claim_per_patient=claim_count_total/npi_unq_benes)
+
+# create variable that indicates the physician left the hospital completely
+Physician_Data <- Physician_Data %>%
+  mutate(only_office = ifelse(pos_inpat<.05,1,0))
 
 
 
@@ -232,8 +279,13 @@ Physician_Data <- Physician_Data %>%
 Physician_Data <- Physician_Data %>%
   filter(yearbefore>.5 | is.na(yearbefore))
 
+Physician_Data <- Physician_Data %>%
+  group_by(DocNPI) %>%
+  fill(Rndrng_Prvdr_State_Abrvtn, .direction="downup") %>%
+  ungroup()
+
 # Save the data
-saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data2.rds"))
+saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
 
 
 

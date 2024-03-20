@@ -6,6 +6,9 @@ library(ggplot2)
 library(readr)
 library(showtext)
 library(panelView)
+library(maps)
+library(mapdata)
+library(cdlTools)
 
 
 options(knitr.kable.NA=" ")
@@ -22,7 +25,7 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 # The data used is created in "Final_Pairs.R"
 
 # Read in Final_Pairs_Variables.rds
-Physician_Data <- read_rds(paste0(created_data_path,"Physician_data2.rds"))
+Physician_Data <- read_rds(paste0(created_data_path,"Physician_Data.rds"))
 
 
 
@@ -158,6 +161,119 @@ ggplot(sum_stats_year,aes(x=year,y=value,color=Variable, linetype=Variable)) +
         text=element_text(size=20)) 
 
 ggsave("Objects/sum_stats_year.pdf", width=10, height=7, units="in")
+
+
+# summary stats for levels of integration:  ----------------------------------------------------------------
+
+sum_stats_ipa <- Physician_Data %>% ungroup() %>% filter(phys_ever_IPA==1 & minyr_EHR>0) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Ever Exit Clinical Work"="ever_retire",
+                 "Fraction Patients in Office"="pos_office",
+                 "Work in an Office"="work_in_office",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Claims per Patient"="claim_per_patient",
+                 "Number of Patients"="npi_unq_benes"), 
+               list(m=mean,sd=sd), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,m,sd) 
+
+sum_stats_opho <- Physician_Data %>% ungroup() %>% filter(phys_ever_OPHO==1 & minyr_EHR>0) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Ever Exit Clinical Work"="ever_retire",
+                 "Fraction Patients in Office"="pos_office",
+                 "Work in an Office"="work_in_office",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Claims per Patient"="claim_per_patient",
+                 "Number of Patients"="npi_unq_benes"), 
+               list(m=mean,sd=sd), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,m,sd) 
+
+sum_stats_cpho <- Physician_Data %>% ungroup() %>% filter(phys_ever_CPHO==1 & minyr_EHR>0) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Ever Exit Clinical Work"="ever_retire",
+                 "Fraction Patients in Office"="pos_office",
+                 "Work in an Office"="work_in_office",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Claims per Patient"="claim_per_patient",
+                 "Number of Patients"="npi_unq_benes"), 
+               list(m=mean,sd=sd), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,m,sd) 
+
+sum_stats_ism <- Physician_Data %>% ungroup() %>% filter(phys_ever_ISM==1 & minyr_EHR>0) %>%
+  summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
+                 "Female"="female", "Number of Systems Worked With"="num_systems",
+                 "Age"="age",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Ever Exit Clinical Work"="ever_retire",
+                 "Fraction Patients in Office"="pos_office",
+                 "Work in an Office"="work_in_office",
+                 "Year of EHR Exposure"="minyr_EHR",
+                 "Claims per Patient"="claim_per_patient",
+                 "Number of Patients"="npi_unq_benes"), 
+               list(m=mean,sd=sd), na.rm=TRUE) %>%
+  mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
+  gather(key=var,value=value) %>%
+  extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
+  spread(key=statistic, value=value) %>%
+  relocate(variable,m,sd) 
+
+n_ipa <- Physician_Data %>%
+  filter(phys_ever_IPA==1) %>%
+  distinct(DocNPI) %>%
+  nrow()
+n_opho <- Physician_Data %>%
+  filter(phys_ever_OPHO==1) %>%
+  distinct(DocNPI) %>%
+  nrow()
+n_cpho <- Physician_Data %>%
+  filter(phys_ever_CPHO==1) %>%
+  distinct(DocNPI) %>%
+  nrow()
+n_ism <- Physician_Data %>%
+  filter(phys_ever_ISM==1) %>%
+  distinct(DocNPI) %>%
+  nrow()
+
+sum_stats <- sum_stats_ipa %>%
+  left_join(sum_stats_opho, by="variable") %>%
+  left_join(sum_stats_cpho, by="variable") %>%
+  left_join(sum_stats_ism, by="variable") %>%
+  add_row(variable = "No. Hospitalists", m.x=n_ipa, m.y=n_opho, m.x.x=n_cpho, m.y.y=n_ism)
+
+
+knitr::kable(sum_stats[c(1,4,6,8,10,3,5,9,7,2,11),],
+             format="latex",
+             table.envir="table",
+             col.names=c("Variable","Mean","s.d.", "Mean","s.d.", "Mean","s.d.", "Mean","s.d."),
+             digits=2,
+             caption="Summary Statistics by Integration Type",
+             booktabs=TRUE,
+             escape=F,
+             align=c("l","c","c","c","c","c"),
+             position="h") %>%
+  kable_styling(full_width=F) %>%
+  pack_rows(index = c("Characteristics" = 5, "Outcomes" = 5, " " = 1)) %>%
+  add_header_above(c(" "=1, "IPA"=2, "OPHO"=2, "CPHO"=2, "FIO"=2))
 
 
 # Create graph showing the distributions of important variables---------------------------------------------------------
@@ -462,3 +578,71 @@ ggplot(control_hist_data, aes(x=time, y=sum, fill=Group)) +
   ylab("Count of Physicians") + xlab("Event Time")
 
 ggsave(plot=last_plot(), file="/Objects/control_histogram.pdf", height=7, width=10, units="in")
+
+
+## plot distribution of where retiring physicians who retire are located
+zipcw <- read_excel(paste0(raw_data_path, "ZIPCodetoZCTACrosswalk2010UDS.xls"))
+
+zipcw <- zipcw %>%
+  distinct(ZIP, StateAbbr)
+
+Physician_Data <- Physician_Data %>%
+  mutate(phy_zip1=as.character(phy_zip1)) %>%
+  left_join(zipcw, by=c("phy_zip1"="ZIP"))
+
+Physician_Data <- Physician_Data %>%
+  group_by(DocNPI) %>%
+  fill(StateAbbr, .direction="downup") %>%
+  ungroup()
+
+retire_data <- Physician_Data %>%
+  filter(ever_retire==1) %>%
+  distinct(DocNPI, StateAbbr) %>%
+  group_by(StateAbbr) %>%
+  count() %>%
+  ungroup() %>%
+  filter(!is.na(StateAbbr)) %>%
+  add_row(StateAbbr="CN", n=0) %>%
+  add_row(StateAbbr="ME", n=0) %>%
+  add_row(StateAbbr="MA", n=0) %>%
+  add_row(StateAbbr="NH", n=0) %>%
+  add_row(StateAbbr="NJ", n=0) %>%
+  add_row(StateAbbr="RI", n=0) %>%
+  add_row(StateAbbr="VT", n=0)
+
+observe <- Physician_Data %>%
+  filter(ever_retire==1) %>%
+  distinct(DocNPI)
+
+sum <- sum(retire_data$n)
+
+ggplot(retire_data, aes(x=StateAbbr, y=n)) + geom_bar(stat = "identity")
+
+# make it into a map
+usa <- map_data('usa')
+state <- map_data("state")
+
+state <- state %>%
+  mutate(fips = fips(region, to="FIPS"))
+retire_data <- retire_data %>%
+  mutate(fips=fips(StateAbbr, to="FIPS"))
+
+retire_data <- retire_data %>%
+  left_join(state, by="fips")
+
+retire_data <- retire_data %>%
+  mutate(n_group = cut(n, breaks = c(0, 10, 20, 30, 40, 50, 60, 100, 150))) %>%
+  mutate(n_group=as.character(n_group)) %>%
+  mutate(n_group = ifelse(is.na(n_group), "0", n_group)) %>%
+  mutate(n_group = factor(n_group, levels = c("0", "(0,10]", "(10,20]", "(20,30]", "(30,40]", "(40,50]", "(50,60]", "(100,150]"))) %>%
+  rename("# Retiring Docs"=n_group)
+
+ggplot(data=retire_data, aes(x=long, y=lat, fill=`# Retiring Docs`, group=group)) + 
+  geom_polygon(color = "white") + 
+  theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  ggtitle('U.S. Map with States') + 
+  coord_fixed(1.3) +
+  theme(text=element_text(size=15)) + theme_bw()
+
+ggsave(filename = "Objects/retire_dist_map.pdf")

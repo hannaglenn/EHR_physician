@@ -62,19 +62,61 @@ data <- data %>%
 
 # Read in main AHA survey data
 # I need to think about adding more hospital characteristics to this dataset
-AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
+AHAmainsurvey <- read_csv(paste0(raw_data_path,"allAHAvariables_20092017.csv"))
 
 AHAmainsurvey <- AHAmainsurvey %>%
+  select(ID, YEAR, MCRNUM, MNAME, MADMIN, SYSID, SUBS, EHLTH, 
+         BDTOT, FTMDTF, FTRES, PTMDTF, PTRES, JNTPH, PHYGP,
+         IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS, IPAP, OPHP, CPHP, ISMP) %>%
+  filter(!is.na(MCRNUM)) %>%
   mutate(ID=as.character(ID)) %>%
-  dplyr::rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
-         joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
-  select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
-  select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS,
-         -total_physicians, -joint_phys, -phys_owned)
+  filter(YEAR<=2015)
+
+# drop hospitals that change system ID
+AHAmainsurvey <- AHAmainsurvey %>%
+  group_by(MCRNUM) %>%
+  mutate(minyr = min(YEAR),
+         maxyr = max(YEAR)) %>% 
+  mutate(lag_sys = dplyr::lag(SYSID)) %>%
+  mutate(change_sys = ifelse(is.na(SYSID) & !is.na(lag_sys),1,NA)) %>%
+  mutate(change_sys = ifelse(!is.na(SYSID) & is.na(lag_sys),1,change_sys)) %>%
+  mutate(change_sys = ifelse(!is.na(SYSID) & !is.na(lag_sys) & lag_sys!=SYSID, 1, change_sys)) %>%
+  mutate(change_sys = ifelse((YEAR==minyr),NA,change_sys)) %>%
+  fill(change_sys, .direction="downup") %>%
+  filter(is.na(change_sys)) %>%
+  select(-change_sys)
+  
 
 data <- data %>% ungroup() %>%
   mutate(AHAID=as.character(AHAID)) %>%
-  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"),na_matches="never")
+  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"="YEAR"),na_matches="never")
+
+data <- data %>%
+  filter(!is.na(MCRNUM))
+  # 545k obs
+
+# create variables for type of hosp
+data <- data %>%
+  group_by(MCRNUM) %>%
+  mutate(ever_IPA = ifelse(IPAHOS==1,1,NA),
+         ever_OPHO = ifelse(OPHOSHOS==1,1,NA),
+         ever_CPHO = ifelse(CPHOHOS==1,1,NA),
+         ever_ISM = ifelse(ISMHOS==1,1,NA)) %>%
+  fill(ever_IPA, ever_OPHO, ever_CPHO, ever_ISM, .direction="downup") %>%
+  ungroup()
+
+data <- data %>%
+  group_by(DocNPI) %>%
+  mutate(phys_ever_IPA = ifelse(ever_IPA==1,1,NA),
+         phys_ever_OPHO = ifelse(ever_OPHO==1,1,NA),
+         phys_ever_CPHO = ifelse(ever_CPHO==1,1,NA),
+         phys_ever_ISM = ifelse(ever_ISM==1,1,NA)) %>%
+  fill(phys_ever_IPA, phys_ever_OPHO, phys_ever_CPHO, phys_ever_ISM, .direction="downup") %>%
+  mutate(phys_ever_IPA = ifelse(is.na(phys_ever_IPA),0,phys_ever_IPA),
+         phys_ever_OPHO = ifelse(is.na(phys_ever_OPHO),0,phys_ever_OPHO),
+         phys_ever_CPHO = ifelse(is.na(phys_ever_CPHO),0,phys_ever_CPHO),
+         phys_ever_ISM = ifelse(is.na(phys_ever_ISM),0,phys_ever_ISM)) %>%
+  ungroup()
 
 # Read in HIMSS data for additional EHR information
 for (t in 2009:2017){
@@ -105,7 +147,7 @@ rm(HAEntity2009, HAEntity2010, HAEntity2011, HAEntity2012, HAEntity2013, HAEntit
 
 # Merge HIMSS data sets into one
 HIMSS <- HAEntity %>%
-  left_join(HostedSoftware, by=c("HAEntityId","SurveyId", "year"), na.matches="never") 
+  left_join(HostedSoftware, by=c("HAEntityId","SurveyId", "year"), na_matches="never") 
 # This created repeats because some hospitals have multiple EHR systems.
 
 # Convert HIMSS from long to wide in Vendor name
@@ -146,7 +188,7 @@ num_missing_EHR <- data %>%
   filter(is.na(EHLTH) & is.na(EHR_HIMSS1)) %>%
   group_by(year) %>%
   distinct(HospNPI)
-  # 7314 missing 
+  # 5123 missing 
 
 # Find out how many hospitals are missing an answer in every year
 num_always_missing_EHR <- data %>% ungroup() %>%
@@ -157,7 +199,7 @@ num_always_missing_EHR <- data %>% ungroup() %>%
   filter(always_missing==1) %>%
   ungroup() %>%
   distinct(HospNPI, .keep_all = T)
-  # There are only 82 hospitals that never answer this question, but they typically have answers to the other questions in the AHA survey
+  # There are only 57 hospitals that never answer this question, but they typically have answers to the other questions in the AHA survey
 
 # Fill in missing year for EHR if it's between two years that have the same answer for EHR question
 data <- data %>% group_by(AHAID) %>%
@@ -184,7 +226,7 @@ data <- data %>% ungroup() %>%
 
 # Get rid of physicians who only work on VA hospitals
 VA <- data %>%
-  mutate(VA=ifelse(str_detect(Hospital_name,"Veteran"),1,0)) %>%
+  mutate(VA=ifelse(str_detect(MNAME,"Veteran|\\sVA\\s|\\sVHA\\s"),1,0)) %>%
   filter(VA==1) %>%
   distinct(pairID,VA)
 
@@ -192,6 +234,35 @@ data <- data %>%
   left_join(VA,by="pairID") %>%
   filter(is.na(VA)) %>%
   select(-VA)
+
+# read in HCRIS data to create average exposure of hospitals to HITECH subsidies
+hcris <- read_csv(paste0(raw_data_path, "/final_hcris_data.csv")) %>%
+  select(-fy_start, -fy_end, -date_processed, -date_created, -source)
+
+exposure <- hcris %>%
+  filter(year>=2006 & year<=2008) %>%
+  distinct(year, provider_number, tot_operating_exp, tot_discharges, mcare_beddays, mcaid_beddays, total_beddays)
+
+exposure <- exposure %>%
+  group_by(provider_number) %>%
+  select(-year) %>%
+  summarise_all(list(mean)) %>%
+  ungroup() %>%
+  mutate(discharges_fun = ifelse(tot_discharges<1150, 2000000,
+                                 ifelse(tot_discharges>23000,4370200, 1770000+(200*tot_discharges)))) %>%
+  mutate(mcaid_exposure = discharges_fun * (mcaid_beddays/total_beddays)) %>%
+  mutate(mcare_exposure = discharges_fun * (mcare_beddays/total_beddays)) %>%
+  distinct(provider_number, mcaid_exposure, mcare_exposure)
+
+observe <- exposure %>%
+  mutate(count=1) %>%
+  group_by(provider_number) %>%
+  mutate(sum=sum(count)) %>%
+  filter(sum>1)
+
+data <- data %>%
+  left_join(exposure, by=c("MCRNUM"="provider_number"))
+
 
 
 
@@ -201,21 +272,21 @@ data <- data %>%
 # Descriptive Variable: Average size of hospital worked with
 # Drop hospitals with really low bed count
 low_beds <- data %>% ungroup() %>%
-  distinct(HospNPI, year, beds) %>%
-  filter(beds<10) %>%
+  distinct(HospNPI, year, BDTOT) %>%
+  filter(BDTOT<10) %>%
   distinct(HospNPI) %>%
   mutate(low_beds=1)
-  # 58 hospitals
+  # 45 hospitals
 
 data <- data %>%
   left_join(low_beds, by="HospNPI") %>%
   filter(is.na(low_beds)) %>%
   select(-low_beds)
-  # 775k obs
+  # 544k obs
 
 data <- data %>%
   group_by(DocNPI,year) %>%
-  mutate(avg_beds=mean(beds,na.rm=T)) %>%
+  mutate(avg_beds=mean(BDTOT,na.rm=T)) %>%
   mutate(avg_beds=round(avg_beds,1)) %>%
   ungroup()
 
@@ -226,8 +297,7 @@ data <- data %>% ungroup() %>%
 ### EHR VARIABLES --------------------------------------------------------------------------------
 # Create indicator for general hospital EHR use
 data <- data %>%
-  mutate(EHR=ifelse(EHLTH==2 | !is.na(EHR_HIMSS1),1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) %>%
-  select(-EHLTH, -EHR_HIMSS1)
+  mutate(EHR=ifelse(EHLTH==2 | !is.na(EHR_HIMSS1),1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) 
 
 # In some cases, 2009 or 2015 can be filled in to not have a missing value. 
 # Create dataset to fill in 2009 or 2015 conditionally
@@ -391,6 +461,24 @@ data <- data %>%
   mutate(never_newnpi=ifelse(sum==0,1,0)) %>%
   select(-sum)
 
+# save a hospital level dataset
+hosp_data <- data %>%
+  distinct(year, HospNPI, MCRNUM, MADMIN, EHLTH, EHR_HIMSS1, SYSID, SUBS, BDTOT, FTMDTF, FTRES, 
+           PTMDTF, PTRES, JNTPH, PHYGP, IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS,
+           IPAP, OPHP, CPHP, ISMP, mcare_exposure, mcaid_exposure)
+
+saveRDS(hosp_data, paste0(created_data_path, "hosp_data.rds"))
+
+# Create average exposure among all hospitals physician works with
+data <- data %>%
+  group_by(MCRNUM, year) %>%
+  mutate(total_exposure = sum(mcaid_exposure, mcare_exposure)) %>%
+  ungroup() %>%
+  group_by(DocNPI, year) %>%
+  mutate(weightedavg_exposure = weighted.mean(total_exposure, samedaycount, na.rm=T)) %>%
+  mutate(weightedavg_mcaid_exposure = weighted.mean(mcaid_exposure, samedaycount, na.rm=T)) %>%
+  mutate(weightedavg_mcare_exposure = weighted.mean(mcare_exposure, samedaycount, na.rm=T)) %>%
+  ungroup()
 
 # Aggregate the data to the physician level -------------------------------------------------------------
 
@@ -399,8 +487,9 @@ Aggregated_Pairs <- data %>%
            num_hospitals, 
            frac_EHR, minyr_EHR, 
            num_systems, hosp_patient_count, hosp_patient_count_EHRhosp, hosp_patient_count_noEHRhosp, 
-           newnpi, never_newnpi)
-  #526k obs
+           newnpi, never_newnpi, weightedavg_exposure, weightedavg_mcaid_exposure, weightedavg_mcare_exposure,
+           phys_ever_IPA, phys_ever_OPHO, phys_ever_CPHO, phys_ever_ISM)
+  #403k obs
 
 # Now complete the data
 Aggregated_Pairs <- complete(Aggregated_Pairs,DocNPI,year=2009:2017)
@@ -411,7 +500,7 @@ Aggregated_Pairs <- Aggregated_Pairs %>%
   fill(grad_year,.direction="downup") %>%
   fill(avg_beds,.direction="downup") %>%
   fill(num_hospitals,.direction="downup") %>%
-  fill(num_systems,.direction="downup") %>%
+  fill(num_systems, weightedavg_exposure, phys_ever_IPA, phys_ever_OPHO, phys_ever_CPHO, phys_ever_ISM, .direction="downup") %>%
   ungroup() %>%
   mutate(experience=year-grad_year) %>%
   mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0))
@@ -419,7 +508,7 @@ Aggregated_Pairs <- Aggregated_Pairs %>%
 
 
 # Save the Data for Analysis -----------------------------------------------------------------
-saveRDS(Aggregated_Pairs,file=paste0(created_data_path,"Aggregated_Pairs2.rds"))
+saveRDS(Aggregated_Pairs,file=paste0(created_data_path,"Aggregated_Pairs.rds"))
 
 
 # Balance Check
