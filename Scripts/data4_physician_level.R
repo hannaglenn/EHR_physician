@@ -67,7 +67,7 @@ AHAmainsurvey <- read_csv(paste0(raw_data_path,"allAHAvariables_20092017.csv"))
 AHAmainsurvey <- AHAmainsurvey %>%
   select(ID, YEAR, MCRNUM, MNAME, MADMIN, SYSID, SUBS, EHLTH, 
          BDTOT, FTMDTF, FTRES, PTMDTF, PTRES, JNTPH, PHYGP,
-         IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS, IPAP, OPHP, CPHP, ISMP) %>%
+         IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS, IPAP, OPHP, CPHP, ISMP, FTRNTF) %>%
   filter(!is.na(MCRNUM)) %>%
   mutate(ID=as.character(ID)) %>%
   filter(YEAR<=2015)
@@ -464,7 +464,7 @@ data <- data %>%
 # save a hospital level dataset
 hosp_data <- data %>%
   distinct(year, HospNPI, MCRNUM, MADMIN, EHLTH, EHR_HIMSS1, SYSID, SUBS, BDTOT, FTMDTF, FTRES, 
-           PTMDTF, PTRES, JNTPH, PHYGP, IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS,
+           PTMDTF, PTRES, JNTPH, PHYGP, IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS, FTRNTF,
            IPAP, OPHP, CPHP, ISMP, mcare_exposure, mcaid_exposure)
 
 saveRDS(hosp_data, paste0(created_data_path, "hosp_data.rds"))

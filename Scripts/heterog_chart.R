@@ -596,8 +596,7 @@ cpp_data_frame <- as.data.frame(chart_data_frame) %>%
 
 
 # Create Chart
-plot_data <- rbind(retire_data_frame, fracoffice_data_frame, indoffice_data_frame,
-                   patcount_data_frame, cpp_data_frame) %>%
+plot_data <- rbind(fracoffice_data_frame, indoffice_data_frame) %>%
   mutate(mean=ifelse(Outcome=="Exit",.03,NA),
          mean=ifelse(Outcome=="Frac. Patients in Office",.08,mean),
          mean=ifelse(Outcome=="Work in Office",.27,mean),
@@ -610,17 +609,17 @@ plot_data <- rbind(retire_data_frame, fracoffice_data_frame, indoffice_data_fram
          Sample=ifelse(is.na(Sample),"Main", Sample)) %>%
   select(-IPA, -OPHO, -CPHO, -ISM) %>%
   mutate(estimate_perc=coef/mean) %>%
-  mutate(upper=(coef+(1.96*se))/mean,
-         lower=(coef-(1.96*se))/mean)
+  mutate(upper=(coef+(1.96*se)),
+         lower=(coef-(1.96*se)))
 plot_data$Outcome <- factor(plot_data$Outcome, levels=c("Exit", "Frac. Patients in Office", "Work in Office", "Number Patients", "Claims per Patient"))
 plot_data$Sample <- factor(plot_data$Sample, levels = c("Main", "IPA", "OPHO", "CPHO", "ISM"))
 
 cbbPalette <- c("#000000", "#E69F00", "#D55E00", "#0072B2", "#009E73")
 dodge <- position_dodge(width=0.5)
-ggplot(data=plot_data, aes(x=Outcome, y=estimate_perc, color=Sample)) + geom_point(position = dodge) +
+ggplot(data=plot_data, aes(x=Outcome, y=coef, color=Sample)) + geom_point(position = dodge) +
   geom_errorbar(aes(ymax=upper,ymin=lower, color=Sample),size=.5, position = dodge, width=.2) + 
   scale_colour_manual(values=cbbPalette) + theme_bw() + geom_hline(yintercept=0, linetype="dashed") +
-  xlab("\nVariable") + ylab("Estimate and 95% CI as Percent of Mean\n") + theme(text = element_text(size = 15))
+  xlab("\nVariable") + ylab("Estimate and 95% CI\n") + theme(text = element_text(size = 15))
 
-ggsave("Objects/heterog_plot_int.pdf", width=10, height=6, units = "in")
+ggsave("Objects/heterog_plot_int_office.pdf", width=8, height=6, units = "in")
 

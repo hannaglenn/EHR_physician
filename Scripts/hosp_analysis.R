@@ -1,7 +1,7 @@
 library(readr)
 library(dplyr)
 library(did)
-dodge <- position_dodge(width=0.3) 
+
 
 
 # read in hospital level data
@@ -64,7 +64,7 @@ hosp_data <- hosp_data %>%
 
 # hospital level analysis with outcomes of other hospital behaviors
 varlist <- list("change_admin", "SUBS", "BDTOT", "IPAP", "OPHP", "CPHP", "ISMP", "PHYGP", "capital_cost_buildings", 
-                "capital_cost_movableequip", "expenses_minus_medrecords", "IPAHOS", "OPHOSHOS", "CPHOHOS", "ISMHOS")
+                "capital_cost_movableequip", "expenses_minus_medrecords", "IPAHOS", "OPHOSHOS", "CPHOHOS", "ISMHOS", "FTRNTF")
 
 models <- lapply(varlist, function(x){
   all <- att_gt(yname = x,                # LHS Variable
@@ -151,10 +151,11 @@ chart_data <- chart_data %>%
          outcome = ifelse(outcome=="IPAHOS","IPA",outcome),
          outcome = ifelse(outcome=="OPHOSHOS","OPHO",outcome),
          outcome = ifelse(outcome=="CPHHOS","CPHO",outcome),
-         outcome = ifelse(outcome=="ISMHOS","FIO",outcome)) %>%
+         outcome = ifelse(outcome=="ISMHOS","FIO",outcome),
+         outcome = ifelse(outcome=="FTRNTF", "No. Nurses", outcome)) %>%
   select(outcome, est, se) 
 
-knitr::kable(chart_data[c(9,10,11,2,1,3,8,12,13,14,15),],
+knitr::kable(chart_data[c(9,10,11,2,1,3,16,8,12,13,14,15),],
              format="latex",
              table.envir="table",
              col.names=c("Outcome","Estimate","SE"),
@@ -167,7 +168,7 @@ knitr::kable(chart_data[c(9,10,11,2,1,3,8,12,13,14,15),],
              row.names = F) %>%
   kable_styling(full_width=F) %>%
   column_spec(1, width = "20em") %>%
-  pack_rows(index = c("Non-EHR Investment/Organizational Changes" = 6, "Relation to Physicians" = 5))
+  pack_rows(index = c("Non-EHR Investment/Organizational Changes" = 6, "Workforce" = 6))
 
 
 

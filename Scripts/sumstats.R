@@ -37,57 +37,105 @@ sum_stats_exit <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0) %>%
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
                  "Year of EHR Exposure"="minyr_EHR",
-                 "Ever Exit Clinical Work"="ever_retire"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))/9), na.rm=TRUE) %>%
+                 "Ever Exit Clinical Work"="ever_retire",
+                 "Works w/ IPA Hosp."="phys_ever_IPA",
+                 "Works w/ OPHO Hosp."="phys_ever_OPHO",
+                 "Works w/ CPHO Hosp."="phys_ever_CPHO",
+                 "Works w/ FIO Hosp."="phys_ever_ISM"), 
+               list(m=mean,sd=sd), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) 
+  relocate(variable,m,sd) %>%
+  add_row(variable = "Fraction Patients in Office") %>%
+  add_row(variable = "Work in an Office") %>%
+  add_row(variable = "Number of Patients") %>%
+  add_row(variable = "Claims per Patient")
 
-sum_stats_office <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0 & ever_retire==0) %>%
+n_exit <- Physician_Data %>%
+  ungroup() %>%
+  filter(minyr_EHR>0) %>%
+  distinct(DocNPI) %>%
+  nrow()
+
+sum_stats_office <- Physician_Data %>% ungroup() %>% filter(ever_retire==0) %>%
+  filter(minyr_EHR>0) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
                  "Year of EHR Exposure"="minyr_EHR",
                  "Fraction Patients in Office"="pos_office",
-                 "Work in an Office"="work_in_office"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))/9), na.rm=TRUE) %>%
+                 "Work in an Office"="work_in_office",
+                 "Works w/ IPA Hosp."="phys_ever_IPA",
+                 "Works w/ OPHO Hosp."="phys_ever_OPHO",
+                 "Works w/ CPHO Hosp."="phys_ever_CPHO",
+                 "Works w/ FIO Hosp."="phys_ever_ISM"), 
+               list(m.office=mean,sd.office=sd), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) 
+  relocate(variable,m.office,sd.office)  %>%
+  add_row(variable="Ever Exit Clinical Work") %>%
+  add_row(variable = "Number of Patients") %>%
+  add_row(variable = "Claims per Patient")
 
-sum_stats_prod <- Physician_Data %>% ungroup() %>% filter(minyr_EHR>0 & ever_retire==0 & never_newnpi==1) %>%
+n_office <- Physician_Data %>%
+  ungroup() %>%
+  filter(minyr_EHR>0 & ever_retire==0) %>%
+  distinct(DocNPI) %>%
+  nrow()
+
+sum_stats_prod <- Physician_Data %>% ungroup() %>% 
+  filter(ever_retire==0 & never_newnpi==1) %>%
+  filter(minyr_EHR>0) %>%
   summarise_at(c("Number of Hospitals Worked With"="num_hospitals",
                  "Female"="female", "Number of Systems Worked With"="num_systems",
                  "Age"="age",
                  "Number of Patients"="npi_unq_benes",
                  "Year of EHR Exposure"="minyr_EHR",
-                 "Claims per Patient"="claim_per_patient"), 
-               list(m=mean,sd=sd,min=min,max=max,n=~sum(!is.na(.))/9), na.rm=TRUE) %>%
+                 "Claims per Patient"="claim_per_patient",
+                 "Works w/ IPA Hosp."="phys_ever_IPA",
+                 "Works w/ OPHO Hosp."="phys_ever_OPHO",
+                 "Works w/ CPHO Hosp."="phys_ever_CPHO",
+                 "Works w/ FIO Hosp."="phys_ever_ISM"), 
+               list(m.prod=mean,sd.prod=sd), na.rm=TRUE) %>%
   mutate_if(is.numeric, ~ifelse(abs(.)==Inf,NA,.))  %>%
   gather(key=var,value=value) %>%
   extract(col="var",into=c("variable", "statistic"), regex=("(.*)_(.*)$")) %>%
   spread(key=statistic, value=value) %>%
-  relocate(variable,n,m,sd,min,max) 
+  relocate(variable,m.prod,sd.prod) %>%
+  add_row(variable="Ever Exit Clinical Work") %>%
+  add_row(variable = "Fraction Patients in Office") %>%
+  add_row(variable = "Work in an Office") 
 
-sum_stats <- rbind(sum_stats_exit, sum_stats_office, sum_stats_prod)
+n_prod <- Physician_Data %>%
+  ungroup() %>%
+  filter(minyr_EHR>0 & ever_retire==0 & never_newnpi==1) %>%
+  distinct(DocNPI) %>%
+  nrow()
+
+sum_stats <- sum_stats_exit %>%
+  left_join(sum_stats_office, by = "variable") %>%
+  left_join(sum_stats_prod, by= "variable") %>%
+  add_row(variable = "Num. Hospitalists", m=n_exit, m.office = n_office, m.prod = n_prod)
 
 
-knitr::kable(sum_stats[c(2,6,1,3,4,5,12,9,13,7,8,10,11,18,15,20,14,16,17,19),],
+
+knitr::kable(sum_stats[c(1,3,4,5,8,9,6,7,10,2,11,12,13,14,15),],
              format="latex",
              table.envir="table",
-             col.names=c("Variable","No. Hospitalists","Mean","Std. Dev.", "Min", "Max"),
+             col.names=c("Variable","Mean","SD","Mean","SD","Mean","SD"),
              digits=2,
              caption="Summary Statistics",
              booktabs=TRUE,
              escape=F,
-             align=c("l","c","c","c","c","c"),
+             align=c("l","c","c","c","c","c", "c"),
              position="h") %>%
   kable_styling(full_width=F) %>%
-  pack_rows(index = c("Exit Sample" = 6, "Office Setting Sample" = 7, "Productivity Sample" = 7))
+  pack_rows(index = c("Physician Characteristics" = 4, "Integration Characteristics"=4, "EHR Exposure" = 1, "Outcome Variables" = 5, " ")) %>%
+  add_header_above(c(" ", "Exit Sample"=2, "Office Sample"=2, "Productivity Sample"=2))
 
 
 # Summary Stats of all variables by old vs. young  ---------------------------------------------------------
@@ -238,19 +286,23 @@ sum_stats_ism <- Physician_Data %>% ungroup() %>% filter(phys_ever_ISM==1 & miny
   relocate(variable,m,sd) 
 
 n_ipa <- Physician_Data %>%
-  filter(phys_ever_IPA==1) %>%
+  ungroup() %>%
+  filter(phys_ever_IPA==1 & minyr_EHR>0) %>%
   distinct(DocNPI) %>%
   nrow()
 n_opho <- Physician_Data %>%
-  filter(phys_ever_OPHO==1) %>%
+  ungroup() %>%
+  filter(phys_ever_OPHO==1 & minyr_EHR>0) %>%
   distinct(DocNPI) %>%
   nrow()
 n_cpho <- Physician_Data %>%
-  filter(phys_ever_CPHO==1) %>%
+  ungroup() %>%
+  filter(phys_ever_CPHO==1 & minyr_EHR>0) %>%
   distinct(DocNPI) %>%
   nrow()
 n_ism <- Physician_Data %>%
-  filter(phys_ever_ISM==1) %>%
+  ungroup() %>%
+  filter(phys_ever_ISM==1 & minyr_EHR>0) %>%
   distinct(DocNPI) %>%
   nrow()
 
@@ -580,7 +632,7 @@ ggplot(control_hist_data, aes(x=time, y=sum, fill=Group)) +
 ggsave(plot=last_plot(), file="/Objects/control_histogram.pdf", height=7, width=10, units="in")
 
 
-## plot distribution of where retiring physicians who retire are located
+## plot distribution of where retiring physicians who retire are located ############
 zipcw <- read_excel(paste0(raw_data_path, "ZIPCodetoZCTACrosswalk2010UDS.xls"))
 
 zipcw <- zipcw %>%
@@ -635,14 +687,13 @@ retire_data <- retire_data %>%
   mutate(n_group=as.character(n_group)) %>%
   mutate(n_group = ifelse(is.na(n_group), "0", n_group)) %>%
   mutate(n_group = factor(n_group, levels = c("0", "(0,10]", "(10,20]", "(20,30]", "(30,40]", "(40,50]", "(50,60]", "(100,150]"))) %>%
-  rename("# Retiring Docs"=n_group)
+  dplyr::rename("# Retiring Docs"=n_group)
 
 ggplot(data=retire_data, aes(x=long, y=lat, fill=`# Retiring Docs`, group=group)) + 
   geom_polygon(color = "white") + 
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(),
         axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
-  ggtitle('U.S. Map with States') + 
   coord_fixed(1.3) +
   theme(text=element_text(size=15)) + theme_bw()
 
-ggsave(filename = "Objects/retire_dist_map.pdf")
+ggsave(filename = "Objects/retire_dist_map.pdf", width=8, height=5, units="in")
