@@ -608,28 +608,91 @@ Physician_Data <- Physician_Data %>%
 
 
 # LEE (2009) BOUNDS ------------------------------------------------------------------------------------ #### 
-leebounds <- Physician_Data %>%
-  filter(minyr_EHR!=2009) %>%
-  mutate(ctrl=ifelse(minyr_EHR==0,1,0),
-         treat=ifelse(minyr_EHR>0,1,0),
-         attrition=ifelse(never_newnpi==0 | ever_retire==1,1,0)) %>%
-  mutate(claim_per_patient=ifelse(attrition==1,NA,claim_per_patient))
 
-observe <- leebounds %>%
-  filter(treat==1) 
-summary(observe$claim_per_patient)
+# work in office indicator
+group_list <- c(2010, 2011, 2012, 2013, 2014)
 
-leebounds <- leebounds %>%
-  mutate(pctile=ntile(npi_unq_benes,100))
+office_lee <- lapply(group_list, function(x){
+    leedata <- Physician_Data %>%
+      filter(minyr_EHR>=x) %>%
+      mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
+      mutate(selection = ifelse(ever_retire==1,0,1))
+    
+    leedata <- data.frame(treat=leedata$treat,selection=leedata$selection,outcome=leedata$work_in_office)
+    
+    return(GetBounds(leebounds(leedata)))
+})
 
-observe <- leebounds %>%
-  filter(pctile>22) %>%
-  filter(treat==0)
-summary(observe$claim_per_patient)
+office_frac_lee <- lapply(group_list, function(x){
+  leedata <- Physician_Data %>%
+    filter(minyr_EHR>=x) %>%
+    mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
+    mutate(selection = ifelse(ever_retire==1,0,1))
+  
+  leedata <- data.frame(treat=leedata$treat,selection=leedata$selection,outcome=leedata$pos_office)
+  
+  return(GetBounds(leebounds(leedata)))
+})
+
+pat_count_lee <- lapply(group_list, function(x){
+  leedata <- Physician_Data %>%
+    filter(minyr_EHR>=x) %>%
+    mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
+    mutate(selection = ifelse(ever_retire==1,0,1))
+  
+  leedata <- data.frame(treat=leedata$treat,selection=leedata$selection,outcome=leedata$npi_unq_benes)
+  
+  return(GetBounds(leebounds(leedata)))
+})
+x <- 2010
+claim_lee <- lapply(group_list, function(x){
+  leedata <- Physician_Data %>%
+    filter(minyr_EHR>=x) %>%
+    mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
+    mutate(selection = ifelse(ever_retire==1,0,1)) %>%
+    filter(!is.na(claim_per_patient))
+  
+  leedata <- data.frame(treat=leedata$treat,selection=leedata$selection,outcome=leedata$claim_per_patient)
+  
+  return(GetBounds(leebounds(leedata)))
+})
+
+office_ind_lower <- mean(c(office_lee[[1]][1], office_lee[[2]][1], office_lee[[3]][1],office_lee[[4]][1], office_lee[[5]][1]))
+office_ind_upper <- mean(c(office_lee[[1]][2], office_lee[[2]][2], office_lee[[3]][2],office_lee[[4]][2], office_lee[[5]][2]))
+
+office_frac_lower <- mean(c(office_frac_lee[[1]][1], office_frac_lee[[2]][1], office_frac_lee[[3]][1],office_frac_lee[[4]][1], office_frac_lee[[5]][1]))
+office_frac_upper <- mean(c(office_frac_lee[[1]][2], office_frac_lee[[2]][2], office_frac_lee[[3]][2],office_frac_lee[[4]][2], office_frac_lee[[5]][2]))
+
+pat_lower <- mean(c(pat_count_lee[[1]][1], pat_count_lee[[2]][1], pat_count_lee[[3]][1],pat_count_lee[[4]][1], pat_count_lee[[5]][1]))
+pat_upper <- mean(c(pat_count_lee[[1]][2], pat_count_lee[[2]][2], pat_count_lee[[3]][2],pat_count_lee[[4]][2], pat_count_lee[[5]][2]))
+
+claim_lower <- mean(c(claim_lee[[1]][1], claim_lee[[2]][1], claim_lee[[3]][1],claim_lee[[4]][1], claim_lee[[5]][1]))
+claim_upper <- mean(c(claim_lee[[1]][2], claim_lee[[2]][2], claim_lee[[3]][2],claim_lee[[4]][2], claim_lee[[5]][2]))
+
+lower <- as.data.frame(c(office_ind_lower, office_frac_lower, pat_lower, claim_lower))
+upper <- as.data.frame(c(office_ind_upper, office_frac_upper, pat_upper, claim_upper))
+
+lee_plot <- cbind(lower,upper)
+colnames(lee_plot) <- c("lower", "upper")
+
+lee_table <- lee_plot %>%
+  mutate(variable = c("Work in Office", "Fraction in Office", "Num Patients", "Claims per Patient")) %>%
+  select(variable, lower, upper)
+
+lee_table_code <- knitr::kable(lee_table,
+                               format="latex",
+                               table.envir="table",
+                               caption="\\label{leebouns}Lee Bounds for Selection",
+                               col.names=c("Variable","Lower","Upper"),
+                               digits=3,
+                               booktabs=TRUE,
+                               escape=F,
+                               align=c("l","c","c"),
+                               position="ht!") 
+write(lee_table_code, "Table Code/leebounds.tex")
 
 
-
-# EVENT STUDY WITH LEAST WIGGLY CONFOUNDER
+# EVENT STUDY WITH LEAST WIGGLY CONFOUNDER ####
 wiggly <- lapply(varlist, function(x){
   es <- EventStudy(estimator = "OLS",
                    data = dplyr::filter(Physician_Data, minyr_EHR>0 & minyr_EHR!=2009),

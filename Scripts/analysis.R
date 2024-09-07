@@ -7,6 +7,7 @@ library(did2s)
 library(ggpubr)
 library(tidyr)
 library(extrafont)
+library(dplyr)
 
 
 # ------------------------------------- ANALYSIS  ------------------------------------
@@ -30,13 +31,15 @@ Physician_Data <- Physician_Data %>%
 
 varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient", "only_office")
 
+observe <- dplyr::filter(Physician_Data,minyr_EHR>0)
+
 # Get results for ATTGT 
 models <- lapply(varlist, function(x) {
   all <- att_gt(yname = x,                # LHS Variable
     gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
     idname = "DocNPI",               # ID
     tname = "year",                  # Time Variable
-    # xformla = NULL                 # No covariates
+    # xformla = NULL,                 # No covariates
     xformla = ~grad_year,            # Time-invariant controls
     data= if (x=="retire") dplyr::filter(Physician_Data,minyr_EHR>0) else (if (x=="pos_office" | x=="work_in_office" | x=="only_office") dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data, minyr_EHR>0 & ever_retire==0 & never_newnpi==1)),
     est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
@@ -236,11 +239,32 @@ ggsave(file="Objects/Presentation_patients_ages.pdf",plot=graphs[[6]]$ages, widt
 
 ggsave(file="Objects/Presentation_claimperpatient_all.pdf",plot=graphs[[8]]$all, width=10, height=7, units="in")
 
+observe <- Physician_Data %>%
+  filter(minyr_EHR==2014) %>%
+  group_by(year) %>%
+  summarise_if(is.numeric, mean, na.rm=T)
 
+# Save dis-aggregated plots for appendix 
+# retire dis-aggregated
+ggdid(models[[1]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Exiting Clinical Work")
 
+ggsave(filename = "Objects/retire_group.pdf", width=10, height=12, units="in")
 
-#Save plot of patient count dis-aggregated
-ggdid(models[[5]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
+# office ind dis-aggregated
+ggdid(models[[3]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Likelihood of Working in Office")
+
+ggsave(filename = "Objects/officeind_group.pdf", width=10, height=12, units="in")
+
+# office frac dis-aggregated
+ggdid(models[[2]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
+  theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Likelihood of Working in Office")
+
+ggsave(filename = "Objects/officefrac_group.pdf", width=10, height=12, units="in")
+
+# patient count dis-aggregated
+ggdid(models[[4]][["all"]]) + scale_color_manual(labels = c("Pre", "Post"), values=c("#000000", "#E69F00"),name="") +
   theme(legend.position = "none", text = element_text(colour="black",size = 15)) + labs(title="Dis-aggregated Effects of EHR Exposure on Patient Count")
 
 ggsave(filename = "Objects/patient_group.pdf", width=10, height=12, units="in")
