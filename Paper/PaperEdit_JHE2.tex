@@ -132,7 +132,7 @@ Formal retirement (leaving the labor force altogether) is not the only way for p
 
 For those who remain practicing, different settings or locations of practice could be in the choice set. Specifically, if EHRs change job satisfaction of working in the hospital, a hospitalist may decide to shift more of their working hours towards or away from the hospital. This is relevant for hospitalists who contract time to hospitals, as not all physicians working as hospitalists have a binding contract with their associated hospital. A 2013 survey estimated that 36\% of hospitalists also worked outside of the hospital in primary care, long-term care, or hospice settings (\cite{Today}). Many physicians trained as internists choose to work in offices and also spend part of their time in inpatient settings. The fraction of internists who work as hospitalists increased from 25\% to 40\% from 2008 to 2018 (\cite{gray2022evolving}).  
 
-For hospitalists who do have a binding contract with a hospital, there could still be opportunities to shift work from inpatient to outpatient settings owned by the hospital. Particularly, if EHRs change hospital incentives of where to allocate physicians, EHR adoption could affect work setting in a way that is outside of the hospitalists' control. The sample of physicians I consider include both hospitalists with formal contracts, and internists who contract a majority of their time in the hospital inpatient setting, but could also work in hospital outpatient settings or independent offices. I investigate whether these groups differentially change work setting due to EHR through a heterogeneity analysis of hospitalists working in hospitals with different levels of integration with physicians.
+For hospitalists who do have a binding contract with a hospital, there could still be opportunities to shift work from inpatient to outpatient settings owned by the hospital. Particularly, if EHRs change hospital incentives of where to allocate physicians, EHR adoption could affect work setting in a way that is outside of the hospitalists' control. The sample of physicians I consider include both hospitalists with formal contracts, and internists who contract a majority of their time in the hospital inpatient setting, but could also work in hospital outpatient settings or independent offices. Medicare billing codes are location specific, so for each physicians I observe claims filed in offices, in outpatient settings, and in inpatient settings. Prior to 2016, office-based claims can be chosen for physicians in independent practices or in off-campus hospital outpatient departments. However, physicians working in off-campus hospital outpatient departments have strong incentive to claim as an outpatient department because the reimbursement rate is much higher (\cite{post2021hospital}). Therefore, I treat office-based claims as independent practices and investigate these separately from hospital outpatient departments. Further, I investigate whether these groups differentially change work setting due to EHR through a heterogeneity analysis of hospitalists working in hospitals with different levels of integration with physicians.
 
 
 \subsubsection{Care/Billing Activity}
@@ -299,23 +299,6 @@ To continue investigating how different ages may respond differently to technolo
 
 
 
-\subsubsection{Mechanisms}\label{sec:mechanisms}
-
-There are various reasons that hospitalists could be switching work settings after EHR adoption. It could be because of their own preferences to avoid technology, or it could be that because EHRs change efficiency of performing tasks in different locations, hospitalists choose to see more patients in outpatient settings or hospitals send their hospitalists to outpatient settings more often. 
-
-As discussed in Section \ref{sec:worksetting}, hospitalists could be switching work setting either because of their own preferences to avoid technology, or because EHRs, through improved substitution between work settings, cause hospitals to re-allocate workers to hospital-owned outpatient settings. While there are fundamental differences in inpatient and outpatient EHRs, there could still be some potential substitution occurring. Therefore, I investigate this mechanism through a heterogeneity analysis of hospitals with different contract types with physicians, which will shut down certain channels of re-allocation of resources.
-
-I do not observe individual physician contract type with each hospital, but I do observe hospital level information about the aggregate nature of their physician contracts. To investigate the potential mechanism of hospital allocation, I present a heterogeneity analysis for all outcomes broken down by level of integration the physician is exposed to in their connected hospitals. From least integrated (contracts with multiple facilities) to most integrated (full salaried hospitalists), results are broken down by Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM). In practice, hospitals drive the re-allocation of work setting to outpatient only if the hospitalist is heavily integrated. Further, in order for a hospital to have an outpatient facility to re-allocate physicians to, they must be heavily integrated with the physicians currently in that outpatient facility. For contracted hospitalists, the choice remains whether to contract with a hospital who wants them to work in an outpatient setting. However, I present estimates of a heterogeneity analysis by integration level in Figure \ref{fig:het_int}, which shows that the results are not driven entirely by hospital-owned outpatient facilities. 
-
-\begin{figure}
-    \centering
-    \caption{Effect of EHR Exposure on Outcomes by Integration Level}
-    \includegraphics[width=.6\textwidth]{Objects/heterog_plot_int_office.pdf}
-    \label{fig:het_int}
-\end{figure}
-
-Another proxy for contract type is whether hospitalists work with one system or are connected to facilities from different systems. I present the results from this heterogeneity analysis in Appendix \ref{sec:het}, and find no difference in effects between the two groups. Finally, I investigate whether this finding is potentially due to EHRs changing the type of billing performed by hospitalists. For example, they could be performing the same services in the same location, but coding the billing information differently. I present this analysis in Appendix \ref{app:coding}, and I do not find this to be the case.
-
 
 \subsection{Patient Count and Billing Activity}\label{sec:patientcount}
 
@@ -477,6 +460,49 @@ Next, I create the dependent variables used in the analysis. The first outcome i
 \end{figure}
 
 The next outcome variables consider level of labor market activity in office settings. The first decision to make is how to handle years where a physician has missing data for claims. A year of missing data can mean the hospitalist had no claims that year, or the observation was removed due to insufficient claims (less than 11). A conservative assumption is to assume a year of missing data means zero claims, thus, I set all missing claim counts to zero. The data already contains a variable for the fraction of patients seen in an office setting, which is used in the analysis, but I further create an indicator variable for whether the hospitalist sees any positive amount of patients in an office setting. Finally, the variables for unique patient count and claim count are already defined. I simply divide the number of claims by the number of patients to get the claims per patient variable used in the analysis. This is the final data used in the analysis.
+
+\section{Supplemental Analyses}
+
+\subsection{Effect of EHR Exposure on Work in Outpatient Settings}
+
+Analyzing the effect of EHR exposure on patients seen in independent office settings reveals that hospitalists are shifting work towards a setting where they may have more control over their work environment. However, there are likely hospitalists in my sample for which is it more feasible to shift work between inpatient and outpatient hospital settings. Therefore, I present estimates of the effect of EHR exposure on fraction of patients seen in outpatient hospital departments in Figure \ref{fig:outpat}. Here, outpatient departments can be either on or off the hospital campus. Hospitalists increase the fraction of patients seen in outpatient settings by up to .01 ppts in each year after EHR exposure. This magnitude is much smaller than that for independent office visits, potentially indicating less choice of work setting by these hospitalists. 
+
+    \begin{figure}[ht!]
+\centering
+    \captionsetup{width=.85\linewidth}
+    \caption{Effect of EHR Exposure on Fraction of Patients Seen in Outpatient}
+   \begin{subfigure}[]{.8\textwidth}
+   \caption{all physicians}
+   \includegraphics[scale=.5]{Objects/outpat_all.pdf}
+   \label{fig:outpat_all} 
+\end{subfigure}
+
+\vspace{3mm}
+
+\begin{subfigure}[]{.8\textwidth}
+\caption{sub-samples of physicians based on age}
+   \includegraphics[scale=.5]{Objects/oupat_ages.pdf}
+   \label{fig:outpat_ages}
+\end{subfigure}
+\label{fig:outpat}
+\vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: .008 (0.002), .009 (0.003), 0.006 (0.007), respectively.}}
+\end{figure}
+
+\subsubsection{Mechanisms}\label{sec:mechanisms}
+
+As discussed in Section \ref{sec:worksetting}, hospitalists could be switching work setting either because of (1) their own preferences to avoid technology (as outpatient department EHRs tend to look different than inpatient EHRs), (2) because EHRs, through improved substitution between work settings, cause hospitals to re-allocate workers to hospital-owned outpatient settings, or because (3) physicians have always preferred to see patients in outpatient settings, but before EHRs certain tasks could only be performed in inpatient settings due to efficiency or patient sharing. In this section, I specifically explore the role of hospital re-allocation of work vs. physician preferences, as I cannot distinguish observed physician behavior from which preference might be driving that behavior. 
+
+I do not observe individual physician contract type with each hospital, but I do observe hospital level information about the aggregate nature of their physician contracts. To investigate the potential mechanism of hospital allocation, I present a heterogeneity analysis by level of integration the physician is exposed to in their connected hospitals. From least integrated (contracts with multiple facilities) to most integrated (full salaried hospitalists), results are broken down by Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM). In practice, hospitals drive the re-allocation of work setting to outpatient only if the hospitalist is heavily integrated. Further, in order for a hospital to have an outpatient facility to re-allocate physicians to, they must be heavily integrated with the physicians currently in that outpatient facility. For contracted hospitalists, the choice remains whether to contract with a hospital who wants them to work in an outpatient setting. However, I present estimates of a heterogeneity analysis for fraction of patients in outpatient settings by integration level in Figure \ref{fig:het_int}, which shows that the results are not driven entirely by integrated physicians. 
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Effect of EHR Exposure on Outcomes by Integration Level}
+    \includegraphics[width=.6\textwidth]{Objects/heterog_plot_int_office.pdf}
+    \label{fig:het_int}
+\end{figure}
+
+Another proxy for contract type is whether hospitalists work with one system or are connected to facilities from different systems. I present the results from this heterogeneity analysis in Appendix \ref{sec:het}, and find no difference in effects between the two groups. Finally, I investigate whether this finding is potentially due to EHRs changing the type of billing performed by hospitalists. For example, they could be performing the same services in the same location, but coding the billing information differently. I present this analysis in Appendix \ref{app:coding}, and I do not find this to be the case.
 
 
 
