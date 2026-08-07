@@ -28,7 +28,7 @@
  
 
 \title{Labor Markets and Technological Change: Evidence from Electronic Health Records}
-\author{Hanna Glenn}
+
 
 \DeclareLabeldate[online]{%
   \field{date}
@@ -42,7 +42,7 @@
 
 \begin{document}
 
-\linespread{1.2}\title{\vspace{-0.5in} Labor Markets and Technological Change \\ \Large Evidence from Electronic Health Records} 
+\linespread{1.2}\title{\vspace{-0.5in} Labor Markets and Technological Change: \\ \Large Evidence from Electronic Health Records} 
 	
 	\date{\today}
 	
@@ -71,13 +71,13 @@
 	
 	\newpage
 
-
+\section{Introduction}
 
 For decades technological innovation has brought about changes to production in the economy through adjustments in demand for labor, wages, and other labor market factors. Advancement of modern technology is rapid, but it is not clear how policymakers should be involved in the implementation of new technologies. This is particularly important in health care, where new technologies also impact patient outcomes. A recent technology roll-out that altered the US health care system dramatically was the electronic health record (EHR). Medical entities nationwide implemented EHRs rapidly from 2008-2015, with the percentage of hospitals with basic EHR capability increasing from 9 to 84 percent. Since many physicians working in hospitals were exposed to this technology in a concentrated time, this is an opportune setting to investigate the relationship between rapid technology implementation and individual labor market behaviors. In this paper, I investigate the effect of EHR adoption in hospitals on several behaviors of physicians working in hospitals, hereafter referred to as hospitalists. 
 
 EHRs are computer systems that house digital medical records, and they also have the capability to be used for more complex functionalities. EHRs have become increasingly relevant in the US since 2009, when the Health Information Technology for Economic and Clinical Health (HITECH) Act was passed to subsidize hospitals and practices who implement and ``meaningfully'' use an EHR (\cite{hitech}).\footnote{Meaningful use (MU) standards proceeded in three stages over time. In Stage 1 (2010), MU focused on data capturing and sharing. In Stage 2, which began in late 2012, MU extended to using EHRs for patient incorporation and using the technology as a helper in care. Stage 3 went from 2014-2016 and focused on making data accessible across hospitals (\cite{meanuse})} President Obama stated in 2009, “To improve the quality of our health care while lowering its cost, we will make the immediate investments necessary to ensure that, within five years, all of America’s medical records are computerized.” (\cite{presquote}). The push for EHR use stemmed from a widespread expectation that EHRs would improve quality of health care while decreasing costs, the gold standard in health policy. For example, a 2005 study estimated hundreds of billions of dollars saved if health information technology were to be fully implemented (\cite{hillestad2005}).
 
-Physicians, as the primary users of EHRs, play an important role in whether the expected benefits come to fruition. Daily tasks change drastically when a new system is put in place; some physicians reported that when using EHRs, they are less satisfied with their job and have higher stress levels. Senior physicians in particular “loathe the cumbersome, time-consuming data entry that comes with using EHR.” (\cite{CollierBurnout}). When looking solely at hospitalists, 63\% of survey respondents found EHRs time consuming and inefficient (\cite{czernik2022hospitalist}). The frustration of a new technology raises the cost of working in settings that use it, which may lead physicians on the margin to make behavioral changes such as exiting the labor market altogether or shifting towards alternative work settings. However, the extent to which this frustration imposes a meaningful cost is unknown, making physician response an empirical question. For a hospitalist, the hospital's decision to adopt an EHR is plausibly exogenous. Thus, I use a difference-in-differences research design to estimate the effect of EHR adoption on hospitalist labor market choices: (1) exiting clinical work altogether, measured based on no future claims, (2) substituting hospital work for office/outpatient work, measured by the location of claims, and (3) care/billing patterns, measured by the number of patients seen and claims filed per patient.
+Physicians, as the primary users of EHRs, play an important role in whether the expected benefits come to fruition. Daily tasks change drastically when a new system is put in place; some physicians reported that when using EHRs, they are less satisfied with their job and have higher stress levels. Senior physicians in particular “loathe the cumbersome, time-consuming data entry that comes with using EHR.” (\cite{CollierBurnout}). When looking solely at hospitalists, 63\% of survey respondents found EHRs time consuming and inefficient (\cite{czernik2022hospitalist}). The frustration of a new technology raises the cost of working in settings that use it, which may lead physicians on the margin to make behavioral changes such as exiting the labor market altogether or shifting towards alternative work settings. However, the extent to which this frustration imposes a meaningful cost is unknown, making physician response an empirical question. For a hospitalist, the hospital's decision to adopt an EHR is plausibly exogenous. Thus, I use a difference-in-differences research design to estimate the effect of EHR adoption on hospitalist labor market choices: (1) exiting clinical work altogether, measured based on no future claims, (2) substituting inpatient work to offices, measured by the location of claims, and (3) care/billing patterns, measured by the number of patients seen and claims filed per patient.
 
 While hospitalists are an ideal setting to answer this question econometrically, they are also important in their own right. Approximately 44,000 physicians are employed as hospitalists in the US, and studies estimate that 75\% of hospitals employ hospitalists (\cite{bls}; \cite{healthecareers_2022}). Further, one third of Medicare admissions are seen by a hospitalist (\cite{messler2015history}). I construct a panel of hospitalists spanning from 2009-2017. Using Centers for Medicare and Medicaid Services (CMS) Shared Patient Data, I identify the hospital affiliation of each hospitalist. Then, I use the American Hospital Association (AHA) Survey and Health Information and Management Systems Society (HIMSS) to determine EHR adoption status, and thus connect hospitalists to EHR exposure. Finally, I use Medicare Data on Provider Practice and Specialty (MDPPAS) for information on the patients seen by each hospitalist. The independent variable of interest is binary, capturing exposure to an EHR.\footnote{While there are ample nuances to EHRs, I abstract away from these as I focus on the initial shock of a new technology.} Due to staggered treatment timing, I estimate group-time treatment effects of EHR exposure on the physician decisions defined above (\cite{callaway2021difference}).
 
@@ -85,9 +85,9 @@ This paper contributes to our understanding of the effects of health information
 
 I expand this literature first by considering individual physician labor market decisions as an outcome, which, to my knowledge, has not yet been examined. Further, I consider the primary time period in which EHRs were rapidly implemented, in part due to the HITECH Act (\cite{dranove2015investment}). This provides sufficient variation in the timing of adoption and ensures the EHRs are meaningful and are likely affecting hospitalists' daily life. Similar to past studies, I consider EHR implementation as a treatment variable in a difference-in-differences framework. I improve on this strategy by estimating average group time treatment effects for multiple years after implementation, which avoids common problems that arise in typical two way fixed effects estimation of staggered difference-in-differences.  
 
-Early research on the inputs to physician retirement decisions found that the most influential factors are personal and financial matters, and that physicians care about their work environment (specifically in the context of managed care organizations), but do not necessarily retire early because of it (\cite{Bahrami2002}). Contrary to this result, I find that EHR implementation led to a 20\% increase in the likelihood of exiting clinical settings for hospitalists of age 60 plus. Physicians less than 60 were 7\% more likely to exit, possibly pointing to career switching. Limiting the sample to those who remained in clinical settings, I find that hospitalists were 30\% more likely to start seeing patients in an office setting at the time of exposure. I find that this is not necessarily driven by hospital allocation of hospitalists to outpatient facilities. Finally, for hospitalists who do not change work setting, I find that EHRs lead to a patient count increase of at least 20 patients per year. This increase is large enough that it is not entirely driven by a redistribution of patients from those who left clinical settings. 
+Early research on the inputs to physician retirement decisions found that the most influential factors are personal and financial matters, and that physicians care about their work environment (specifically in the context of managed care organizations), but do not necessarily retire early because of it (\cite{Bahrami2002}). Contrary to this result, I find that EHR implementation led to a 20\% increase in the likelihood of exiting clinical settings for hospitalists of age 60 plus. Physicians less than 60 were 7\% more likely to exit, possibly pointing to career switching. Limiting the sample to those who remained in clinical settings, I find that hospitalists were 30\% more likely to start seeing patients in an office setting at the time of exposure. Finally, for hospitalists who do not change work setting, I find that EHRs lead to a patient count increase of at least 20 patients per year. This increase is large enough that it is not entirely driven by a redistribution of patients from those who left clinical settings. 
 
-Two key assumptions underlie the main analysis. First, I assume that hospitalists are constrained to use the technology implemented in their work setting. Second, I assume the decision for hospitals to implement EHRs is exogenous to individual hospitalists, and uncorrelated with other major changes to the hospitalist work environment. I mitigate concerns of the latter by analyzing whether other observable hospital changes are correlated with EHR adoption, and find no evidence that this is biasing the results. Additionally, the main findings are not sensitive to a plethora of robustness checks. The results suggest that a surge of hospitalists left clinical settings altogether, and even more shifted work away from the hospitals where the EHR was deployed and towards outpatient/office settings. Thus, EHR implementation may have intensified access to care issues for hospitalized patients. These findings speak to the immediate impacts of incentivizing a new, unfamiliar technology, that may lead to unintended consequences in the physician labor market. 
+Two key assumptions underlie the main analysis. First, I assume that hospitalists are constrained to use the technology implemented in their work setting. Second, I assume the decision for hospitals to implement EHRs is exogenous to individual hospitalists, and uncorrelated with other major changes to the hospitalist work environment. I mitigate concerns of the latter by analyzing whether other observable hospital changes are correlated with EHR adoption, and find no evidence that this is biasing the results. Additionally, the main findings are not sensitive to a plethora of robustness checks. The results suggest that a surge of hospitalists left clinical settings altogether, and even more shifted work away from the hospitals where the EHR was deployed and towards office settings. Thus, EHR implementation may have intensified access to care issues for hospitalized patients. These findings speak to the immediate impacts of incentivizing a new, unfamiliar technology and should be considered as new technologies are rapidly incorporated in health care. 
 
 
 
@@ -116,7 +116,7 @@ On a daily basis, a physician spends approximately 23.7\%, 17\%, and 15.5\% of t
 
 This section outlines the potential responses of hospitalists to EHRs based on their incentives and institutions. The behaviors that I consider in this analysis are closely related and should not be taken as independent. For example, hospitalists' choice of work setting depends on their decision to remain in clinical settings, and billing activity depends on work setting. Thus, I discuss the behaviors in stages of decision making. 
 
-For ease of notation, I define a hospitalist as any general practice physician who sees at least 70\% of their patients within a hospital setting. However, there are two types of physicians who can be categorized as hospitalists based on this definition: a formal hospitalist who is solely employed by the hospital, or an internist who contracts their services to the hospital. Both formal hospitalists and internists are medical professionals who primarily focus on general patient care, but they potentially differ in whether they work in multiple settings. Internists are primary care physicians who provide comprehensive medical care to adult patients in either outpatient settings or hospitals, whereas formal hospitalists specialize in the care of hospitalized patients, and typically work exclusively in the hospital setting. While this distinction could be important for some of the decisions outlined below, the data do not explicitly distinguish between the two for each individual hospitalist. However, I observe whether each hospital integrates with certain types of physicians, and investigate the differences in the effect of EHRs across hospital types in Section \ref{sec:mechanisms}. 
+For ease of notation, I define a hospitalist as any general practice physician who sees at least 70\% of their patients within a hospital setting. However, there are two types of physicians who can be categorized as hospitalists based on this definition: a formal hospitalist who is solely employed by the hospital, or an internist who contracts their services to the hospital. Both formal hospitalists and internists are medical professionals who primarily focus on general patient care, but they potentially differ in whether they work in multiple settings. Internists are primary care physicians who provide comprehensive medical care to adult patients in either outpatient settings or hospitals, whereas formal hospitalists specialize in the care of hospitalized patients, and typically work exclusively in the hospital setting. While this distinction could be important for some of the decisions outlined below, the data do not explicitly distinguish between the two for each individual hospitalist. However, I observe whether each hospital integrates with certain types of physicians, and investigate the differences in the effect of EHRs across hospital types. 
 
 \subsubsection{Exiting Clinical Work}
 
@@ -130,9 +130,10 @@ Formal retirement (leaving the labor force altogether) is not the only way for p
 
 \subsubsection{Work Setting}\label{sec:worksetting}
 
-For those who remain practicing, different settings or locations of practice could be in the choice set. Specifically, if EHRs change job satisfaction of working in the hospital, a hospitalist may decide to shift more of their working hours towards or away from the hospital. This is relevant for hospitalists who contract time to hospitals, as not all physicians working as hospitalists have a binding contract with their associated hospital. A 2013 survey estimated that 36\% of hospitalists also worked outside of the hospital in primary care, long-term care, or hospice settings (\cite{Today}). Many physicians trained as internists choose to work in offices and also spend part of their time in inpatient settings. The fraction of internists who work as hospitalists increased from 25\% to 40\% from 2008 to 2018 (\cite{gray2022evolving}).  
+For those physicians who remain practicing, different settings or locations of practice could be in the choice set. Specifically, if EHRs change job satisfaction of working in the hospital, a hospitalist may decide to shift more of their working hours towards or away from the hospital. This is a particularly salient choice for hospitalists who contract time to hospitals, as not all physicians working as hospitalists have a binding contract with their associated hospital. A 2013 survey estimated that 36\% of hospitalists also worked outside of the hospital in primary care, long-term care, or hospice settings (\cite{Today}). Many physicians trained as internists choose to work in offices and also spend part of their time in inpatient settings. The fraction of internists who work as hospitalists increased from 25\% to 40\% from 2008 to 2018 (\cite{gray2022evolving}).  
 
-For hospitalists who do have a binding contract with a hospital, there could still be opportunities to shift work from inpatient to outpatient settings owned by the hospital. Particularly, if EHRs change hospital incentives of where to allocate physicians, EHR adoption could affect work setting in a way that is outside of the hospitalists' control. The sample of physicians I consider include both hospitalists with formal contracts, and internists who contract a majority of their time in the hospital inpatient setting, but could also work in hospital outpatient settings or independent offices. Medicare billing codes are location specific, so for each physicians I observe claims filed in offices, in outpatient settings, and in inpatient settings. Prior to 2016, office-based claims can be chosen for physicians in independent practices or in off-campus hospital outpatient departments. However, physicians working in off-campus hospital outpatient departments have strong incentive to claim as an outpatient department because the reimbursement rate is much higher (\cite{post2021hospital}). Therefore, I treat office-based claims as independent practices and investigate these separately from hospital outpatient departments. Further, I investigate whether these groups differentially change work setting due to EHR through a heterogeneity analysis of hospitalists working in hospitals with different levels of integration with physicians.
+For hospitalists who do have a binding contract with a hospital, i.e., salaried hospitalists, there could still be opportunities to shift work from inpatient to office settings if the hospital owns outpatient facilities. Whether the stand-alone office is owned by a hospital or not, the type of services provided in an office are not substitutable with those provided in the inpatient setting.\footnote{For example, code 99201, ``New patient office or other outpatient visit, typically 10 minutes" cannot be substituted with code 99221, ``Initial hospital inpatient care, typically 30 minutes per day".} Thus, an observed change in claims in office settings would indicate a change in practice setting. However, if EHRs affect hospital's optimal allocation of physicians, this could be a decision driven by the hospital and not driven by a physician's preferences for technology exposure. The sample of physicians I consider includes both hospitalists with formal contracts, and internists who contract a majority of their time in the hospital inpatient setting, but could also work in stand-alone offices. While I cannot distinguish each physician in my sample's level of integration with hospitals, I do observe hospital-level integration with physicians in general. Therefore, I investigate whether this is a hospital decision or a physician decision using a heterogeneity analysis by hospital-level integration. 
+
 
 
 \subsubsection{Care/Billing Activity}
@@ -151,7 +152,7 @@ I construct a balanced hospitalist-level panel data set spanning from 2009-2017 
 
 \subsection{Sample Construction}
 
-The Medicare Data on Provider Practice and Specialty (MDPPAS) is a database of physicians with information on claim counts, physician specialty, and practice location from 2009-2017. Variables included are physician NPI, primary and secondary specialties, patient count and total billing counts, and fraction of patients seen in different settings (hospital, office/outpatient, emergency room, etc.). I only include physicians classified as hospitalists\footnote{Physician who self-identifies as hospitalist or has 70\% of patients in inpatient setting. I cannot distinguish between types of hospitalists as the data source manipulates this definition based on percent of patients seen in a hospital, so these can be formal hospitalists or internists.}, internal medicine, general practice or family practice in at least one year. I drop physicians with less than 70\% of patients in a hospital setting in all years, as the focus is on those who are affected by a hospital's decision to adopt. I use this data to construct the dependent variables in my analysis.  
+The Medicare Data on Provider Practice and Specialty (MDPPAS) is a database of physicians with information on claim counts, physician specialty, and practice location from 2009-2017. Variables included are physician NPI, primary and secondary specialties, patient count and total billing counts, and fraction of patients seen in different settings (hospital, office, emergency room, etc.). I only include physicians classified as hospitalists\footnote{Physician who self-identifies as hospitalist or has 70\% of patients in inpatient setting. I cannot distinguish between types of hospitalists as the data source manipulates this definition based on percent of patients seen in a hospital, so these can be formal hospitalists or internists.}, internal medicine, general practice or family practice in at least one year. I drop physicians with less than 70\% of patients in a hospital setting in all years, as the focus is on those who are affected by a hospital's decision to adopt. I use this data to construct the dependent variables in my analysis.  
 
 
 The Center for Medicare and Medicaid (CMS) Shared Patient Data records annual information on frequency of billing associated with the same patient across providers within a given time period. These data are available from 2009 to 2015. For example, if a primary care physician refers a patient to a specialist, then those two physicians have that particular shared patient in common. The number of shared patients are collected in 30, 90, or 180 day intervals. I focus on the 30 day interval and patients that are shared within the same day, and I employ this data to detect physicians who work closely with hospitals. I limit the entities by tax-code to only include shared patients for physician-hospital pairs, where the physicians in these pairs match the physicians from MDPPAS. The types of physicians are already limited to primary care, but there still may be office-based primary care physicians in the shared patient data. Therefore, I limit the sample of pairs based on a threshold of same day patients which depends on the number of years the physician appears in the data. That is, I only include physician-hospital pairs who have non-missing data with at least 30 same day shared patients per year.
@@ -161,9 +162,9 @@ Using hospital National Provider Identifier (NPI), I link the physician-hospital
 
 I also gather information on the level of integration a hospital has with physicians from the AHA survey. There are four categories of integration considered (ranked from least to most integrated): independent practice association (IPA), open physician-hospital organization (OPHO), closed physician-hospital organization (CPHO), and integrated salary model (ISM). An IPA has loose contracts with physicians, but the physicians remain independent, an OPHO adds administration tasks to the physician, a CPHO contracts with specific physicians, and a FIO hires physicians as salaried employees (\cite{short2017integration}). Further, I limit to hospitalists whose hospitals are not acquired by another hospital.
 
-I aggregate the data to the hospitalist level. I drop anyone not treated by 2015 since I do not observe whether they become treated in 2016 or 2017. That is, the data contains no units which are ``never-treated". Finally, I include a physician's graduation year from Physician Compare (provided by CMS). I limit to hospitalists who graduated before 2005, as anyone who graduated medical school after that will be finishing residency during the span of the data and will exhibit labor market changing behavior, which could be correlated to EHR exposure purely because of switching work settings during a time of rapid EHR implementation. There are various thresholds used in the construction of this final data, including the years chosen and how many shared patients constitutes a physician-hospital relationship. To ensure that the results  are not sensitive to various choices of the thresholds, I estimate the effect of EHR exposure on all outcomes under different combinations of data limitations. The specification charts with these results are shown in Appendix \ref{sec:changes}, and confirm the main results in most cases.
+I aggregate the data to the hospitalist level. I drop anyone not treated by 2015 since I do not observe whether they become treated in 2016 or 2017. That is, the data contains no units which are ``never-treated". Finally, I include a physician's graduation year from Physician Compare (provided by CMS). I limit to hospitalists who graduated before 2005, as anyone who graduated medical school after that will be finishing residency during the span of the data and will exhibit labor market changing behavior, which could be correlated to EHR exposure purely because of switching work settings during a time of rapid EHR implementation. There are various thresholds used in the construction of this final data, including the years chosen and how many shared patients constitutes a physician-hospital relationship. To ensure that the results  are not sensitive to various choices of the thresholds, I estimate the effect of EHR exposure on all outcomes under different combinations of data limitations. 
 
-The first dependent variable I consider is the decision for a hospitalist to stop seeing Medicare patients, which I refer to as exit. Exit is an indicator variable equal to 1 in the first year that a hospitalist sees no patients in any future year. This captures a one-time decision to stop seeing patients, not a cumulative decision in all following years. The next variables I construct capture whether physicians change work setting. I consider the fraction of patients a physician sees in an office/outpatient setting, and I construct an indicator variable equal to one if a physician sees any positive number of patients in such a setting. Finally, I consider outcome variables which explore care/billing patterns, the number of patients seen and claims filed per patient.
+The first dependent variable I consider is the decision for a hospitalist to stop seeing Medicare patients, which I refer to as exit. Exit is an indicator variable equal to 1 in the first year that a hospitalist sees no patients in any future year. This captures a one-time decision to stop seeing patients, not a cumulative decision in all following years. The next variables I construct capture whether physicians change work setting. I consider the fraction of patients a physician sees in an office, and I construct an indicator variable equal to one if a physician sees any positive number of patients in an office. Finally, I consider outcome variables which explore care/billing patterns, the number of patients seen and claims filed per patient.
 
 
 \subsection{Summary Statistics}
@@ -243,9 +244,9 @@ Next, I examine how the results differ when considering physicians in different 
 
 \subsection{Work Setting}
 
-I investigate another dimension by which hospitalists could change behavior after EHR exposure: the allocation of their time spent in different settings. Specifically, I measure whether the hospitalist, who begins with the majority of their patients seen in inpatient settings, shifts work to an independent office setting. The outcomes I consider are (1) an indicator variable equal to 1 if the hospitalist has any positive number of patients in an office in a given year, and (2) the fraction of patients a hospitalist sees in an office in a given year. This analysis does not include individuals who exit at any point in the sample, as a zero could indicate dropping out of the data instead of working solely in a hospital. 
+I investigate another dimension by which hospitalists could change behavior after EHR exposure: the allocation of their time spent in different settings. Specifically, I measure whether the hospitalist, who begins with the majority of their patients seen in inpatient settings, shifts work to a stand-alone office setting. The outcomes I consider are (1) an indicator variable equal to 1 if the hospitalist has any positive number of patients in an office in a given year, and (2) the fraction of patients a hospitalist sees in an office in a given year. This analysis does not include individuals who exit at any point in the sample, as a zero could indicate dropping out of the data instead of working solely in a hospital. 
 
-First, I present estimates of the effect of EHR exposure on a hospitalist's likelihood of working in an office, and I present these in Figure \ref{fig:officefirsta}. EHR exposure increases the likelihood of working in an office by at least 4 ppts in every year after being exposed, where the effect increases over time (up to 10 ppts four years after exposure). This estimate is equivalent to a 15-38\% increase relative to the average proportion of hospitalists who work in an office. That is, those working only in a hospital are more likely to start working in an office after being exposed to an EHR, and these effects are just as large as those on exiting. However, unlike the estimated exiting effects, the increased likelihood of working in an office is persistent over time, which suggests that EHRs impact work environment in hospitals for several years after implementation. 
+First, I present estimates of the effect of EHR exposure on a hospitalist's likelihood of working in an office, and I present these in Figure \ref{fig:officefirsta}. EHR exposure increases the likelihood of working in an office by at least 4 ppts in every year after being exposed, where the effect increases over time (up to 10 ppts four years after exposure). This estimate is equivalent to a 15-38\% increase relative to the average proportion of hospitalists who work in an office. That is, those working only in a hospital are more likely to start working in an office after being exposed to an EHR, and these effects are just as large as those on exiting. However, unlike the estimated exiting effects, the increased likelihood of working in an office is persistent over time, which suggests that physicians do not move back towards inpatient settings even after multiple years. 
 
 \begin{figure}[ht!]
 \centering
@@ -272,7 +273,7 @@ First, I present estimates of the effect of EHR exposure on a hospitalist's like
 
 To continue investigating how different ages may respond differently to technology, I also present estimates for hospitalists less than 60 and greater than or equal to 60 separately in Figure \ref{fig:officefirstb}. Unlike the choice to exit, both age groups respond to EHR exposure similarly. The magnitudes for senior hospitalists continue to increase over time, whereas the estimates for younger physicians become stagnant. However, senior physicians are more likely to work in an office than younger physicians on average, so both groups exhibit similar increases relative to the mean. 
 
- I also estimate the effect of EHR exposure on the fraction of patients seen in office based settings.\footnote{Since this variable is tied to the total number of patients seen, I also estimate this analysis with the outcome of total number of patients seen in an office and the results are identical.} The estimates, displayed in Figure \ref{fig:officeseconda}, show an increase in the fraction of patients seen in office settings after the hospitalist is exposed to an EHR. In the year of exposure, the fraction of patients increases by .04, and by the fourth year after exposure the fraction of patients increases by .12. Since the hospitalists included in the sample are meant to have close ties with hospitals, the average fraction of patients seen in an office is low, at .09. Thus, the observed effect is massive, as it is equivalent to a 75-150\% increase in the fraction of patients seen in an office relative to the mean. Further, the variation in this variable can either be driven by physicians who already worked in an office or those who did not and then began working in an office after exposure. When I partition the sample into prior office work, the effects are identical for both groups. 
+ I also estimate the effect of EHR exposure on the fraction of patients seen in office based settings.\footnote{Since this variable is tied to the total number of patients seen, I also estimate this analysis with the outcome of total number of patients seen in an office and the results are identical.} The estimates, displayed in Figure \ref{fig:officeseconda}, show an increase in the fraction of patients seen in office settings after the hospitalist is exposed to an EHR. In the year of exposure, the fraction of patients increases by .04, and by the fourth year after exposure the fraction of patients increases by .12. Since the hospitalists included in the sample are meant to have close ties with hospitals, the average fraction of patients seen in an office is low, at .09. Thus, the observed effect is large, as it is equivalent to a 75-150\% increase in the fraction of patients seen in an office relative to the mean. Further, the variation in this variable can either be driven by physicians who already worked in an office or those who did not and then began working in an office after exposure. 
 
 
 \begin{figure}[ht!]
@@ -355,11 +356,13 @@ Finally, I consider whether EHR exposure affects claims filed per patient. On av
 
 \subsection{Changes Related to the ACA}
 
-There were many changes implemented under the Affordable Care Act (ACA) from 2010-2014 that affected the delivery of health care in general, such as insurance expansion and hospital quality initiatives. In order for additional changes to be biasing my results, they must be taking place in such a way that they either cause EHR adoption in hospitals or are differentially affecting EHR exposed hospitalists vs. non-EHR exposed hospitalists. I cannot completely rule this out, but it seems unlikely that any one change is causing a large and immediate effect for every treated group year. If the results are driven primarily by the group of hospitals who implemented EHRs in 2012 (when pay-for-performance initiatives began) or 2014 (when Medicaid expansion went into effect), one might be concerned that the legislation is driving the observed changes in physician behavior. I present average group time treatment effects for each treated group and each outcome in Appendix \ref{sec:changes}. Despite different EHR exposure years, each group shows the same pattern of changes in physician behavior after exposure, suggesting that the groups most affected by the ACA are not driving the main findings. 
+There were many changes implemented under the Affordable Care Act (ACA) from 2010-2014 that affected the delivery of health care in general, such as insurance expansion and hospital quality initiatives. In order for additional changes to be biasing my results, they must either cause EHR adoption in hospitals or differentially affect EHR exposed hospitalists vs. non-EHR exposed hospitalists. I cannot completely rule this out, but it seems unlikely that any one change is causing a large and immediate effect for every treated group year. If the results are driven primarily by the group of hospitals who implemented EHRs in 2012 (when pay-for-performance initiatives began) or 2014 (when Medicaid expansion went into effect), one might be concerned that the legislation is driving the observed changes in physician behavior. I present average group time treatment effects for each treated group and each outcome in Appendix \ref{sec:changes}. Despite different EHR exposure years, each group shows the same pattern of changes in physician behavior after exposure, suggesting that the groups most affected by the ACA are not driving the main findings. 
 
- Further, the ACA had potentially opposing effects on Medicare patients: they may be crowded out by an increased demand in Medicaid patients, or the small changes to Medicare may have led to an increase in utilization from the Medicare population. A recent study found no negative spillovers to the Medicare population due to the ACA (\cite{carey2020impact}), suggesting that this particular change should not drive the results. 
+Further, the ACA had potentially opposing effects on Medicare patients: they may be crowded out by an increased demand in Medicaid patients, or the small changes to Medicare may have led to an increase in utilization from the Medicare population. A recent study found no negative spillovers to the Medicare population due to the ACA (\cite{carey2020impact}), suggesting that this particular change should not drive the results. 
 
-\subsection{Other Work Environment Changes}\label{sec:hospanalysis}
+Relatedly, a potential concern is that hospitalists are not leaving a clinical setting, but choosing to only see patients with private insurance. First, EHR use should not be directly correlated with Medicare patients. Further, as a hospitalist, these physicians do not have complete control over their patient composition and likely are not paid differently based on the types of patients they see. As a final check, the CMS publishes a list of physicians who have officially opted out of seeing Medicare patients and none of the hospitalists in the sample have selected into this option. 
+
+\subsection{Other Hospital Changes}\label{sec:hospanalysis}
 
 One concern is that EHR adoption could be occurring simultaneously with a host of other hospital initiatives to improve productivity or quality, which may also affect physician work environment. If true, EHR adoption is not exogenous and the results found above are biased. Here, I discuss the implications of this type of endogeneity for each outcome, and present evidence that hospital behaviors are not changing in a way that is correlated with EHR adoption.
 
@@ -373,30 +376,43 @@ I estimate the effect of EHR adoption on each of these outcomes using the same \
 
 Overall, the results presented in the paper do not indicate an existing pre-trend between exposed and non-exposed hospitalists. Further, EHRs do not seem to be a part of a very broad change to strategy at the hospital level. Finally, as shown in in Appendix \ref{sec:pretrends}, even when allowing for a difference in trends in outcomes between exposed and non-exposed hospitalists, a very large shock would be necessary to rule out the effect of EHR. Collectively, these analyses suggests that there is unlikely to be meaningful endogeneity that biases the results found. 
 
-\subsection{Additional Robustness Checks}
+\subsection{Hospital Firing or Re-allocation of Hospitalists}
 
-\subsubsection{Exiting Clinical Work}
+It could be that physicians are not necessarily choosing to exit clinical settings, but that hospitals are less willing to continue employment of physicians that are inefficient in EHR use. However, if this is the case, then one would expect to find differing results depending on the type of contract the hospitalist has with the employing hospital. That is, hospitalists with more integrated relationships would show a higher likelihood of exiting clinical work after EHR, as the hospital has more control over their employment. I show in Appendix \ref{sec:het} that this is not driving the main results. 
 
-A potential concern is that hospitalists are not leaving a clinical setting, but choosing to only see patients with private insurance. First, EHR use should not be directly correlated with Medicare patients. Further, as a hospitalist, these physicians do not have complete control over their patient composition and likely are not paid differently based on the types of patients they see. As a final check, the CMS publishes a list of physicians who have officially opted out of seeing Medicare patients and none of the hospitalists in the sample have selected into this option. 
+Further, as discussed in Section \ref{sec:worksetting}, hospitalists could be switching work settings either because of their own preferences to avoid technology, or because EHRs, through improved substitution between work settings, cause hospitals to re-allocate workers to hospital-owned outpatient settings. While there are fundamental differences in inpatient and outpatient EHRs, there could still be some potential substitution occurring. Therefore, I investigate this mechanism through a heterogeneity analysis of hospitals with different contract types with physicians, which will shut down certain channels of re-allocation of resources.
 
-It could also be that physicians are not necessarily choosing to exit clinical settings, but that hospitals are less willing to continue employment of physicians that are inefficient in EHR use. However, if this is the case, then one would expect to find differing results depending on the type of contract the hospitalist has with the employing hospital. That is, hospitalists with more integrated relationships would show a higher likelihood of exiting clinical work after EHR, as the hospital has more control over their employment. I show in Section \ref{sec:mechanisms} that this is not driving the main results. 
+I do not observe individual physician contract type with each hospital, but I do observe hospital level information about the aggregate nature of their physician contracts. To investigate the potential mechanism of hospital allocation, I present a heterogeneity analysis for all outcomes broken down by level of integration the physician is exposed to in their connected hospitals. From least integrated (contracts with multiple facilities) to most integrated (full salaried hospitalists), results are broken down by Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM). In practice, hospitals drive the re-allocation of work setting to outpatient only if the hospitalist is heavily integrated. Further, in order for a hospital to have an outpatient facility to re-allocate physicians to, they must be heavily integrated with the physicians currently in that outpatient facility. For contracted hospitalists, the choice remains whether to contract with a hospital who wants them to work in an outpatient setting. However, estimates do not differ between the types of integration relationships, indicating that the results are not driven entirely by hospital-owned outpatient facilities. I present summary statistics by contract type and estimates of this heterogeneity analysis for all outcomes in Appendix \ref{sec:het}.
+
+\begin{figure}
+    \centering
+    \caption{Effect of EHR Exposure on Outcomes by Integration Level}
+    \includegraphics[width=.7\textwidth]{Objects/heterog_plot_int_office.pdf}
+    \label{fig:het_int}
+\end{figure}
+
+Another proxy for contract type is whether hospitalists work with one system or is connected to facilities from different systems. I present the results from this heterogeneity analysis in Appendix \ref{sec:het}, and find no difference in effects between the two groups. Finally, I show in Appendix \ref{app:coding} that it is not likely that physicians are doing the same tasks but billing them in a different location. 
 
 
-\subsubsection{Evaluating Pre-Trends}
 
-When analyzing the effect of EHRs on exiting clinical settings, there is no visual indication of a violation of the parallel trends assumption in the pre-periods. However, the p-value of a Wald test for pre-trends indicates some evidence for such a violation for younger hospitalists. In Appendix \ref{sec:pretrends}, I present confidence intervals robust to various specifications of a violation in parallel trends. The estimate becomes null with any specified variation in the parallel trend assumption. Thus, I focus on the results for older hospitalists. I also present overall treatment effects under different data specifications for this outcome in Appendix \ref{sec:changes}. Under various data and specification changes, the coefficients remain non-negative. Estimates become noisier under strict limitations of the data, but given the rarity of exiting, this positive effect still seems to be robust. 
 
-I also investigate pre-trends for switching to office in Appendix \ref{sec:pretrends}, where I find that under various assumptions of the form of violation in parallel trends, the estimate remains positive and significant of similar magnitude. Further, under different combinations of data specifications I find consistently positive and significant results, as shown in Appendix \ref{sec:changes}. 
 
-\subsubsection{Lee Bounds for Sample Selection}
+\subsection{Re-allocation of Patients}
+
+I investigate whether this increase in the number of patients seen is due to the decrease in the number of working hospitalists. Specifically, a hospital that loses a portion of their physicians, and divides those patients among those remaining. In the long run, the hospital should hire new hospitalists to replace those that left, but in the short run estimates could be driven by increased workload instead of EHR use. This could explain why there is a much larger increase in the first year after exposure compared to the magnitudes of the estimates as they level out over time. Using the estimates I found in Section \ref{sec:retire}, I calculate the increase in the number of patients that would occur if all patients from hospitalists who exited were divided between remaining hospitalists. In the year of exposure the entire increase in patient count is due to EHR use since I find no effect on the likelihood of exit. In the first year after exposure, I estimate the increase in patients due to exiting physicians to be approximately 20 patients, which is less than the observed patient count estimates presented above. However, the second year after exposure is when I observe that largest effect on exiting, and so I do not rule out that the increase in patient count for every year after the first could be caused by the decrease in hospitalists. Further, I find that EHR adoption is not correlated with the aggregate number of physicians working in the hospital, shown in Table \ref{tab:hosp_assoc}, suggesting that hospitals replace those who exit relatively quickly.
+
+
+\subsection{Evaluating Pre-Trends and Specification Charts}
+
+In Appendix \ref{sec:pretrends}, I present confidence intervals robust to various specifications of a violation in parallel trends for each outcome in the analysis. When analyzing the effect of EHRs on exiting clinical settings, there is no visual indication of a violation of the parallel trends assumption in the pre-periods. However, the p-value of a Wald test for pre-trends indicates some evidence for such a violation for younger hospitalists. Since the estimate for this group becomes null with any specified variation in the parallel trend assumption, I highlight results for older hospitalists. For outcomes related to switching offices, the p-values and visual pre-trends assure that there do not seem to be pre-trends driving the results. This is confirmed in when allowing for conservative violations in the parallel trends assumption. Finally, the results regarding EHR's affect on number of patients are robust to many violations in parallel trends. However, when considering claims per patient as the outcome, any assumed violation in parallel trends indicates a null result. Thus, I do not make strong conclusions abut the effect of EHR on claims per patient. 
+
+Additionally, I present average treatment effects under a multitude of changes to the main specification, including allowing for anticipation, changing the sample years, and arbitrary thresholds discussed in Section \ref{sec:data}. I discuss the robustness of each outcome to such changes. The coefficient for exit is relatively stable and non-negative under specification changes. Estimates become noisier under strict limitations of the data, but given the rarity of exiting, this positive effect still seems to be robust. For any outcomes relating to office-based work and number of patients, the results are very robust to any specification changes. However, when considering claims per patient as the outcome, a majority of the estimates are negative or zero. Thus, it is not clear whether this positive effect is actually an unintended consequence of EHRs, and I do not make any strong conclusions. 
+
+\subsection{Lee Bounds for Sample Selection}
 
 EHR exposure affects which hospitalists are included in the analysis for both office work outcomes and patient count outcomes (since I drop those who exit or move), indicating a non-random attrition problem. That is, if productive or tech savvy hospitalists are the ones who do not change their behavior after EHR exposure, the estimates are biased. To investigate whether my results are robust to this issue, I construct average treatment effect bounds as in  \citeauthor{lee2009training} (\citeyear{lee2009training}). For these bounds to be valid, a monotonicity assumption must hold on selection. That is, treatment can only affect selection in one direction. In this case, that means that EHR exposure increases the likelihood of exiting or moving workplace settings and no hospitalists remain in the sample under treatment who would have exited or moved in the absence of EHR exposure. Since I find in earlier analyses that hospitalists are more likely to move and exit due to EHRs, this assumption is reasonable. I present the lower and upper bounds in Table \ref{tab:leebounds}, and they confirm that even if there is nonrandom sample selection, the general findings of changes in physician behavior still hold. 
 
 \import{Table Code}{leebounds.tex}
-
-\subsubsection{Change in Patient Distribution}
-
-Similarly, I investigate whether this increase in the number of patients seen is due to the decrease in the number of working hospitalists. Specifically, a hospital that loses a portion of their physicians, and divides those patients among those remaining. In the long run, the hospital should hire new hospitalists to replace those that left, but in the short run estimates could be driven by increased workload instead of EHR use. This could explain why there is a much larger increase in the first year after exposure compared to the magnitudes of the estimates as they level out over time. Using the estimates I found in Section \ref{sec:retire}, I calculate the increase in the number of patients that would occur if all patients from hospitalists who exited were divided between remaining hospitalists. In the year of exposure the entire increase in patient count is due to EHR use since I find no effect on the likelihood of exit. In the first year after exposure, I estimate the increase in patients due to exiting physicians to be approximately 20 patients, which is less than the observed patient count estimates presented above. However, the second year after exposure is when I observe that largest effect on exiting, and so I do not rule out that the increase in patient count for every year after the first could be caused by the decrease in hospitalists. Further, I find that EHR adoption is not correlated with the aggregate number of physicians working in the hospital, shown in Table \ref{tab:hosp_assoc}, suggesting that hospitals replace those who exit relatively quickly.
 
 \section{Conclusion}
 
@@ -461,52 +477,80 @@ Next, I create the dependent variables used in the analysis. The first outcome i
 
 The next outcome variables consider level of labor market activity in office settings. The first decision to make is how to handle years where a physician has missing data for claims. A year of missing data can mean the hospitalist had no claims that year, or the observation was removed due to insufficient claims (less than 11). A conservative assumption is to assume a year of missing data means zero claims, thus, I set all missing claim counts to zero. The data already contains a variable for the fraction of patients seen in an office setting, which is used in the analysis, but I further create an indicator variable for whether the hospitalist sees any positive amount of patients in an office setting. Finally, the variables for unique patient count and claim count are already defined. I simply divide the number of claims by the number of patients to get the claims per patient variable used in the analysis. This is the final data used in the analysis.
 
-\section{Supplemental Analyses}
+\section{Sensitivity Analysis}
 
-\subsection{Effect of EHR Exposure on Work in Outpatient Settings}
+\subsection{Alternative Estimators}\label{app:estimators}
 
-Analyzing the effect of EHR exposure on patients seen in independent office settings reveals that hospitalists are shifting work towards a setting where they may have more control over their work environment. However, there are likely hospitalists in my sample for which is it more feasible to shift work between inpatient and outpatient hospital settings. Therefore, I present estimates of the effect of EHR exposure on fraction of patients seen in outpatient hospital departments in Figure \ref{fig:outpat}. Here, outpatient departments can be either on or off the hospital campus. Hospitalists increase the fraction of patients seen in outpatient settings by up to .01 ppts in each year after EHR exposure. This magnitude is much smaller than that for independent office visits, potentially indicating less choice of work setting by these hospitalists. 
+There is a robust recent literature considering the issues with estimating heterogeneous treatment effects with a two way fixed effects specification, the classic approach in staggered treatment setups. To avoid these problems, in the main specification I use the average group time effect estimator established in \citeauthor{callaway2021difference} (\citeyear{callaway2021difference}). In this section, I discuss other potential estimators and why I ultimately included average group time treatment effects as the main specification. 
 
-    \begin{figure}[ht!]
-\centering
-    \captionsetup{width=.85\linewidth}
-    \caption{Effect of EHR Exposure on Fraction of Patients Seen in Outpatient}
-   \begin{subfigure}[]{.8\textwidth}
-   \caption{all physicians}
-   \includegraphics[scale=.5]{Objects/outpat_all.pdf}
-   \label{fig:outpat_all} 
-\end{subfigure}
-
-\vspace{3mm}
-
-\begin{subfigure}[]{.8\textwidth}
-\caption{sub-samples of physicians based on age}
-   \includegraphics[scale=.5]{Objects/oupat_ages.pdf}
-   \label{fig:outpat_ages}
-\end{subfigure}
-\label{fig:outpat}
-\vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: .008 (0.002), .009 (0.003), 0.006 (0.007), respectively.}}
-\end{figure}
-
-\subsubsection{Mechanisms}\label{sec:mechanisms}
-
-As discussed in Section \ref{sec:worksetting}, hospitalists could be switching work setting either because of (1) their own preferences to avoid technology (as outpatient department EHRs tend to look different than inpatient EHRs), (2) because EHRs, through improved substitution between work settings, cause hospitals to re-allocate workers to hospital-owned outpatient settings, or because (3) physicians have always preferred to see patients in outpatient settings, but before EHRs certain tasks could only be performed in inpatient settings due to efficiency or patient sharing. In this section, I specifically explore the role of hospital re-allocation of work vs. physician preferences, as I cannot distinguish observed physician behavior from which preference might be driving that behavior. 
-
-I do not observe individual physician contract type with each hospital, but I do observe hospital level information about the aggregate nature of their physician contracts. To investigate the potential mechanism of hospital allocation, I present a heterogeneity analysis by level of integration the physician is exposed to in their connected hospitals. From least integrated (contracts with multiple facilities) to most integrated (full salaried hospitalists), results are broken down by Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM). In practice, hospitals drive the re-allocation of work setting to outpatient only if the hospitalist is heavily integrated. Further, in order for a hospital to have an outpatient facility to re-allocate physicians to, they must be heavily integrated with the physicians currently in that outpatient facility. For contracted hospitalists, the choice remains whether to contract with a hospital who wants them to work in an outpatient setting. However, I present estimates of a heterogeneity analysis for fraction of patients in outpatient settings by integration level in Figure \ref{fig:het_int}, which shows that the results are not driven entirely by integrated physicians. 
+Before I present these estimators, I present results from a two way fixed effects setup that may suffer bias from negative weighting. Specifically, I estimate the following equation:
+$$\text{outcome}_{i,t}=\sum_{j=-4}^{-2} \text{rel\_year}_{j} + \sum_{j=0}^{4} \text{rel\_year}_{j} + \delta_i + \gamma_t,$$
+where outcome$_{i,t}$ is one of the five outcomes discussed previously, rel\_year$_j$ is an indicator equal to 1 if year $t$ is $j$ years relative to treatment, $\delta_i$ are physician fixed effects, and $\gamma_t$ are year fixed effects.
+These results from each outcome are presented in Figure \ref{fig:twfe}. These results show similar patterns to the main specification, with slight variations in magnitude and more indications of a pre-trend. 
 
 \begin{figure}[ht!]
     \centering
-    \caption{Effect of EHR Exposure on Outcomes by Integration Level}
-    \includegraphics[width=.6\textwidth]{Objects/heterog_plot_int_office.pdf}
-    \label{fig:het_int}
+    \captionsetup{width=.8\linewidth}
+    \caption{Results: Two Way Fixed Effects}
+    \includegraphics[scale=.6]{Objects/twfe_plot.pdf}
+    \label{fig:twfe}
+    \vspace{2mm}
+    \caption*{\footnotesize{\textit{Notes:} Event study plots from two way fixed effects estimation are shown for each outcome variable.}}
 \end{figure}
 
-Another proxy for contract type is whether hospitalists work with one system or are connected to facilities from different systems. I present the results from this heterogeneity analysis in Appendix \ref{sec:het}, and find no difference in effects between the two groups. Finally, I investigate whether this finding is potentially due to EHRs changing the type of billing performed by hospitalists. For example, they could be performing the same services in the same location, but coding the billing information differently. I present this analysis in Appendix \ref{app:coding}, and I do not find this to be the case.
+One method that addresses issues with the TWFE specification by differencing out fixed effects is established in \citeauthor{gardner2021two} (\citeyear{gardner2021two}). This approach is commonly known as two stage difference-in-differences. The approach requires a group of never-treated units as the comparison group, a drawback of this study in that I remove all never-treated units to utilize all years of MD-PPAS data, and because never-treated hospitals are likely compositionally different from those treated in the majority of the sample. Nevertheless, I limit the years of data to 2009-2015 and present estimates as a percentage of the mean of each variable in Figure \ref{fig:estimators}. Generally, the results have the same sign with a slightly larger magnitude. 
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Alternative Estimators}
+    \includegraphics[width=.8\linewidth]{Objects/estimators_plot.pdf}
+    \label{fig:estimators}
+\end{figure}
+
+Another estimation method first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and ``clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:estimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
+
+\subsection{Heterogeneity}\label{sec:het}
+
+The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. large hospitals. These average treatment effects as a percentage of the mean of each variable are shown in Figure \ref{fig:heter}. The results do not differ along these dimensions, implying that a new technology affects hospitalists across many different settings. 
+
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Heterogeneity Analysis}
+    \includegraphics[scale=.6]{Objects/heterog_plot.pdf}
+    \label{fig:heter}
+\end{figure}
+
+I also present a heterogeneity analysis for all outcomes broken down by level of integration the physician is exposed to in their connected hospitals. From least integrated (contracts with multiple facilities) to most integrated (full salaried hospitalists), results are broken down by Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM). Estimates do not differ between the types of integration relationships. I present summary statistics by contract type and estimates of this heterogeneity analysis for all outcomes. 
+
+\import{Table Code}{int_sumstats.tex}
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Heterogeneity Analysis, Hospital Contract Types}
+    \includegraphics[scale=.6]{Objects/heterog_plot_int.pdf}
+\end{figure}
 
 
 
-\section{Sensitivity Analysis}
+
+
+\subsection{Coding Activity as Cause for Work Setting Shift}\label{app:coding}
+
+In this section, I investigate specific codes that take place in offices vs. inpatient settings to see what might be driving the increased office work. I merge the CMS Public Utilization File on Providers by Service (PUF), which provides data beginning in 2013. Therefore, for the purpose of this exercise, I consider only years 2013-2017. Using Provider NPI, I merge in the total number of claims and the number of claims that are specific to primary care services in hospitals and offices. These are listed on the y-axis of Figure \ref{fig:claims_estimates}. Then, using the same difference-in-differences methodology as the main results, I estimate the effect of EHR exposure on physician fraction of claims in each category.
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Effect of EHR Exposure on Type of Claims}
+    \includegraphics[width=.8\textwidth]{Objects/claim_type_results.pdf}
+    \label{fig:claims_estimates}
+\end{figure}
+
+
+
+The estimates and 95\% CI are shown in Figure \ref{fig:claims_estimates}. After EHR exposure, the entire substitution from hospital to outpatient services is driven by a decrease in subsequent care in the hospital and an increase in established patient visits in an office. Subsequent visit in a hospital refers to evaluation/management of a patient during their hospital admission, while an established patient visit in an office is when a patient who has been seen by the physician in the last three years returns with a new or existing condition. While both services can be performed by physicians who specialize in primary care, they are not substitutes. Specifically, codes for subsequent hospital inpatient or observation care codes (99231-99233) represent services that occur after the first encounter of the patient's hospital admission, while codes for established patient office visit (99211 - 99215) must be in an office setting. 
+
+
 
 \subsection{Various Changes to Specification}\label{sec:changes}
 
@@ -602,48 +646,6 @@ As referenced in the main paper, the effect of EHR exposure on patient count cou
     \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
 \end{figure}
 
-\begin{figure}[ht!]
-    \centering
-    \captionsetup{width=.6\linewidth}
-    \caption{Effect of EHR Exposure on Claims per Patient by Group}
-    \includegraphics[scale=.4]{Objects/claim_group.pdf}
-    \label{fig:patientgroup}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
-\end{figure}
-
-\subsection{Alternative Estimators}\label{app:estimators}
-
-There is a robust recent literature considering the issues with estimating heterogeneous treatment effects with a two way fixed effects specification, the classic approach in staggered treatment setups. To avoid these problems, in the main specification I use the average group time effect estimator established in \citeauthor{callaway2021difference} (\citeyear{callaway2021difference}). In this section, I discuss other potential estimators and why I ultimately included average group time treatment effects as the main specification. 
-
-Before I present these estimators, I present results from a two way fixed effects setup that may suffer bias from negative weighting. Specifically, I estimate the following equation:
-$$\text{outcome}_{i,t}=\sum_{j=-4}^{-2} \text{rel\_year}_{j} + \sum_{j=0}^{4} \text{rel\_year}_{j} + \delta_i + \gamma_t,$$
-where outcome$_{i,t}$ is one of the five outcomes discussed previously, rel\_year$_j$ is an indicator equal to 1 if year $t$ is $j$ years relative to treatment, $\delta_i$ are physician fixed effects, and $\gamma_t$ are year fixed effects.
-These results from each outcome are presented in Figure \ref{fig:twfe}. These results show similar patterns to the main specification, with slight variations in magnitude and more indications of a pre-trend. 
-
-\begin{figure}[ht!]
-    \centering
-    \captionsetup{width=.8\linewidth}
-    \caption{Results: Two Way Fixed Effects}
-    \includegraphics[scale=.6]{Objects/twfe_plot.pdf}
-    \label{fig:twfe}
-    \vspace{2mm}
-    \caption*{\footnotesize{\textit{Notes:} Event study plots from two way fixed effects estimation are shown for each outcome variable.}}
-\end{figure}
-
-One method that addresses issues with the TWFE specification by differencing out fixed effects is established in \citeauthor{gardner2021two} (\citeyear{gardner2021two}). This approach is commonly known as two stage difference-in-differences. The approach requires a group of never-treated units as the comparison group, a drawback of this study in that I remove all never-treated units to utilize all years of MD-PPAS data, and because never-treated hospitals are likely compositionally different from those treated in the majority of the sample. Nevertheless, I limit the years of data to 2009-2015 and present estimates as a percentage of the mean of each variable in Figure \ref{fig:estimators}. Generally, the results have the same sign with a slightly larger magnitude. 
-
-\begin{figure}[ht!]
-    \centering
-    \caption{Alternative Estimators}
-    \includegraphics[width=.8\linewidth]{Objects/estimators_plot.pdf}
-    \label{fig:estimators}
-\end{figure}
-
-Another estimation method first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and ``clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:estimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
-
-
-
 
 
 
@@ -679,52 +681,6 @@ I place restrictions on how large the violations in parallel trends must be in o
     \end{subfigure}
     \label{fig:par_trends}
 \end{figure}
-
-
-\subsection{Heterogeneity}\label{sec:het}
-
-The main analysis focuses on the differential effects of technology for older vs. younger physicians. However, another important question is whether physicians in rural vs. urban settings respond differently to the technology since the implications for behavior changes are high in areas that already suffer from access to care issues. Thus, I present average treatment effects for each outcome where the sample is split between physicians in rural and urban areas. Further, to investigate the same idea, I present results for physicians who typically work at small hospitals vs. large hospitals. These average treatment effects as a percentage of the mean of each variable are shown in Figure \ref{fig:heter}. The results do not differ along these dimensions, implying that a new technology affects hospitalists across many different settings. 
-
-
-\begin{figure}[ht!]
-    \centering
-    \caption{Heterogeneity Analysis}
-    \includegraphics[scale=.6]{Objects/heterog_plot.pdf}
-    \label{fig:heter}
-\end{figure}
-
-I also present a heterogeneity analysis for all outcomes broken down by level of integration the physician is exposed to in their connected hospitals. From least integrated (contracts with multiple facilities) to most integrated (full salaried hospitalists), results are broken down by Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM). Estimates do not differ between the types of integration relationships. I present summary statistics by contract type and estimates of this heterogeneity analysis for all outcomes. 
-
-\import{Table Code}{int_sumstats.tex}
-
-\begin{figure}[ht!]
-    \centering
-    \caption{Heterogeneity Analysis, Hospital Contract Types}
-    \includegraphics[scale=.6]{Objects/heterog_plot_int.pdf}
-\end{figure}
-
-
-
-
-
-
-\subsection{Coding Activity as Cause for Work Setting Shift}\label{app:coding}
-
-I merge the CMS Public Utilization File on Providers by Service (PUF), which provides data beginning in 2013. For the purpose of this exercise, I therefore consider only years 2013-2017. Using Provider NPI, I merge in the total number of claims and the number of claims that are specific to primary care services in hospitals and offices. These are listed on the y-axis of Figure \ref{fig:claims_estimates}. Then, using the same difference-in-differences methodology as the main results, I estimate the effect of EHR exposure on physician fraction of claims in each category.
-
-\begin{figure}[ht!]
-    \centering
-    \caption{Effect of EHR Exposure on Type of Claims}
-    \includegraphics[width=.8\textwidth]{Objects/claim_type_results.pdf}
-    \label{fig:claims_estimates}
-\end{figure}
-
-
-
-The estimates and 95\% CI are shown in Figure \ref{fig:claims_estimates}. After EHR exposure, the entire substitution from hospital to outpatient services is driven by a decrease in subsequent care in the hospital and an increase in established patient visits in an office. Subsequent visit in a hospital refers to evaluation/management of a patient during their hospital admission, while an established patient visit in an office is when a patient who has been seen by the physician in the last three years returns with a new or existing condition. While both services can be performed by physicians who specialize in primary care, they are not substitutes. In other words, the hospitalists seem to be performing different tasks after EHR exposure, not simply billing the same task in a different location. 
-
-
-
 
 
 
