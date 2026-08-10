@@ -4,7 +4,6 @@
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \fontsize{8}{10}\selectfont
-\begin{threeparttable}
 \begin{tabular}[t]{lccccccccc}
 \toprule
 \multicolumn{1}{c}{ } & \multicolumn{9}{c}{Event time relative to first EHR exposure} \\
@@ -33,10 +32,5 @@
 \hspace{1em}Physicians & 1,499 & 2,870 & 4,512 & 6,659 & 8,849 & 8,848 & 8,849 & 8,515 & 7,263\\
 \hspace{1em}Events & 0 & 0 & 1 & 5 & 37 & 116 & 370 & 528 & 600\\
 \bottomrule
-\end{tabular}
-\begin{tablenotes}
-\item \textit{Note: } 
-\item Event time $-1$ is the reference period and is omitted. Confidence intervals are pointwise and computed as $hat{ATT} pm 1.96 times SE$. CI width is reported to make clear that narrow pre-treatment intervals reflect precise estimates rather than missing values. Physicians is the number of distinct physicians contributing to each event-time cell; Events is the number of exits.
-\end{tablenotes}
-\end{threeparttable}}
+\end{tabular}}
 \end{table}

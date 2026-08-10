@@ -4,7 +4,6 @@
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \fontsize{8}{10}\selectfont
-\begin{threeparttable}
 \begin{tabular}[t]{lccccccccc}
 \toprule
 \multicolumn{1}{c}{ } & \multicolumn{9}{c}{Event time relative to first EHR exposure} \\
@@ -27,10 +26,5 @@
 \hspace{1em}95\% CI & {}[-49.3902, 96.3504] & {}[-30.1641, 88.2444] & {}[-10.4840, 47.5133] & {}[-11.7014, 23.4621] & {}[-15.9951, 128.7323] & {}[20.4586, 191.2882] & {}[53.5097, 126.7724] & {}[48.6780, 144.8490] & {}[63.2215, 224.8379]\\
 \hspace{1em}CI width & 145.7407 & 118.4085 & 57.9972 & 35.1634 & 144.7275 & 170.8296 & 73.2627 & 96.1710 & 161.6163\\
 \bottomrule
-\end{tabular}
-\begin{tablenotes}
-\item \textit{Note: } 
-\item Event time $-1$ is the reference period and is omitted. Confidence intervals are pointwise and computed as $hat{ATT} pm 1.96 times SE$. CI width is reported to make clear that narrow pre-treatment intervals reflect precise estimates rather than missing values. 
-\end{tablenotes}
-\end{threeparttable}}
+\end{tabular}}
 \end{table}
