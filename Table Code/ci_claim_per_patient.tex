@@ -1,0 +1,36 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:ci_claim_per_patient}Event-time estimates and confidence intervals: Claims per Patient}
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{8}{10}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{lccccccccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{9}{c}{Event time relative to first EHR exposure} \\
+\cmidrule(l{3pt}r{3pt}){2-10}
+ & -5 & -4 & -3 & -2 & 0 & 1 & 2 & 3 & 4\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{10}{l}{\textbf{All}}\\
+\hspace{1em}Estimate & 0.4428 & 0.2103 & -0.0639 & 0.0706 & 0.0560 & 0.2810 & 0.3231 & 0.1118 & -0.0528\\
+\hspace{1em}95\% CI & {}[-0.4765, 1.3621] & {}[-0.2852, 0.7058] & {}[-0.3548, 0.2270] & {}[-0.0811, 0.2222] & {}[-0.0936, 0.2056] & {}[0.0142, 0.5477] & {}[-0.0766, 0.7228] & {}[-0.5326, 0.7562] & {}[-0.9433, 0.8377]\\
+\hspace{1em}CI width & 1.8386 & 0.9910 & 0.5818 & 0.3032 & 0.2993 & 0.5335 & 0.7995 & 1.2888 & 1.7810\\
+\addlinespace[0.3em]
+\multicolumn{10}{l}{\textbf{Age < 60}}\\
+\hspace{1em}Estimate & 0.2076 & 0.1239 & -0.1838 & 0.0444 & 0.0385 & 0.2378 & 0.3532 & 0.1836 & 0.4232\\
+\hspace{1em}95\% CI & {}[-0.6102, 1.0255] & {}[-0.3438, 0.5916] & {}[-0.4960, 0.1284] & {}[-0.1301, 0.2188] & {}[-0.1234, 0.2004] & {}[0.0012, 0.4745] & {}[0.0244, 0.6821] & {}[-0.3213, 0.6886] & {}[-0.2956, 1.1420]\\
+\hspace{1em}CI width & 1.6358 & 0.9354 & 0.6244 & 0.3488 & 0.3238 & 0.4733 & 0.6577 & 1.0099 & 1.4376\\
+\addlinespace[0.3em]
+\multicolumn{10}{l}{\textbf{Age $\geq$ 60}}\\
+\hspace{1em}Estimate & 1.6076 & 0.6866 & 0.3089 & 0.0289 & 0.3142 & 0.7411 & 0.4895 & 0.0039 & -1.8319\\
+\hspace{1em}95\% CI & {}[-1.2517, 4.4669] & {}[-1.1159, 2.4890] & {}[-0.5930, 1.2108] & {}[-0.3769, 0.4347] & {}[-0.2787, 0.9071] & {}[-0.3489, 1.8311] & {}[-1.1313, 2.1103] & {}[-2.5864, 2.5942] & {}[-4.4742, 0.8104]\\
+\hspace{1em}CI width & 5.7186 & 3.6049 & 1.8038 & 0.8116 & 1.1858 & 2.1801 & 3.2415 & 5.1806 & 5.2846\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note: } 
+\item Event time $-1$ is the reference period and is omitted. Confidence intervals are pointwise and computed as $hat{ATT} pm 1.96 times SE$. CI width is reported to make clear that narrow pre-treatment intervals reflect precise estimates rather than missing values. 
+\end{tablenotes}
+\end{threeparttable}}
+\end{table}

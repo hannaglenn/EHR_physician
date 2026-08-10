@@ -1,0 +1,36 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:ci_npi_unq_benes}Event-time estimates and confidence intervals: Number of Patients}
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{8}{10}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{lccccccccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{9}{c}{Event time relative to first EHR exposure} \\
+\cmidrule(l{3pt}r{3pt}){2-10}
+ & -5 & -4 & -3 & -2 & 0 & 1 & 2 & 3 & 4\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{10}{l}{\textbf{All}}\\
+\hspace{1em}Estimate & 4.3658 & 3.6177 & 4.3517 & 0.9686 & 86.4046 & 219.7474 & 206.3165 & 194.8678 & 203.4072\\
+\hspace{1em}95\% CI & {}[-14.0794, 22.8110] & {}[-6.9764, 14.2118] & {}[-1.8453, 10.5486] & {}[-1.9835, 3.9208] & {}[81.9645, 90.8447] & {}[210.7979, 228.6969] & {}[194.7938, 217.8392] & {}[179.8254, 209.9103] & {}[178.1667, 228.6476]\\
+\hspace{1em}CI width & 36.8905 & 21.1882 & 12.3938 & 5.9043 & 8.8801 & 17.8990 & 23.0454 & 30.0849 & 50.4809\\
+\addlinespace[0.3em]
+\multicolumn{10}{l}{\textbf{Age < 60}}\\
+\hspace{1em}Estimate & 4.9870 & 3.2851 & 3.8628 & 0.7571 & 87.7939 & 226.4990 & 214.2568 & 203.1358 & 206.4799\\
+\hspace{1em}95\% CI & {}[-14.5301, 24.5041] & {}[-6.7626, 13.3328] & {}[-2.1561, 9.8817] & {}[-2.2525, 3.7667] & {}[83.8068, 91.7811] & {}[218.1876, 234.8103] & {}[203.7066, 224.8071] & {}[186.6908, 219.5808] & {}[180.8777, 232.0822]\\
+\hspace{1em}CI width & 39.0342 & 20.0954 & 12.0378 & 6.0193 & 7.9744 & 16.6226 & 21.1005 & 32.8899 & 51.2045\\
+\addlinespace[0.3em]
+\multicolumn{10}{l}{\textbf{Age $\geq$ 60}}\\
+\hspace{1em}Estimate & 23.4801 & 29.0402 & 18.5146 & 5.8804 & 56.3686 & 105.8734 & 90.1410 & 96.7635 & 144.0297\\
+\hspace{1em}95\% CI & {}[-49.3902, 96.3504] & {}[-30.1641, 88.2444] & {}[-10.4840, 47.5133] & {}[-11.7014, 23.4621] & {}[-15.9951, 128.7323] & {}[20.4586, 191.2882] & {}[53.5097, 126.7724] & {}[48.6780, 144.8490] & {}[63.2215, 224.8379]\\
+\hspace{1em}CI width & 145.7407 & 118.4085 & 57.9972 & 35.1634 & 144.7275 & 170.8296 & 73.2627 & 96.1710 & 161.6163\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note: } 
+\item Event time $-1$ is the reference period and is omitted. Confidence intervals are pointwise and computed as $hat{ATT} pm 1.96 times SE$. CI width is reported to make clear that narrow pre-treatment intervals reflect precise estimates rather than missing values. 
+\end{tablenotes}
+\end{threeparttable}}
+\end{table}
