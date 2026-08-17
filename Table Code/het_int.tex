@@ -1,0 +1,53 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:het_int}Effect of EHR exposure by physician-hospital integration level}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{lccccc}
+\toprule
+ & Physicians & Baseline mean & Estimate & 95\% CI & Pre-trends $p$\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Exit}}\\
+\hspace{1em}\quad Main & 5,471 & 0.009 & 0.013$^{*}$ & {}[-0.002, 0.029] & 0.02\\
+\hspace{1em}\quad IPA & 1,489 & 0.009 & -0.007 & {}[-0.040, 0.027] & 0.25\\
+\hspace{1em}\quad OPHO & 5,241 & 0.009 & 0.013$^{*}$ & {}[-0.002, 0.028] & 0.01\\
+\hspace{1em}\quad CPHO & 740 & 0.016 & 0.000 & {}[-0.023, 0.023] & 0.17\\
+\hspace{1em}\quad ISM & 3,500 & 0.006 & 0.025$^{***}$ & {}[0.010, 0.040] & 0.04\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Frac. Patients in Office}}\\
+\hspace{1em}\quad Main & 4,798 & 0.033 & 0.111$^{***}$ & {}[0.095, 0.127] & 0.13\\
+\hspace{1em}\quad IPA & 1,334 & 0.034 & 0.091$^{***}$ & {}[0.072, 0.110] & 0.13\\
+\hspace{1em}\quad OPHO & 4,599 & 0.033 & 0.104$^{***}$ & {}[0.089, 0.119] & 0.16\\
+\hspace{1em}\quad CPHO & 651 & 0.031 & 0.083$^{***}$ & {}[0.040, 0.126] & 0.86\\
+\hspace{1em}\quad ISM & 3,103 & 0.030 & 0.107$^{***}$ & {}[0.084, 0.131] & 0.92\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Work in Office}}\\
+\hspace{1em}\quad Main & 4,798 & 0.279 & 0.115$^{***}$ & {}[0.083, 0.147] & 0.28\\
+\hspace{1em}\quad IPA & 1,334 & 0.270 & 0.142$^{***}$ & {}[0.082, 0.202] & 0.10\\
+\hspace{1em}\quad OPHO & 4,599 & 0.277 & 0.110$^{***}$ & {}[0.080, 0.140] & 0.20\\
+\hspace{1em}\quad CPHO & 651 & 0.235 & 0.097$^{*}$ & {}[-0.015, 0.210] & 0.62\\
+\hspace{1em}\quad ISM & 3,103 & 0.264 & 0.095$^{***}$ & {}[0.045, 0.145] & 0.17\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Number Patients}}\\
+\hspace{1em}\quad Main & 3,472 & 299 & 26.29$^{***}$ & {}[10.96, 41.62] & 0.04\\
+\hspace{1em}\quad IPA & 814 & 291 & 26.21$^{**}$ & {}[2.88, 49.54] & 0.11\\
+\hspace{1em}\quad OPHO & 3,285 & 301 & 23.32$^{***}$ & {}[5.92, 40.73] & 0.03\\
+\hspace{1em}\quad CPHO & 393 & 288 & 68.53$^{**}$ & {}[13.06, 124] & 0.32\\
+\hspace{1em}\quad ISM & 2,090 & 288 & 30.32$^{**}$ & {}[5.46, 55.19] & 0.01\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Claims per Patient}}\\
+\hspace{1em}\quad Main & 3,045 & 3.94 & 0.114 & {}[-0.081, 0.308] & 0.08\\
+\hspace{1em}\quad IPA & 699 & 4.20 & -0.025 & {}[-0.408, 0.358] & 0.59\\
+\hspace{1em}\quad OPHO & 2,890 & 3.91 & 0.096 & {}[-0.109, 0.301] & 0.03\\
+\hspace{1em}\quad CPHO & 339 & 3.49 & -0.140 & {}[-0.815, 0.536] & $<$0.01\\
+\hspace{1em}\quad ISM & 1,830 & 3.77 & 0.288$^{*}$ & {}[-0.010, 0.587] & 0.61\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note: } 
+\item Each row reports the overall average treatment effect on the treated from Callaway and Sant'Anna (2021), aggregated over event time and estimated separately on physicians affiliated with hospitals at the indicated level of physician-hospital integration. IPA is independent practice association, OPHO and CPHO are open and closed physician-hospital organizations, and ISM is integrated salary model. Physicians is the number contributing to each estimate. Baseline mean is the mean of the outcome among treated physicians in the year before first EHR exposure, computed within each subsample. The final column reports a Wald test of the null that all pre-treatment group-time effects equal zero. $^{*}p<0.10$, $^{**}p<0.05$, $^{***}p<0.01$.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

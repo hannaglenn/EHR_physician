@@ -1,0 +1,22 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:honest_breakdown}Robustness to violations of parallel trends}
+\centering
+\begin{threeparttable}
+\begin{tabular}[t]{lccc}
+\toprule
+Outcome & Original 95\% CI & Largest pre-treatment violation & Breakdown $\bar{M}$\\
+\midrule
+Exit & {}[0.0036, 0.0300] & 0.0035 & 0.25\\
+Frac. Patients in Office & {}[0.0976, 0.1277] & 0.0044 & $>2$\\
+Work in Office & {}[0.0935, 0.1535] & 0.0053 & $>2$\\
+Number Patients & {}[9.54, 36.26] & 3.12 & 0.60\\
+Claims per Patient & {}[0.0232, 0.4271] & 0.0985 & 0.10\\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note: } 
+\item Sensitivity analysis follows Rambachan and Roth (2023). The restriction bounds any post-treatment violation of parallel trends at $bar{M}$ times the largest violation observed before treatment. The breakdown value is the smallest $bar{M}$ at which the robust confidence interval includes zero; values are searched on a grid of width 0.05 up to $bar{M}=2$. The event window is restricted to $e \in [-3, 4]$.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

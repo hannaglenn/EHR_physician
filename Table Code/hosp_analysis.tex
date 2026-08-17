@@ -1,27 +1,41 @@
-\begin{table}[h]
+\begin{table}[!h][h]
 \centering
-\caption{Association between EHR and Other Hosp. Behaviors}
+\caption{\label{tab:hosp_outcomes}Association between EHR adoption and other hospital behaviors}
 \centering
-\begin{tabular}[t]{>{\raggedright\arraybackslash}p{20em}cc}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{9}{11}\selectfont
+\begin{threeparttable}
+\begin{tabular}[t]{>{\raggedright\arraybackslash}p{13em}ccccccc}
 \toprule
-Outcome & Estimate & SE\\
+\multicolumn{5}{c}{ } & \multicolumn{2}{c}{$p$-value} & \multicolumn{1}{c}{ } \\
+\cmidrule(l{3pt}r{3pt}){6-7}
+Outcome & Pre-treatment mean & Hospitals & Estimate & 95\% CI & Unadj. p-val & BH p-val & Pre-trends\\
 \midrule
 \addlinespace[0.3em]
-\multicolumn{3}{l}{\textbf{Non-EHR Investment/Organizational Changes}}\\
-\hspace{1em}Capital Expenses (Buildings) & 88,036 & 176,287\\
-\hspace{1em}Capital Expenses (Equipment) & -96,304 & 184,225\\
-\hspace{1em}Expenses w/out Med. Records (millions) & 17.4 & 8.1\\
-\hspace{1em}Owns Subsidiary & -0.02 & 0.02\\
-\hspace{1em}Change Admin & 0.01 & 0.02\\
-\hspace{1em}No. Beds & 0.28 & 2.15\\
+\multicolumn{8}{l}{\textbf{Non-EHR Investment/Organizational Changes}}\\
+\hspace{1em}Capital Expenses (Buildings) & 2,433,037 & 1,534 & 134,567 & {}[-318,005, 587,141] & 0.56 & 0.80 & 0.78\\
+\hspace{1em}Capital Expenses (Equipment) & 1,668,741 & 1,532 & 218,919 & {}[-13,118, 450,958] & 0.06 & 0.58 & 0.44\\
+\hspace{1em}Owns Subsidiary & 0.156 & 1,516 & -0.000 & {}[-0.026, 0.026] & 0.98 & 0.98 & 0.66\\
+\hspace{1em}Change Admin & 0.155 & 1,540 & -0.011 & {}[-0.053, 0.031] & 0.60 & 0.80 & 0.35\\
+\hspace{1em}No. Beds & 109.6 & 1,540 & 4.064 & {}[0.408, 7.720] & 0.03 & 0.53 & 0.11\\
 \addlinespace[0.3em]
-\multicolumn{3}{l}{\textbf{Workforce}}\\
-\hspace{1em}No. Nurses & 2.66 & 5.33\\
-\hspace{1em}No. Physicians & 0.00 & 0.01\\
-\hspace{1em}IPA & -0.03 & 0.02\\
-\hspace{1em}OPHO & 0.03 & 0.01\\
-\hspace{1em}CPHO & 0.01 & 0.01\\
-\hspace{1em}FIO & -0.04 & 0.02\\
+\multicolumn{8}{l}{\textbf{Workforce}}\\
+\hspace{1em}No. Nurses & 124.0 & 1,540 & 4.168 & {}[-1.056, 9.393] & 0.12 & 0.71 & 0.15\\
+\hspace{1em}No. Physicians & 0.044 & 1,523 & -0.006 & {}[-0.019, 0.008] & 0.40 & 0.80 & 0.52\\
+\addlinespace[0.3em]
+\multicolumn{8}{l}{\textbf{Physician Arrangements}}\\
+\hspace{1em}Has IPA & 0.084 & 1,523 & 0.003 & {}[-0.026, 0.032] & 0.85 & 0.91 & 0.34\\
+\hspace{1em}Has OPHO & 0.761 & 1,523 & 0.015 & {}[-0.014, 0.045] & 0.30 & 0.80 & 0.83\\
+\hspace{1em}Has CPHO & 0.033 & 1,523 & 0.005 & {}[-0.009, 0.019] & 0.46 & 0.80 & 0.07\\
+\hspace{1em}Has FIO & 0.350 & 1,523 & -0.010 & {}[-0.050, 0.030] & 0.63 & 0.80 & 0.41\\
+\hspace{1em}No. Physicians, IPA & 12.9 & 1,523 & -4.032 & {}[-13.2, 5.179] & 0.39 & 0.80 & 0.69\\
+\hspace{1em}No. Physicians, CPHO & 6.915 & 1,523 & -0.796 & {}[-5.794, 4.203] & 0.76 & 0.91 & 0.26\\
+\hspace{1em}No. Physicians, FIO & 12.8 & 1,520 & 3.755 & {}[-3.589, 11.1] & 0.32 & 0.80 & 0.53\\
 \bottomrule
-\end{tabular}\label{tab:hosp_assoc}
+\end{tabular}
+\begin{tablenotes}
+\item \textit{Note: } 
+\item Each row reports the overall average treatment effect on the treated from Callaway and Sant'Anna (2021), aggregated over event time. The unadjusted $p$-value tests the null that the effect is zero for that outcome alone; the Benjamini--Hochberg $p$-value adjusts across all outcomes in the table to control the false discovery rate. Stars reflect the adjusted $p$-value. The pre-trends column reports a Wald test of the null that all pre-treatment group-time effects equal zero. $^{*}p<0.10$, $^{**}p<0.05$, $^{***}p<0.01$.
+\end{tablenotes}
+\end{threeparttable}}
 \end{table}
