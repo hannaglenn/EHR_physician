@@ -602,20 +602,10 @@ Because this restriction conditions on an outcome that treatment may itself
 affect, the resulting sample is potentially selected; I report Lee (2009) bounds
 in Section~\ref{sec:changes}.
 
-Finally, I use the number of unique Medicare beneficiaries seen in a year as a
-measure of patient volume, and the ratio of total claims to unique patients as a
-measure of billing intensity per patient. Both are reported directly in MD-PPAS.
-For these outcomes I restrict further to physicians who never exit and who do not
-add a new hospital affiliation during the panel, so that the estimates are not
-driven by physicians expanding the set of hospitals they work with. As above,
-these volume measures reflect traditional fee-for-service Medicare only, so the
-estimated effects should be read as lower bounds on the change in a physician's
-total patient panel.
+Finally, I use the number of unique Medicare beneficiaries seen in a year as a measure of total patient volume in any setting, and the ratio of total claims to unique patients as a measure of billing intensity per patient. Both are reported directly in MD-PPAS. For these outcomes I impose two further restrictions. First, I keep only physicians who never exit. Second, I keep only physicians who remain hospital-based throughout the post-adoption period, defined as treating at least 70 percent of their patients in the inpatient setting in every year following EHR adoption. This holds the setting of practice fixed, so that movements in volume and billing intensity reflect changes in productivity within hospital-based practice rather than a reallocation of effort toward office-based work. As above, I account for selection on the included samlple by employing Lee Bounds (\cite{lee2009training}). These volume measures reflect traditional fee-for-service Medicare only, so the estimated effects should be read as lower bounds on the change in a physician's total patient panel. 
 
-\subsubsection*{Claim composition}
-
-For a subset of years I additionally observe the composition of a physician's
-billing. The Medicare Physician and Other Practitioners public use file, which is
+For a subset of years I observe the composition of a physician's
+billing activity. The Medicare Physician and Other Practitioners public use file, which is
 available from 2013 onward, reports the number of services delivered under each
 HCPCS code. I group evaluation and management codes into eight categories:
 initial hospital inpatient care, subsequent hospital inpatient care, hospital
@@ -627,7 +617,11 @@ hospitalists in my sample are exposed to an electronic health record before then
 this analysis rests on a substantially smaller set of treated cohorts and I
 present it as descriptive.
 
+\section{Summary Statistics by Sub-sample}
+
 \input{Table Code/overall_stats_by_age}
+
+\input{overall}
 
 \section{Event Study Estimates}
 
