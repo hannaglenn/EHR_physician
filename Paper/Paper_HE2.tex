@@ -305,9 +305,9 @@ This outcome is likewise robust to potential violations of parallel trends. As r
 
 \subsection{Patient Count and Billing Activity}\label{sec:patientcount}
 
-I now estimate the effect of EHR exposure on patient count and billing activity per patient. I limit to hospitalists who work with the same hospital through the entire sample. These hospitalists do not exit or see patients in another setting, so that when an EHR is implemented they remain utilizing the EHR for the remainder of the sample. The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}. For hospitalists of any age (panel \ref{fig:patienta}), patient count increases in each year after EHR exposure, from an 11 patient increase in year zero to a 41 patient increase in year four after exposure. These estimates translate to a 3-13\% increase in the number of patients seen relative to the mean of 299 patients in the pre-treatment year. These estimates should be read as lower bounds, since MDPPAS captures only traditional fee-for-service Medicare patients, so any increase in volume among patients with other coverage is not observed. 
+I now estimate the effect of EHR exposure on patient count and billing activity per patient. I limit to hospitalists who work with the same hospital through the entire sample. These hospitalists do not exit or see patients in another setting, so that when an EHR is implemented they remain utilizing the EHR for the remainder of the sample. The effect of EHR exposure on patient count is shown in Figure \ref{fig:patient}. For hospitalists of any age (panel \ref{fig:patienta}), patient count increases in each year after EHR exposure, from an approximately 4 patient increase in year zero to a 30 patient increase in year four after exposure. These estimates translate to a 1-9\% increase in the number of patients seen relative to the mean of 336 patients in the pre-treatment year. These estimates should be read as lower bounds, since MDPPAS captures only traditional fee-for-service Medicare patients, so any increase in volume among patients with other coverage is not observed. 
 
-Splitting by age (panel \ref{fig:patientb}) shows that the increase in patient volume is concentrated among younger hospitalists. For those under 60, the estimated effect rises from roughly 10 patients in the year of exposure to 48 by year four, and the confidence intervals exclude zero at most horizons. Estimates for hospitalists over 60 are similar in magnitude in the first two years but considerably less precise, and by years three and four they are indistinguishable from zero. The two groups have nearly identical pre-treatment volumes, 301 and 291 patients respectively, so this is not a difference in scale. However, the confidence intervals for the two groups overlap substantially at every horizon, so I cannot reject that the effects are equal. What the split shows is that the evidence for an increase in patient volume rests largely on younger hospitalists; for those over 60, the data are consistent with an effect of similar size but too imprecise to distinguish from no effect. This should be interpreted with particular caution given that the pre-trends test rejects for the older subgroup. The estimates and confidence intervals underlying these figures are shown in Appendix Table \ref{tab:ci_npi_unq_benes}.
+Splitting by age (panel \ref{fig:patientb}) shows that the increase in patient volume is concentrated among younger hospitalists. For those under 60, the estimated effect rises from roughly 4 patients in the year of exposure to 40 by year four, and the confidence intervals exclude zero at most horizons. Estimates for hospitalists over 60 are indistinguishable from zero post-exposure, though considerably less precise. The two groups have nearly identical pre-treatment volumes, 336 and 338 patients respectively, so this is not a difference in scale. However, the confidence intervals for the two groups overlap substantially at every horizon, so I cannot reject that the effects are equal. What the split shows is that the evidence for an increase in patient volume rests largely on younger hospitalists; for those over 60, the data are consistent with an effect of similar size but too imprecise to distinguish from no effect. This should be interpreted with particular caution given that the pre-trends test rejects for the older subgroup. The estimates and confidence intervals underlying these figures are shown in Appendix Table \ref{tab:ci_npi_unq_benes}.
 
 \begin{figure}[ht!]
 \centering
@@ -333,9 +333,7 @@ Splitting by age (panel \ref{fig:patientb}) shows that the increase in patient v
     \caption*{\footnotesize{\textit{Notes:} The top panel shows average group time treatment effects aggregated over groups to an event study plot. The bottom show these results for different subgroups of physicians by age. The p-value listed for each graph corresponds to a Wald test for pre-trends. Confidence intervals shown are simultaneous confidence bands accounting for multiple hypothesis testing. Overall ATT for all, $<$ 60, $>=$ 60 with SE in parentheses: 28 (5.0), 25.6 (5.2), 40.4 (15.0), respectively.}}
 \end{figure}
 
-The joint Wald test rejects the null of parallel pre-trends for the full sample ($p = 0.04$) and for hospitalists over 60 ($p = 0.02$), though not for those under 60 ($p = 0.26$). The rejection appears to be driven by the deepest leads: estimates at $-4$ and $-3$ are negative for the full sample, while those at $-2$ and $-1$ are essentially zero. Pre-treatment estimates at
-$-5$ are very imprecise for both age groups, reflecting the small number of
-cohorts observed that far before treatment. Notably, the pre-treatment deviations run opposite in sign to the estimated treatment effect, so a violation of parallel trends of this form would bias the estimates toward zero rather than away from it. The sensitivity analysis reflects this weaker pre-treatment evidence. As reported in Table~\ref{tab:honest_breakdown}, the estimated effect on patient volume remains significantly positive only for $\bar{M}$ below 0.60. That is, it would not survive a post-treatment violation more than about 60 percent as large as the largest pre-treatment violation of 3.12 patients. This is a weaker result than for the office outcomes, though considerably stronger than for exit from clinical
+The joint Wald test rejects the null of parallel pre-trends for hospitalists above 60 ($p = 0.01$), but not for those less than 60 ($p=0.62$) and not for the entire pooled sample ($p=0.81$). The rejection appears to be driven by the deepest leads: estimates at $-4$ and $-3$ are negative for the full sample, while those at $-2$ and $-1$ are essentially zero. The sensitivity analysis reflects this weaker pre-treatment evidence. As reported in Table~\ref{tab:honest_breakdown}, the estimated effect on patient volume remains significantly positive only for $\bar{M}$ below 0.60. That is, it would not survive a post-treatment violation more than about 60 percent as large as the largest pre-treatment violation of 3.12 patients. This is a weaker result than for the office outcomes, though considerably stronger than for exit from clinical
 practice.
 
 Finally, I consider whether EHR exposure affects claims filed per patient in Figure \ref{fig:claim}. When including all hospitalists in the estimation, shown in Figure \ref{fig:claima}, there seems to be no strong effect of EHR exposure on claims per patient. In years one and two after exposure, the effect is positive and statistically significant with magnitudes of 0.15 and 0.23, respectively, and representing a 4\% and 7\% increase relative to the pre-exposure mean of 3.94. However, this outcome provides the strongest evidence of violations in the parallel trends assumption with an $\bar{M}$ of 0.1, well below the standard threshold of 1 (\cite{rambachan2019honest}). Additionally, this outcome is the least robust to slight changes in data specifications, which I show in Appendix Figure \ref{fig:cpp_chart}. Therefore, I do not interpret these results as suggesting EHR exposure affects claims per patient. Estimating the effects separately by age does not reveal any differential effects, and only worsens the pre-trend concerns. 
@@ -379,7 +377,7 @@ I find no strong evidence that effects differ along any of these dimensions. Poi
 \end{figure}
 
 
-\section{Alternative Explanations and Robustness Checks}\label{sec:alt}
+\section{Alternative Explanations}\label{sec:alt}
 
 \subsection{Changes Related to Medicare Patients}
 
@@ -442,38 +440,30 @@ Another proxy for contract type is whether hospitalists work with one system or 
 
 It could be possible that the increase in patient count is due to re-allocation of patients after other hospitalists exit as opposed to a true productivity increase. Thus, I investigate whether the increase in patients seen is driven by a decrease in the number of working hospitalists. If hospitals that lose hospitalists then redistribute their patients among those who remain, the estimates could reflect increased workloads rather than any effect of EHR use itself.
 
-Using the exit estimates from Section~\ref{sec:retire}, I calculate the increase in patient volume that would follow if all patients of exiting hospitalists were reassigned to those who remain. Because exit is measured cumulatively, the coefficient at event time $e$ gives the additional share of hospitalists who have left practice by that point. Denoting this share $s_e$, full reassignment implies an increase of $\bar{y} \cdot s_e / (1 - s_e)$ patients per remaining hospitalist, where $\bar{y} = 299$ is the pre-treatment mean. In the year of exposure, exit is negligible and the implied increase is well under one patient, against an observed increase of 11. Redistribution accounts for at most 3 patients in the first year after exposure and 7 by year three, compared with observed increases of 23 and 32 patients. Across the post-treatment window, redistribution can explain no more than 23 percent of the estimated effect, and the share falls
-to 11 percent by year four as the observed increase continues to grow.
+Using the exit estimates from Section~\ref{sec:retire}, I calculate the increase
+in patient volume that would follow if all patients of exiting hospitalists were
+reassigned to those who remain. Because exit is measured cumulatively, the
+coefficient at event time $e$ gives the additional share of hospitalists who have
+left practice by that point. Denoting this share $s_e$, full reassignment implies
+an increase of $\bar{y} \cdot s_e / (1 - s_e)$ patients per remaining
+hospitalist, where $\bar{y} = 336$ is the pre-treatment mean. In the year of
+exposure, exit is negligible and the implied increase is well under one patient,
+against an observed increase of 4. Redistribution accounts for at most 3 patients
+in the first year after exposure and 8 by year three, compared with observed
+increases of 15 and 25 patients. Across the post-treatment window, redistribution
+can explain between 9 and 34 percent of the estimated effect, with the remainder
+attributable to changes in the practice of hospitalists who do not exit.
 
-This calculation is an upper bound on the contribution of redistribution, for two reasons. First, it assumes that every patient of an exiting hospitalist is
+This calculation is an upper bound on the contribution of redistribution, for two
+reasons. First, it assumes that every patient of an exiting hospitalist is
 reassigned to another hospitalist in the sample; in practice some are seen by
-physicians outside the sample, and some may not return to inpatient care at all. Second, it assumes hospitals do not replace departing physicians.
-Table~\ref{tab:hosp_outcomes} shows no association between EHR adoption and hospital physician counts, indicating that replacement does occur, which would reduce the redistributed volume further. The increase in patients seen therefore does not appear to be an artifact of a shrinking hospitalist workforce.
+physicians outside the sample, and some may not return to inpatient care at all.
+Second, it assumes hospitals do not replace departing physicians.
+Table~\ref{tab:hosp_outcomes} shows no association between EHR adoption and
+hospital physician counts, indicating that replacement does occur, which would
+reduce the redistributed volume further. The increase in patients seen therefore
+does not appear to be an artifact of a shrinking hospitalist workforce.
 
-
-\subsection{Additional Robustness}
-
-\subsubsection{Honest Difference-in-differences}
-
-Table~\ref{tab:honest_breakdown} collects the sensitivity analysis discussed
-alongside each outcome above. Following \citet{rambachan2019honest}, I bound each treatment effect under the restriction that any post-treatment violation of parallel trends is at most $\bar{M}$ times the largest violation observed before treatment, and report the breakdown value at which the robust confidence interval first includes zero. The results fall into three groups. Both office outcomes are robust: they remain significantly positive for $\bar{M}$ greater than two, meaning the estimates would survive violations more than twice as large as anything visible in the pre-period. Patient volume is intermediate, with a breakdown value of 0.60. Claims per patient and exit from clinical practice are the least robust, at 0.10
-and 0.25 respectively. 
-
-\subsubsection{Specification Charts}
-
-I also assess sensitivity to the choices made in constructing the sample. For
-each outcome I estimate 36 specifications, varying the minimum shared-patient
-count used to define a hospitalist-hospital pair, the share of a hospitalist's
-patients that must be seen in an inpatient setting, whether one year of
-anticipation is permitted, and whether the panel is truncated at 2015. These are reported as specification charts in Appendix~\ref{sec:changes}. The estimates are stable across these choices: the sign is unchanged in all 36 specifications for every outcome. Appendix~\ref{app:estimators} additionally reports estimates from two-way fixed effects, stacked regression, and two-stage difference-in-differences. The estimators which take into account staggered treatment timing present qualitatively identical results to the main specification. However, the two-way-fixed effects results are often biased towards zero, confirming that the group-time estimators are more suitable for this setting.
-
-\input{Table Code/honest_breakdown}
-
-\subsubsection{Lee Bounds for Sample Selection}\label{sec:leebounds}
-
-EHR exposure affects which hospitalists are included in the analysis for both office work outcomes and patient count outcomes (since I drop those who exit or move), indicating a non-random attrition problem. That is, if productive or tech savvy hospitalists are the ones who do not change their behavior after EHR exposure, the estimates are biased. To investigate whether my results are robust to this issue, I construct average treatment effect bounds as in  \citeauthor{lee2009training} (\citeyear{lee2009training}). For these bounds to be valid, a monotonicity assumption must hold on selection. In this case, EHR exposure must increase the likelihood of exiting or moving workplace settings and no hospitalists remain in the sample under treatment who would have exited or moved in the absence of EHR exposure. Since I find in earlier analyses that hospitalists are more likely to move and exit due to EHRs, this assumption is reasonable. I present the lower and upper bounds in Table \ref{leebouns}, and they confirm that even if there is non-random sample selection, the qualitative results still hold. 
-
-\import{Table Code}{leebounds.tex}
 
 \section{Conclusion}
 
@@ -617,11 +607,57 @@ hospitalists in my sample are exposed to an electronic health record before then
 this analysis rests on a substantially smaller set of treated cohorts and I
 present it as descriptive.
 
-\section{Summary Statistics by Sub-sample}
+\subsection{Summary Statistics by Subgroup}
+
+Tables~\ref{tab:means_age} and~\ref{tab:means_int} report means for the subgroups
+used in the relevant heterogeneity analyses. Table~\ref{tab:means_age} splits hospitalists at age 60. The two groups are
+similar on most dimensions: they work with a comparable number of hospitals (1.27
+and 1.27 in the exit sample) and hospital systems, and are affiliated with
+hospitals at similar levels of physician-hospital integration. Older hospitalists
+are exposed to an electronic health record roughly one year later on average
+(2012 against 2011), a difference that reflects the hospitals they work with
+rather than any individual choice.
 
 \input{Table Code/overall_stats_by_age}
 
-\input{overall}
+Two differences are substantial. First, older hospitalists are far less likely to
+be female (19 percent, against 37 percent of those under 60) consistent with
+the growth of women in medicine over the period during which these physicians
+trained. Second, and more directly relevant to the analysis, older hospitalists
+exit clinical practice at more than twice the rate: 23 percent against 10
+percent. This difference motivates the age split and underlies the larger
+absolute effect on exit reported for the older group. The office and productivity outcomes also differ at baseline. Older hospitalists
+in the office sample see a larger share of patients in an office setting (12
+percent against 8 percent) and are more likely to work in an office at all (41
+percent against 28 percent). In the productivity sample they see somewhat fewer
+Medicare patients (317 against 347) but bill more claims per patient (4.02
+against 3.41). These baseline differences are important for interpreting the
+heterogeneity results, since a given absolute effect represents a different
+proportional change for each group.
+
+Table~\ref{tab:means_int} reports means by the level of physician-hospital
+integration at the hospitals a hospitalist works with. The four categories are
+not mutually exclusive, since a hospital may operate more than one arrangement
+and a hospitalist may work with several hospitals. Open physician-hospital
+organizations are by far the most common, covering 5,241 hospitalists, while
+closed organizations are the least common at 740.
+
+\input{Table Code/overall_stats_by_integration}
+
+Hospitalists are similar across the four categories on nearly every dimension.
+Mean age ranges only from 45.7 to 46.8, the share female from 34 to 36 percent,
+and the mean year of first EHR exposure is 2011 in all four. Outcomes are
+likewise similar: the share ever exiting practice ranges from 10 to 12 percent,
+the fraction of patients seen in an office is 8 percent in all four categories,
+and mean patient counts range from 282 to 292. The one dimension on which the
+groups differ noticeably is the number of hospitals worked with, which is highest
+for hospitalists at independent practice association hospitals (1.41) and lowest
+at open physician-hospital organizations (1.28). This similarity across
+integration types is consistent with the heterogeneity results reported in
+Figure~\ref{fig:heter}, which show no clear differences in the estimated effects
+along this dimension.
+
+
 
 \section{Event Study Estimates}
 
@@ -637,31 +673,38 @@ present it as descriptive.
 
 \section{Sensitivity Analysis}
 
+\subsection{Honest Difference-in-differences}
+
+Table~\ref{tab:honest_breakdown} collects the sensitivity analysis discussed
+alongside each outcome above. Following \citet{rambachan2019honest}, I bound each treatment effect under the restriction that any post-treatment violation of parallel trends is at most $\bar{M}$ times the largest violation observed before treatment, and report the breakdown value at which the robust confidence interval first includes zero. The results fall into three groups. Both office outcomes are robust: they remain significantly positive for $\bar{M}$ greater than two, meaning the estimates would survive violations more than twice as large as anything visible in the pre-period. Patient volume is intermediate, with a breakdown value of 0.60. Claims per patient and exit from clinical practice are the least robust, at 0.10
+and 0.25 respectively. 
+
+\input{Table Code/honest_breakdown}
+
+\subsection{Lee Bounds for Sample Selection}\label{sec:leebounds}
+
+EHR exposure affects which hospitalists are included in the analysis for both office work outcomes and patient count outcomes (since I drop those who exit or move), indicating a non-random attrition problem. That is, if productive or tech savvy hospitalists are the ones who do not change their behavior after EHR exposure, the estimates are biased. To investigate whether my results are robust to this issue, I construct average treatment effect bounds as in  \citeauthor{lee2009training} (\citeyear{lee2009training}). For these bounds to be valid, a monotonicity assumption must hold on selection. In this case, EHR exposure must increase the likelihood of exiting or moving workplace settings and no hospitalists remain in the sample under treatment who would have exited or moved in the absence of EHR exposure. Since I find in earlier analyses that hospitalists are more likely to move and exit due to EHRs, this assumption is reasonable. I present the lower and upper bounds in Table \ref{leebouns}, and they confirm that even if there is non-random sample selection, the qualitative results still hold. 
+
+\import{Table Code}{leebounds.tex}
+
 \subsection{Never-Treated Comparison Groups}
 \label{sec:nevertreated}
 
-My main specification drops hospitalists not exposed to an EHR by 2015, so that identification comes from comparisons with not-yet-treated physicians. An
-alternative is to truncate the panel at 2015 and retain those never exposed
-within that window as a comparison group. This section reports that
-specification and explains why I do not adopt it.
+My main specification drops hospitalists not exposed to an EHR by 2015, so that identification comes from comparisons with not-yet-treated physicians. An alternative is to truncate the panel at 2015 and retain those never exposed
+within that window as a comparison group. This section reports that specification and explains why I do not adopt it.
 
-Table~\ref{tab:nt_chars} compares the two groups in 2009, the first year of the panel. Never-treated hospitalists differ from treated hospitalists on nearly every observable dimension. They are older by 3.4 years on average and have been in practice two years longer. They work at substantially smaller hospitals: 165 beds on average, against 268 for the treated, and with fewer hospitals and fewer distinct hospital systems. Most consequentially for the outcomes I study, they are already less hospital-based at baseline: 76.8 percent of their claims are inpatient, against 83.4 percent for the treated, and 12.0 percent are delivered in an office setting, against 7.1 percent. All of these differences are statistically significant at conventional levels.
-
-These differences are not incidental to the setting. Meaningful Use incentives
-were substantial over this period, and hospitals that had still not adopted an
+Table~\ref{tab:nt_chars} compares the two groups in 2009, the first year of the panel. Never-treated hospitalists differ from treated hospitalists on nearly every observable dimension. They are older by 3.4 years on average and have been in practice two years longer. They work at substantially smaller hospitals: 165 beds on average, against 268 for the treated, and with fewer hospitals and fewer distinct hospital systems. Most consequentially for the outcomes I study, they are already less hospital-based at baseline: 76.8 percent of their claims are inpatient, against 83.4 percent for the treated, and 12.0 percent are delivered in an office setting, against 7.1 percent. All of these differences are statistically significant at conventional levels. These differences are not incidental to the setting. Meaningful Use incentives were substantial over this period, and hospitals that had still not adopted an
 EHR by 2015 were disproportionately small. Hospitalists affiliated with them are correspondingly a selected group, and one that is already further along the transition toward office-based practice that I study.
+
+\input{Table Code/nt_chars}
 
 Table~\ref{tab:nt_estimates} shows what this implies for the estimates. Both
 columns use the same panel truncated at 2015, so the only difference between them is the comparison group. The estimated effect on exit from clinical practice changes sign entirely, from 0.013 under not-yet-treated comparisons to $-0.127$ under never-treated comparisons. The latter estimate implies that EHR exposure reduces the probability of leaving practice by nearly 13 percentage points, an implausible magnitude against a baseline exit rate of roughly 3 percent. The explanation is visible in Table~\ref{tab:nt_chars}: never-treated hospitalists are more than three years older and closer to retirement, so they exit at higher rates for reasons unrelated to EHR adoption, which makes exposure appear protective.
 
 The office outcomes move in a similar direction for a similar reason. The
-estimated effect on the fraction of patients seen in an office falls from 0.111 to 0.047, and on the indicator for working in an office from 0.115 to 0.067. Because never-treated hospitalists already see a substantially larger share of patients in an office at baseline, the two groups are at different points in the same transition, and differencing between them attributes to EHR exposure only the part of the shift that exceeds what the comparison group was already doing. The estimated effect on claims per patient likewise changes sign, from 0.114 to $-0.395$, though both estimates are imprecise. Only the effect on patient volume is stable across the two comparison groups, at 26.3 and 30.3 patients.
+estimated effect on the fraction of patients seen in an office falls from 0.111 to 0.047, and on the indicator for working in an office from 0.115 to 0.067. Because never-treated hospitalists already see a substantially larger share of patients in an office at baseline, the two groups are at different points in the same transition, and differencing between them attributes to EHR exposure only the part of the shift that exceeds what the comparison group was already doing. The estimated effect on claims per patient likewise changes sign, from 0.114 to $-0.395$, though both estimates are imprecise. Only the effect on patient volume is stable across the two comparison groups, at 26.3 and 30.3 patients. I therefore rely on not-yet-treated comparisons as the main specification. The not-yet-treated group consists of hospitalists who are exposed to an EHR at some point, and differ from the treated group only in the timing of that exposure. 
 
-I therefore rely on not-yet-treated comparisons throughout. The not-yet-treated group consists of hospitalists who are exposed to an EHR at some point, and differ from the treated group only in the timing of that exposure. The never-treated group differs systematically in age, practice setting, and baseline outcome levels, and the resulting estimates are difficult to interpret as treatment effects.
-
-%\input{Table Code/nt_char}
-
-%\input{Table Code/nt_estimates}
+\input{Table Code/nt_estimates}
 
 \subsection{Alternative Estimators}\label{app:estimators}
 
@@ -683,12 +726,6 @@ One method that addresses issues with the TWFE specification by differencing out
 \end{figure}
 
 Another estimation method first used by \citeauthor{cengiz2019effect} (\citeyear{cengiz2019effect}) is commonly known as stacked regression. In this method, one re-frames event study data into groups of sub-experiments that are then stacked on top of each other, defining a group of treated units and ``clean" control units. The drawback of this method is choosing an event study window that must be the same for each treatment group, where a large window eliminates many treated units and a small window does not allow for estimation over many years. I present the results using this method with an event window of one year in Figure \ref{fig:estimators}. The results are very similar to the main specification, with a smaller magnitude in some cases. 
-
-\subsection{Heterogeneity}\label{sec:het}
-
-
-\import{Table Code}{int_sumstats.tex}
-
 
 
 \subsection{Coding Activity as Cause for Work Setting Shift}\label{app:coding}
@@ -804,17 +841,6 @@ As referenced in the main paper, the effect of EHR exposure on patient count cou
     \vspace{2mm}
     \caption*{\footnotesize{\textit{Notes:} Plot shows average group time treatment effects for each treatment group.}}
 \end{figure}
-
-
-
-
-\subsection{Parallel Trends Assumption}\label{sec:pretrends}
-
-Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) points to the need to carefully assess the parallel trends assumptions commonly used in difference-in-differences. This is relevant in my analysis in the context of potential endogeneity. In my main specification I assume that, conditional on covariates, average outcomes for those treated in group $g$ would have followed a parallel trend as those in groups treated in later periods in the absence of treatment. I assess this assumption by testing whether the coefficients showing the effect of EHR exposure on an outcome prior to actual treatment are jointly zero. All main specification graphs show p-values from this test. In most analyses, I fail to reject the null that there does not exist a pre-trend. Yet, in some cases, I reject this null. This section utilizes the tools established by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) to demonstrate robustness of the results found in the main specification, and to investigate whether an effect exists in the cases where a differential trend between exposed and non-exposed hospitalists may be driving results. 
-
-I place restrictions on how large the violations in parallel trends must be in order to change my findings. I plot the effect of EHR on each outcome in the first year after exposure under various violations in parallel trends in Figure \ref{fig:par_trends}. M=0 indicates a linear violation in the parallel trends assumption. The interpretation of violations in parallel trends depends on the magnitude of the confounder. For example, if a one standard deviation in manager productivity hypothetically led to a an increase of one extra patient per week (52 per year), then $M=12$ corresponds to allowing the slope of the differential trend to change by .23 standard deviations of manager productivity. Since we are considering Medicare patients alone, this is a relatively large magnitude. In other words, it would take a large endogenous shock to productivity to explain the effect found on patient count. A similar conclusion can be drawn for both office outcomes, where various relaxations of the parallel trends assumption can be made before ruling out the effect of EHR exposure. When considering exiting clinical work, even the assumption of linear violations in parallel trends rules cannot rule out no effect of EHR exposure on exiting. However, this is not surprising due to the rarity of exiting in the sample. Further, when we consider the whole story of EHR exposure on exit, work setting, and patient count, the magnitude of a confounder would have to be large to explain all of these results together.
-
-
 
 
 
