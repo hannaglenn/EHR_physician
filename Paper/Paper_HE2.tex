@@ -13,6 +13,7 @@
 \usepackage{subcaption}
 \usepackage{pdflscape}
 \usepackage{threeparttable}
+\usepackage{makecell}
 
 \usepackage[backend=biber,style=authoryear,citestyle=authoryear, natbib=true]{biblatex}
 \addbibresource{papercitations.bib}
@@ -176,7 +177,7 @@ I show summary statistics of relevant variables based on each sample in Table \r
 \centering
 \captionsetup{width=.45\linewidth}
     \caption{Treatment Variables Over Time}
-    \includegraphics[width=.7\linewidth]{Objects/cohort_sizes.pdf}
+    \includegraphics[width=.9\linewidth]{Objects/cohort_sizes.pdf}
     \label{fig:cohortsizes}
 \end{figure}
 
@@ -373,7 +374,7 @@ I find no strong evidence that effects differ along any of these dimensions. Poi
 \begin{figure}[ht!]
     \centering
     \caption{Heterogeneity Analysis}
-    \includegraphics[width=0.9\textwidth]{Objects/heterog_plot.pdf}
+    \includegraphics[width=\textwidth]{Objects/heterog_plot.pdf}
     \label{fig:heter}
 \end{figure}
 
@@ -407,7 +408,11 @@ Using the staggered difference-in-differences estimator of
 \citeauthor{callaway2021difference} (\citeyear{callaway2021difference}), I
 estimate the association between EHR adoption and each outcome. The results are shown in Table~\ref{tab:hosp_outcomes}. I do not interpret these estimates causally, but use them to assess whether other changes occur concurrently with adoption. Because the table reports fourteen outcomes, I adjust for multiple testing using the Benjamini-Hochberg procedure, which controls the false discovery rate. 
 
+\small
+
 \import{Table Code}{hosp_analysis.tex}
+
+\normalsize
 
 No outcome is statistically distinguishable from zero after adjustment. Two
 estimates are marginally significant on an unadjusted basis, capital expenditure on equipment ($p = 0.06$) and bed count ($p = 0.03$), but neither survives correction, with adjusted $p$-values of 0.58 and 0.53 respectively. The bed-count estimate of 4.1 additional beds is also small relative to a pre-treatment mean of 110. The confidence intervals are tight enough to rule out economically meaningful changes in most cases: adoption is associated with a change in subsidiary ownership of at most 2.6 percentage points and in administrator turnover of at most 5.3 percentage points, against pre-treatment means of 0.156 and 0.155. The pre-trends tests do not reject at conventional levels for any outcome. While I cannot rule out unobserved changes, the absence of observable ones mitigates the concern that concurrent hospital initiatives drive the main findings.
@@ -424,7 +429,7 @@ The estimates, shown in Figure \ref{fig:het_int}, do not vary meaningfully acros
 \begin{figure}
     \centering
     \caption{Effect of EHR Exposure on Outcomes by Integration Level}
-    \includegraphics[width=.9\textwidth]{Objects/heterog_plot_int.pdf}
+    \includegraphics[width=\textwidth]{Objects/heterog_plot_int.pdf}
     \label{fig:het_int}
 \end{figure}
 
@@ -495,25 +500,86 @@ The results have several important implications. First, hospitalists’ willingn
 
 I begin by connecting every National Provider Identifier (NPI)\footnote{\hyperlink{https://download.cms.gov/nppes/NPI/Files.html}{\text{https://download.cms.gov/nppes/NPI-Files.html}}}, an identifier of each medical entity, to a description of their tax code\footnote{\hyperlink{https://nucc.org/index.php/code-sets-mainmenu-41/provider-taxonomy-mainmenu-40/pdf-mainmenu-53}{\text{https://nucc.org/index.php/code-sets-mainmenu-41/provider-taxonomy-mainmenu-40/pdf-mainmenu-53}}}. I then categorize NPIs by key words in their tax code description. Any description containing ``Internal Medicine", ``Hospitalist", ``Family Medicine", or ``General Practice" is classified as a primary care physician (PCP), and any description containing ``hospital" is classified as a hospital. I create two data sets, one containing only PCPs and one containing only hospitals. These data are then used in identifying the relevant NPIs in the CMS Shared Patient Data. 
 
-For years 2009-2015, the CMS collected detailed information on the number of Medicare patients shared between any two NPIs within 30, 90, or 180 day intervals.\footnote{\hyperlink{https://www.nber.org/research/data/physician-shared-patient-patterns-data}{https://www.nber.org/research/data/physician-shared-patient-patterns-data}} In this paper, I use the data files that capture shared patient activity in 30 day intervals. I merge the shared patient data to the filtered tax code data to identify NPIs who are either PCPs or hospitals. I limit to pairs including one physician and one hospital. I combine duplicates into one observation, summing the same day count variable. Most of the pairs have very few shared patients, which is not indicative of the physician working inside the hospital. I drop any pairs who do not have at least 30 same-day shared patients per year the pair appears in the data.\footnote{I also consider thresholds of 10 and 60. Results are similar and can be found in Figure \ref{sec:changes}.}
+For years 2009-2015, the CMS collected detailed information on the number of Medicare patients shared between any two NPIs within 30, 90, or 180 day intervals.\footnote{\hyperlink{https://www.nber.org/research/data/physician-shared-patient-patterns-data}{https://www.nber.org/research/data/physician-shared-patient-patterns-data}} In this paper, I use the data files that capture shared patient activity in 30 day intervals. I merge the shared patient data to the filtered tax code data to identify NPIs who are either PCPs or hospitals. I limit to pairs including one physician and one hospital. I combine duplicates into one observation, summing the same day count variable. Most of the pairs have very few shared patients, which is not indicative of the physician working inside the hospital. I drop any pairs who do not have at least 30 same-day shared patients per year the pair appears in the data.\footnote{I also consider thresholds of 10 and 60. Results are similar and can be found in Figure \ref{sec:changes}.} I combine the physician-hospital pairs with various data sets containing hospital and/or physician level information, which I eventually aggregate to the physician-level.
 
-I combine the physician-hospital pairs with various data sets containing hospital and/or physician level information. First, I merge to CMS Physician Compare\footnote{\hyperlink{https://data.cms.gov/provider-data/dataset/mj5m-pzi6}{https://data.cms.gov/provider-data/dataset/mj5m-pzi6}} for information on each physician's graduation date. This data contains more information on physician quality, but I am limited to time-invariant information since Physician Compare spans 2012-2015 and 2010-2012 is a time of major EHR implementation. I drop any physicians who graduated medical school after 2004, since graduating after that means leaving residency or graduating during the span of the main data, 2009-2017, and potentially exhibiting labor market changes that seem associated with EHRs but are not. 
+\subsection{Hospital-Level Variables}
 
-For hospital level variables, I use an AHA-NPI crosswalk to merge the pairs to the Annual Hospital Administration Survey (AHA Survey) from 2009-2015. Further, I use a hospital's Medicare ID number to merge this data to the Healthcare Information and Management Systems Society (HIMSS) data. From these data sets I collect information on each hospital's EHR use. I define EHR use as either answering in the AHA Survey that the hospital uses an EHR fully, or reporting which vendor is used in the HIMSS Survey. Next, I drop hospitals with missing information for EHR use. If a hospital does not answer the survey question in one year, but the year before and after have an identical survey answer, I fill in the missing year of information. I make a further limitation to hospitals with at least 10 beds. I sum a physician's same day count over their hospitals in a given year to create a physician level patient count variable. 
+I use an AHA-NPI crosswalk to merge the hospitals in each pair to the Annual Hospital Administration Survey (AHA Survey) from 2009-2017. Further, I use a hospital's Medicare ID number to merge this data to the Healthcare Information and Management Systems Society (HIMSS) data. I draw on these two sources that measure adoption differently but provide a more complete picture of EHR use within a hospital. In the first source is the AHA Survey, hospitals are asked to report the status of their electronic health record implementation. The variable \texttt{EHLTH} takes three values: 0 for not implemented, 1 for partially implemented, and 2 for fully implemented. This is a
+single self-reported measure covering the institution as a whole. Alternatively, the HIMSS Analytics database records the status of individual clinical applications at each hospital. For each hospital-year, HIMSS reports whether a given application is not automated, not yet contracted, contracted but not installed, in the process of installation, live and operational, or scheduled to be replaced. I code an application as present if its status is ``live and operational''. HIMSS reports at the level of individual entities, several of which may map to a single Medicare provider number. Where this occurs, I code an application as present at the hospital if it is live at any constituent entity. 
 
-\textcolor{red}{Add information about the EHR definition here.}
+HIMSS classifies a number of applications under the heading of electronic medical records. However, some of these applications are back-end information storage applications that most hospitals employed long before meaningful use standards were established. I distinguish between those with which physicians directly interact and those that operate as back-end infrastructure. I count three applications as physician-facing: computerized physician order entry, physician documentation, and physician portal. Each requires the physician to enter or retrieve information themselves, and each therefore changes the physician's workflow. I exclude three applications that appear under the same heading but tha physicians do not directly use: the clinical data repository, which consolidates records into a single queryable store; order entry, which refers to order communication systems used by clerical and nursing staff rather than physicians;
+and clinical decision support, which typically operates in the background of other systems rather than as a standalone interface.
 
-I exclude three applications that HIMSS classifies as electronic medical record systems but that physicians do not directly interact with: clinical data repositories, non-physician order entry, and clinical decision support. These are considerably more common than the physician-facing applications — present in 89 to 93 percent of hospital-years, compared with 49 to 56 percent — and are best understood as the infrastructure on which physician-facing systems are built. Including them would classify as treated a large number of hospital-years in which no physician workflow had changed.
+Table~\ref{tab:ehr_construct} shows that this distinction is empirically consequential. The three back-end applications are present in 89 to 93 percent of hospital-years in my sample, compared with 49 to 56 percent for the three physician-facing applications. A definition that counted any electronic medical record application would therefore classify as treated a large number of
+hospital-years in which no physician workflow had changed. Consistent with this, hospital-years in which only back-end applications are present are overwhelmingly reported to AHA as having no electronic health record or only a partial implementation.
 
 \input{Table Code/ehr_construct}
 
-The final data contains year, physician NPI, graduation year, years of experience, number of hospitals, minimum year exposed to EHR, number of systems, and an indicator for whether the physician changes hospitals. I complete this data to include years 2016 and 2017, but leave time varying variables missing for those years. Thus, this is a balanced panel of physicians.
+Among hospital-years in which HIMSS records at least one physician-facing application, fewer than half are reported to AHA as fully implemented. The remainder are reported as partially implemented (20.3 percent of all hospital-years), as having no electronic health record (1.5 percent), or are not reported to AHA at all (11.9 percent). The reverse case is much rarer: only 2.8 percent of hospital-years are reported as fully implemented while HIMSS records no physician-facing application. This pattern is consistent with the two sources capturing different points in the implementation process. HIMSS records an application once it is operating, possibly in only part of the hospital. The AHA category of ``fully implemented'' requires the hospital to judge the institution-wide rollout complete. A hospital running computerized order entry on some units while continuing to use paper elsewhere would appear as adopting in HIMSS and as partially implemented in AHA, and both would be accurate. Two further features of the disagreement support this interpretation. First, most disagreements resolve within a year or two, with hospitals subsequently reporting full implementation to AHA. Second, the share of conflicting hospital-years falls steadily across the sample period as implementations mature.
+
+Because physicians face the burden of an electronic record once they must use it, rather than once the hospital considers the project complete, I treat positive evidence from either source as indicating adoption. Specifically, a hospital-year is coded as having an electronic health record if either (1) AHA reports full implementation ($\texttt{EHLTH} = 2$), or (2) HIMSS records computerized physician order entry, physician documentation, or a physician portal as live. A hospital-year is coded as having no electronic health record if AHA reports no implementation or partial implementation and HIMSS records no physician-facing application. A hospital-year is dropped if AHA does not report and HIMSS records no physician-facing application, since in that case neither
+source provides evidence in either direction. Before applying this rule I interpolate the AHA measure within hospitals. Where a
+hospital reports the same implementation status in two years and the intervening year is missing, I fill the intervening year with that status. I do not extrapolate beyond the first and last observed values. Panel B of Table~\ref{tab:ehr_construct} reports the number of hospital-years assigned by each rule.
+
+Beyond the electronic health record measure, I use the AHA Annual Survey for a set of hospital characteristics that enter the analysis in three ways. First, I use total bed count to describe hospital size, both as a sample restriction (I drop hospitals reporting fewer than ten beds) and as the basis for the small versus large hospital split in the heterogeneity analysis. Second, I use several
+measures of organizational structure and workforce as outcomes in Table~\ref{tab:hosp_outcomes}, where I examine whether other hospital behaviors change alongside EHR adoption: subsidiary ownership, turnover in the hospital administrator, bed count, the number of full-time nurses, and the number of physicians. Third, I use the AHA measures of physician-hospital integration: indicators for whether the hospital operates an independent practice association, an open or closed physician-hospital organization, or an integrated salary model, together with the number of physicians in each arrangement. These enter both as outcomes in Table~\ref{tab:hosp_outcomes} and as a dimension of the heterogeneity analysis.
+
+The AHA survey also reports each hospital's system affiliation through the variable \texttt{SYSID}, which is missing for independent hospitals and takes a system identifier otherwise. Changes in this variable are a concern for my empirical strategy because a hospital joining or leaving a system may simultaneously adopt an electronic health record as part of the system's IT standardization. If so, the estimated effect of EHR exposure would conflate the electronic record with the broader organizational changes that accompany an acquisition. I identify system changes at the hospital-year level. A hospital experiences a change in year $t$ if its system identifier differs from that in year $t-1$, where I treat a transition from missing to non-missing (an independent hospital joining a system) and from non-missing to missing (a hospital leaving a system) as changes alongside transitions between two systems. 
+
+
+\subsection{Physician-Level Variables}
+
+To achieve physician-level measures of hospital characteristics, I aggregate the hospital information across all hospitals that a hospitalist is exposed to. I record the first year a hospitalist is exposed to an EHR in any of their affiliated hospitals. This serves as the grouping used in the \citet{callaway2021difference} estimations. To account for affiliated hospital system changes, I record, for each hospitalist and year, the set of years in which any hospital they work with experienced a system change. I then drop hospitalists whose first EHR exposure coincides with a system change at any affiliated hospital. 
+
+I combine the physician NPI in each physician-hospital pair with additional physician level information. I merge to CMS Physician Compare\footnote{\hyperlink{https://data.cms.gov/provider-data/dataset/mj5m-pzi6}{https://data.cms.gov/provider-data/dataset/mj5m-pzi6}} for information on each physician's graduation date. This data contains more information on physician quality, but I am limited to time-invariant information since Physician Compare spans 2012-2015 and 2010-2012 is a time of major EHR implementation. I drop any physicians who graduated medical school after 2005, since graduating after that means leaving residency or graduating during the span of the main data, 2009-2017, and potentially exhibiting labor market changes that seem associated with EHRs but are not. 
+
+
+This aggregated data contains year, physician NPI, graduation year, years of experience, number of hospitals worked with, first year exposed to EHR, number of systems worked with, and an indicator for whether the physician changes hospitals. I complete this data to include years 2016 and 2017, but leave time varying variables missing for those years. Thus, this is a balanced panel of physicians.
 
 \subsection{Dependent Variables}\label{sec:appmdppas}
 
-Using physician NPI, I merge the physician treatment data to Medicare Data on Provider Practice and Specialty (MD-PPAS)\footnote{\hyperlink{https://resdac.org/cms-data/files/md-ppas}{https://resdac.org/cms-data/files/md-ppas}}, which spans 2009-2017. This data contains variables on physician specialty, Medicare claim counts in various zip codes, unique number of patients seen, fraction of patients seen in specific settings, patient demographics, and physician date of birth. Once the data is merged, I make a further limitation to drop any physicians with less than 70\% of their total patients in a hospital setting.\footnote{I consider different thresholds as a sensitivity analysis. The results are similar, and can be found in Section \ref{sec:changes}} 
+The majority of my outcome variables are taken from the Medicare Data on Provider
+Practice and Specialty (MD-PPAS), which spans 2009--2017.\footnote{\url{https://resdac.org/cms-data/files/md-ppas}}
+MD-PPAS is a provider-level file that CMS constructs from provider enrollment
+records and the 100 percent file of Original Medicare Part B non-institutional
+claims. A provider appears in a given year if they submitted at least one Part B
+claim for an evaluation and management visit, procedure, imaging service, or
+non-laboratory test. For each provider-year the file reports physician
+specialty, date of birth and sex, claim counts by practice zip code, the number
+of unique Medicare beneficiaries seen, and the share of claim line items
+delivered in each of several places of service. Because the file is built from
+traditional fee-for-service claims, all volume measures capture only that portion
+of a physician's practice, and exclude Medicare Advantage enrollees and patients
+with other coverage.
 
-Next, I create the dependent variables used in the analysis. First, I sum a physician's claim counts across zip codes into one variable for total claim count in a given year. Then, I create a variable that sums up a physicians claims in all future years. In 2009, this variable sums up all claims from 2010-2017, and so on. Then I create a variable for the first year that a physician has a future claim count of zero. However, this counts exit one year too early. For example, if a physician has no claims from 2014 to 2017, the minimum year variable is set to 2013, but the first year of exit is 2014. Thus, I add one year to the minimum year variable. I also create a physician level variable for whether they ever retire for sample limitations in analyzing other outcomes. Since exit is relatively rare, I present a distribution showing where they occur geographically in Figure \ref{fig:retire_dist}. The distribution is fairly uniform.
+After merging MD-PPAS to the hospital-physician pairs, I drop physicians with
+less than 70 percent of their claims in an inpatient setting, so that the sample
+consists of physicians whose practice is genuinely hospital-based.\footnote{I
+consider thresholds of 50 and 90 percent as a sensitivity analysis. The results
+are similar and are reported in Section~\ref{sec:changes}.} I also drop
+physicians whose share of inpatient claims in the year before first EHR exposure
+falls below 50 percent, so that the estimates are not driven by physicians who
+were becoming hospitalists around the time of adoption.
+
+MD-PPAS does not record retirement directly, so I infer exit from the cessation
+of Medicare billing. I first sum a physician's claim counts across practice zip
+codes into a single annual total. I then construct, for each physician and year,
+the sum of claims in all strictly subsequent years: in 2009 this is total claims
+from 2010 through 2017, in 2010 it is total claims from 2011 through 2017, and
+so on. The first year in which this forward sum equals zero identifies the last
+year in which the physician billed Medicare, so the year of exit is the following
+one; I therefore add one year to obtain the exit year. Because the forward sum
+cannot be computed for the final year of the panel, exit is not defined for 2017. I measure exit cumulatively: the outcome equals one in the year of exit and in
+every subsequent year, rather than only in the year the physician leaves. The
+estimated effect at event time $e$ is therefore the effect of EHR exposure on the
+probability of having left clinical practice by that point. This differs from a
+year-specific hazard, and I adopt it because a one-time indicator would leave
+physicians who have already exited in the sample coded as still practicing, which
+understates the effect at longer horizons. I also construct a physician-level
+indicator for whether a physician ever exits, which I use to restrict the sample
+for the remaining outcomes. Exit is relatively rare in this setting and is concentrated toward the end of the
+panel. Figure~\ref{fig:retire_dist} shows the geographic distribution of exiting
+physicians, which is broadly uniform across states apart from California, which is unsurprising given the population.
 
 \begin{figure}[ht!]
     \centering
@@ -522,7 +588,44 @@ Next, I create the dependent variables used in the analysis. First, I sum a phys
     \label{fig:retire_dist}
 \end{figure}
 
-The next outcome variables consider level of labor market activity in office settings. I set all missing claim counts to zero. The data already contains a variable for the fraction of patients seen in an office setting, which is used in the analysis, but I further create an indicator variable for whether the hospitalist sees any positive amount of patients in an office setting. Finally, the variables for unique patient count and claim count are already defined.
+
+The next set of outcomes measures the extent to which hospitalists shift work
+into an office setting. MD-PPAS reports the share of a physician's claim line
+items delivered in each place of service, and I use the office share directly as
+a continuous outcome. I also construct an indicator equal to one if the physician
+delivers any positive share of claims in an office, which captures movement on
+the extensive margin. Where a physician appears in MD-PPAS but reports no claims
+in a given place of service, I set the corresponding share to zero. For these outcomes I restrict the sample to physicians who never exit clinical
+practice. Exit and a shift to office-based work are alternative responses to the
+same underlying change, and including exiting physicians would conflate the two.
+Because this restriction conditions on an outcome that treatment may itself
+affect, the resulting sample is potentially selected; I report Lee (2009) bounds
+in Section~\ref{sec:changes}.
+
+Finally, I use the number of unique Medicare beneficiaries seen in a year as a
+measure of patient volume, and the ratio of total claims to unique patients as a
+measure of billing intensity per patient. Both are reported directly in MD-PPAS.
+For these outcomes I restrict further to physicians who never exit and who do not
+add a new hospital affiliation during the panel, so that the estimates are not
+driven by physicians expanding the set of hospitals they work with. As above,
+these volume measures reflect traditional fee-for-service Medicare only, so the
+estimated effects should be read as lower bounds on the change in a physician's
+total patient panel.
+
+\subsubsection*{Claim composition}
+
+For a subset of years I additionally observe the composition of a physician's
+billing. The Medicare Physician and Other Practitioners public use file, which is
+available from 2013 onward, reports the number of services delivered under each
+HCPCS code. I group evaluation and management codes into eight categories:
+initial hospital inpatient care, subsequent hospital inpatient care, hospital
+discharge day management, hospital observation care, subsequent observation care,
+critical care delivery, new patient office visits, and established patient office
+visits. For each category I compute the share of a physician's total services
+delivered under those codes. Because these data begin in 2013, and most
+hospitalists in my sample are exposed to an electronic health record before then,
+this analysis rests on a substantially smaller set of treated cohorts and I
+present it as descriptive.
 
 \input{Table Code/overall_stats_by_age}
 
@@ -581,7 +684,7 @@ One method that addresses issues with the TWFE specification by differencing out
 \begin{figure}[ht!]
     \centering
     \caption{Alternative Estimators}
-    \includegraphics[width=.9\linewidth]{Objects/estimators_plot.pdf}
+    \includegraphics[width=\textwidth]{Objects/estimators_plot.pdf}
     \label{fig:estimators}
 \end{figure}
 
@@ -717,8 +820,6 @@ Work by \citeauthor{rambachan2019honest} (\citeyear{rambachan2019honest}) points
 
 I place restrictions on how large the violations in parallel trends must be in order to change my findings. I plot the effect of EHR on each outcome in the first year after exposure under various violations in parallel trends in Figure \ref{fig:par_trends}. M=0 indicates a linear violation in the parallel trends assumption. The interpretation of violations in parallel trends depends on the magnitude of the confounder. For example, if a one standard deviation in manager productivity hypothetically led to a an increase of one extra patient per week (52 per year), then $M=12$ corresponds to allowing the slope of the differential trend to change by .23 standard deviations of manager productivity. Since we are considering Medicare patients alone, this is a relatively large magnitude. In other words, it would take a large endogenous shock to productivity to explain the effect found on patient count. A similar conclusion can be drawn for both office outcomes, where various relaxations of the parallel trends assumption can be made before ruling out the effect of EHR exposure. When considering exiting clinical work, even the assumption of linear violations in parallel trends rules cannot rule out no effect of EHR exposure on exiting. However, this is not surprising due to the rarity of exiting in the sample. Further, when we consider the whole story of EHR exposure on exit, work setting, and patient count, the magnitude of a confounder would have to be large to explain all of these results together.
 
-
-\input{Table Code/honest_grid.tex}
 
 
 
