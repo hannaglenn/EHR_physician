@@ -1,0 +1,31 @@
+
+\begin{landscape}\begin{table}[!h]
+\centering
+\caption{\label{tab:ci_claims_office}Event-time estimates and confidence intervals: claims_office}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lcccccccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{8}{c}{Event time relative to first EHR exposure} \\
+\cmidrule(l{3pt}r{3pt}){2-9}
+ & -4 & -3 & -2 & 0 & 1 & 2 & 3 & 4\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{All}}\\
+\hspace{1em}Estimate & 0.308 & -3.227 & -0.656 & -0.469 & -0.806 & 2.242 & 3.155 & 5.673\\
+\hspace{1em}95\% CI & {}[-10.185, 10.801] & {}[-7.856, 1.402] & {}[-2.886, 1.573] & {}[-2.327, 1.389] & {}[-3.916, 2.304] & {}[-2.835, 7.320] & {}[-7.741, 14.051] & {}[-10.835, 22.180]\\
+\hspace{1em}CI width & 20.986 & 9.258 & 4.459 & 3.717 & 6.220 & 10.155 & 21.792 & 33.015\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Age $\leq$ 60}}\\
+\hspace{1em}Estimate & 1.159 & -3.509 & -0.502 & -0.773 & -1.028 & 2.443 & 4.017 & 7.825\\
+\hspace{1em}95\% CI & {}[-11.321, 13.638] & {}[-8.581, 1.562] & {}[-2.825, 1.822] & {}[-2.655, 1.110] & {}[-4.455, 2.399] & {}[-3.202, 8.089] & {}[-8.243, 16.278] & {}[-11.841, 27.492]\\
+\hspace{1em}CI width & 24.959 & 10.143 & 4.647 & 3.765 & 6.854 & 11.291 & 24.521 & 39.333\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Age $\geq$ 60}}\\
+\hspace{1em}Estimate & -5.386 & -0.963 & -2.102 & 1.705 & 0.672 & 0.328 & -3.584 & -11.034\\
+\hspace{1em}95\% CI & {}[-15.384, 4.611] & {}[-7.882, 5.955] & {}[-6.611, 2.408] & {}[-6.003, 9.413] & {}[-7.220, 8.565] & {}[-8.652, 9.307] & {}[-20.346, 13.178] & {}[-39.493, 17.425]\\
+\hspace{1em}CI width & 19.995 & 13.837 & 9.018 & 15.416 & 15.785 & 17.959 & 33.524 & 56.918\\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{landscape}
