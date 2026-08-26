@@ -150,31 +150,32 @@ To gather information on which hospitals a physician is working in, I utilize th
 
 I link hospitals within each pair to two sources of EHR adoption information: the American Hospital Association (AHA) survey and the Healthcare Information and Management Systems Society (HIMSS) survey. In the AHA Annual Survey, hospitals are asked to classify their Electronic Health Record Status according to the following definition: ``An electronic health record (EHR) integrates electronically originated and maintained patient-level clinical health information, derived from multiple sources, into one point of access. An EHR replaces the paper medical record as the primary source of patient information." Hospitals respond with 0: not implemented, 1: partially implemented, or 2: fully implemented. In the HIMSS survey, hospitals are asked granular questions about their health information technology use, including which applications within the EHR are ``Live and Operational". In the 2009-2015 time period, the possible applications are clinical data repository, clinical decision support, computerized practitioner order entry (CPOE), physician documentation, and physician portal. 
 
-In Table \ref{tab:ehr_construct} I present all possible combinations of how hospitals respond in the two different sources.  The two sources disagree when considering \textit{any} application in the HIMSS data, which points to hospitals viewing back-end applications as not fully implementing an EHR. This pattern is consistent with the two measures capturing different points in the implementation process. HIMSS records an application once it is operating in some part of the hospital, whereas AHA's "fully implemented" category requires the hospital to judge the institution-wide roll-out complete. Because physicians face the burden of an electronic record once they must use it, a hospital is coded as having an EHR if AHA reports full implementation or if HIMSS records a physician-facing application (computerized physician order entry, physician documentation, or a physician portal). A hospital-year is dropped if AHA does not report and HIMSS records no physician-facing application. 
-
-I also use the AHA survey to measure hospital-physician integration, categorized into four levels from least to most integrated: independent practice association (IPA), open physician-hospital organization (OPHO), closed physician-hospital organization (CPHO), and integrated salary model (ISM). In an IPA, physicians maintain independence under loose contracts; OPHOs involve additional administrative duties; CPHOs include formal contracts with specific physicians; and ISMs employ physicians directly as salaried staff (\cite{short2017integration}). Finally, to maintain consistency, I exclude hospitalists affiliated with hospitals that became system affiliated or changed system affiliation at the same time as EHR exposure, as that could be correlated with labor market decisions.
+In Table \ref{tab:ehr_construct} I present all possible combinations of how hospitals respond in the two different sources.  The two sources disagree when considering \textit{any} application in the HIMSS data, which points to hospitals viewing back-end applications as not fully implementing an EHR. This pattern is consistent with the two measures capturing different points in the implementation process. HIMSS records an application once it is operating in some part of the hospital, whereas AHA's "fully implemented" category requires the hospital to judge the institution-wide roll-out complete. Because physicians face the burden of an electronic record once they must use it, a hospital is coded as having an EHR if AHA reports full implementation or if HIMSS records a physician-facing application (computerized physician order entry, physician documentation, or a physician portal). A hospital-year is dropped if AHA does not report and HIMSS records no physician-facing application. I exclude hospitalists affiliated with hospitals that became system affiliated or changed system affiliation at the same time as EHR exposure, as that could be correlated with labor market decisions.
 
 Finally, I aggregate the data to the hospitalist level. I limit to hospitalists who graduated before 2005, as anyone who graduated medical school after that will be finishing residency during the span of the data and will exhibit labor market changing behavior, which could be correlated to EHR exposure purely because of switching work settings during a time of rapid EHR implementation. Since I observe outcomes but not treatment for 2016 and 2017, I drop anyone not treated by 2015. That is,
 the estimation sample contains no units which are ``never-treated,'' and
-identification comes from comparisons with hospitalists not yet exposed. This has
-two advantages. First, retaining 2016 and 2017 gives a longer post-treatment
-window, allowing me to observe outcomes further from the year of first exposure.
-Second, it yields a better comparison group: given the strength of the
-Meaningful Use incentives over this period, hospitals that had still not adopted
-an EHR by 2015 are likely to differ substantially from those that did, and
-hospitalists affiliated with them are correspondingly less suitable as a
-counterfactual. Section~\ref{sec:nevertreated} documents these differences and
-reports estimates using never-treated comparisons; the two groups differ
-significantly in age, hospital size, and baseline practice setting, and the
-resulting estimates are difficult to interpret as treatment effects.  
+identification comes from comparisons with hospitalists not yet exposed. This has two advantages. First, retaining 2016 and 2017 gives a longer post-treatment window, allowing me to observe outcomes further from the year of first exposure. Second, it yields a better comparison group: given the strength of the Meaningful Use incentives over this period, hospitals that had still not adopted an EHR by 2015 are likely to differ substantially from those that did, and hospitalists affiliated with them are correspondingly less suitable as a counterfactual. Section~\ref{sec:nevertreated} documents these differences and reports estimates using never-treated comparisons; the two groups differ significantly in age, hospital size, and baseline practice setting, and the resulting estimates are difficult to interpret as treatment effects.  
+
+\subsection{Dependent Variable Construction}
+
+All dependent variables are built based on the MD-PPAS physician-level data set described in Section \ref{sec:sample}. The first dependent variable I consider is the decision for a hospitalist to stop seeing patients, which I refer to as exit. Exit is an indicator variable equal to 1 in the first year that a hospitalist has no patients recorded in any future year. This indicator variable turns on in the year of exit and remains one in every year after, so it is a cumulative measure of exit. 
+
+The next variables I construct capture whether a hospitalist changes work setting. The first variables used focus on the physical place of work, the fraction of patients a physician sees in an office, and an indicator variable equal to one if a physician sees any positive number of patients in an office. Additionally, I classify each physician's primary billing entity using tax identification data from MD-PPAS, sorting entities into hospital-direct employment, system-affiliated physician groups, third-party staffing companies, and solo or independent practice based on the entity's legal name. 
+
+Finally, I consider outcome variables which explore care/billing patterns,
+the number of patients seen and claims filed per patient. The number of
+unique patients captures beneficiaries seen by the physician in any
+setting, so it reflects a physician's total patient volume rather than volume in a specific setting.\footnote{It would be preferable to examine patient volume in inpatient and outpatient settings separately, particularly given the
+office-based reallocation documented in Section~\ref{sec:office}.
+However, constructing setting-specific patient counts in MD-PPAS requires
+apportioning total claims across settings using the place-of-service
+shares described above, which is problematic here because those shares
+could be correlated with EHR exposure.}
 
 
 \subsection{Summary Statistics}\label{sec:sumstats}
 
-All dependent variables are built based on the MD-PPAS physician-level data set described in Section \ref{sec:sample}. The first dependent variable I consider is the decision for a hospitalist to stop seeing patients, which I refer to as exit. Exit is an indicator variable equal to 1 in the first year that a hospitalist has no patients recorded in any future year. This indicator variable turns on in the year of exit and remains one in every year after, so it is a cumulative measure of exit. The next variables I construct capture whether a hospitalist changes work setting. I consider the fraction of patients a physician sees in an office, and I construct an indicator variable equal to one if a physician sees any positive number of patients in an office. Finally, I consider outcome variables which explore care/billing patterns, the number of patients seen and claims filed per patient.
-
 For each progression of decision making, I limit to hospitalists who did not change their behavior in the previous outcome. That is, for office-based outcomes I exclude those who exit, and for care/billing outcomes I exclude those who exit or change their work setting. Because these restrictions condition on an outcome that treatment may itself affect, the resulting coefficients could be biased due to selection. I therefore report Lee (2009) bounds on the treatment effects for these outcomes in Section \ref{sec:leebounds}. 
-
 
 I show summary statistics of relevant variables based on each sample in Table \ref{tab:tab:sumstatsnew}. I follow a maximum of 5,471 eventually-treated hospitalists over time, where the number of hospitalists reduces each time a previous behavior is limited. Additionally, all always-treated units are dropped from the estimation. The average year of EHR exposure is 2011 for the exit and office samples. However, when limiting to those who do not exit or change work setting, the average EHR exposure year increases to 2012. A positive number of hospitalists are exposed to an EHR in each year, shown in Figure \ref{fig:cohortsizes}. Out of all hospitalists in the sample, 12\% stop seeing patients at some point. I show a geographic distribution of exiters in Appendix \ref{sec:appmdppas}, which shows that exiting occurs across the country. For hospitalists in the office setting sample (those who do not exit), 30\% of have a positive number of patients seen in an office, and the average hospitalist sees 9\% of their total patient volume in an office. Hospitalists who do not exit or switch work setting see 304 patients and file 4 claims per patient on average. Consistent across all samples, hospitalists tend to work in 1.2 hospitals and 1.1 systems. In Table \ref{tab:means_age}, I also show means of these variable by subgroup: hospitalists over 60 and younger than 60. 
 
@@ -325,6 +326,9 @@ observations with identical outcome values, and the upper and lower bounds
 coincide. The continuous measure captures the same behavior on the intensive
 margin and yields informative bounds.
 
+\subsubsection{Reallocation Across Employer Types}
+
+
 
 \subsection{Patient Count and Billing Activity}\label{sec:patientcount}
 
@@ -432,30 +436,6 @@ estimate the association between EHR adoption and each outcome. The results are 
 
 No outcome is statistically distinguishable from zero after adjustment. Two
 estimates are marginally significant on an unadjusted basis, capital expenditure on equipment ($p = 0.06$) and bed count ($p = 0.03$), but neither survives correction, with adjusted $p$-values of 0.58 and 0.53 respectively. The bed-count estimate of 4.1 additional beds is also small relative to a pre-treatment mean of 110. The confidence intervals are tight enough to rule out economically meaningful changes in most cases: adoption is associated with a change in subsidiary ownership of at most 2.6 percentage points and in administrator turnover of at most 5.3 percentage points, against pre-treatment means of 0.156 and 0.155. The pre-trends tests do not reject at conventional levels for any outcome. While I cannot rule out unobserved changes, the absence of observable ones mitigates the concern that concurrent hospital initiatives drive the main findings.
-
-
-\subsection{Re-allocation of Hospitalists}
-
-\textcolor{red}{I'm going to need to update this section based on reviewer 2's comments. This first paragraph is new.}
-
-The AHA integration variables (IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS) describe a hospital's overall relationships with affiliated physicians and are not specific to hospitalists. Because these categories may correspond more closely to non-hospital-based specialties such as primary care (in the case of IPAs) than to hospital-based specialties such as hospitalist medicine (in the case of integrated salary models), we cannot verify whether hospital-level integration status reflects the specific contractual arrangement governing the hospitalists in our sample. We therefore interpret Figure 8 as evidence that the estimated effect does not vary with a hospital's overall degree of physician integration, rather than as a direct test of whether hospitalist contract form moderates the response to EHR adoption.
-
-As discussed in Section \ref{sec:worksetting}, hospitalists may shift work settings either by personal preference to avoid EHRs or due to hospital-driven reallocation enabled by EHRs. Although inpatient and outpatient EHRs differ, some substitution across settings is possible. To explore this mechanism, I conduct a heterogeneity analysis by hospital-physician contract type, which limits certain re-allocation channels.
-
-While I cannot observe individual physician contracts, I use hospital-level information on contract structures. I categorize hospitals by integration level: Independent Practice Association (IPA), Open Physician-Hospital Organization (OPHO), Closed Physician-Hospital Organization (CPHO), and Integrated Salary Model (ISM), ranging from least to most integrated. Hospitals are more likely to shift physicians to outpatient settings when integration is high, whereas for less integrated hospitalists, reallocation is more voluntary.
-
-The estimates, shown in Figure \ref{fig:het_int}, do not vary meaningfully across integration types, suggesting that hospital-driven outpatient reallocation does not explain the main findings. 
-
-\begin{figure}
-    \centering
-    \caption{Effect of EHR Exposure on Outcomes by Integration Level}
-    \includegraphics[width=\textwidth]{Objects/heterog_plot_int.pdf}
-    \label{fig:het_int}
-\end{figure}
-
-Another proxy for contract type is whether hospitalists work with one system or are connected to facilities from different systems, as a contracted hospitalist is more likely to work in multiple facilities and a salaried hospitalist is more likely to work in one facility. I present the results from this heterogeneity analysis in Appendix \ref{sec:het}, and find no difference in effects between the two groups. Finally, I show in Appendix \ref{app:coding} that it is not likely that physicians are doing the same tasks but billing them in a different location. 
-
-
 
 
 \subsection{Re-allocation of Patients}
