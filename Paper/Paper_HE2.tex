@@ -203,13 +203,9 @@ For each outcome, I present aggregated group time treatment effects of being exp
 
 \subsection{Identification Assumptions}
 
-There are several assumptions necessary to identify the parameters of interest, $ATT(g,t)$. First, I assume that treatment is not reversed. That is, once a hospitalist is exposed to an EHR, they cannot be un-exposed. For hospitalists that do not switch hospitals, an EHR is a costly technology and requires a significant amount of collaboration to implement, so a hospital does not have incentive to un-implement an EHR. Any hospitalists who stop using EHRs through exiting or changing work settings are removed from the relevant sample, satisfying this assumption.
+There are several standard assumptions in a difference-in-differences estimation necessary to identify the parameters of interest, $ATT(g,t)$. I assume a version of parallel trends based on not-yet-treated units. I assume that average outcomes for those treated in group $g$ would have followed a parallel trend to those in groups treated in later periods. While this assumption cannot be tested directly, I present p-values for a Wald test of pre-trends for each specification. Further, I investigate pre-trends by allowing for specified violations in the parallel trends assumption (\cite{rambachan2019honest}). Additionally, I assume that treatment is not reversed. That is, once a hospitalist is exposed to an EHR, they cannot be un-exposed. For hospitalists that do not switch hospitals, an EHR is a costly technology and requires a significant amount of collaboration to implement, so a hospital does not have incentive to un-implement an EHR. Any hospitalists who stop using EHRs through exiting or changing work settings are removed from the relevant sample, satisfying this assumption. Finally, I assume hospitalists do not anticipate EHR exposure prior to occurrence. If they learn that the system will be implemented and change behavior beforehand, the estimates may be biased. Generally, even a complex EHR system can be completely set up within a year, and most systems take 6 to 9 months (\cite{uzialko_2021}). Therefore, I proceed in the main specification assuming no anticipation. However, I explore and present results for a one year anticipation period in the specification charts in Appendix \ref{sec:changes}, and I find that accounting for one year of anticipation does not drastically change the findings. 
 
-Second, I assume hospitalists do not anticipate EHR exposure prior to occurrence. If they learn that the system will be implemented and change behavior beforehand, the estimates may be biased. Generally, even a complex EHR system can be completely set up within a year, and most systems take 6 to 9 months (\cite{uzialko_2021}). Therefore, I proceed in the main specification assuming no anticipation. However, I explore and present results for a one year anticipation period in the specification charts in Appendix \ref{sec:changes}, and I find that accounting for one year of anticipation does not drastically change the findings.  
-
-As is usual in a difference-in-differences framework, I assume a version of parallel trends based on not-yet-treated units. I assume that average outcomes for those treated in group $g$ would have followed a parallel trend to those in groups treated in later periods. While this assumption cannot be tested directly, I present p-values for a Wald test of pre-trends for each specification. Further, I investigate pre-trends by allowing for specified violations in the parallel trends assumption (\cite{rambachan2019honest}).
-
-To interpret these estimators as the causal effect of EHR exposure on various labor market outcomes, there are additional institutional assumptions necessary. First, I assume that when a hospital adopts an EHR, hospitalists working in that hospital use the EHR. While some hospitalists may create work-arounds to ease the burden of EHR use, it is inevitable that they will need to interact with the technology in some capacity. Second, I assume that exposure to EHRs is exogenous. That is, hospitalists do not influence the hospital's decision to implement an EHR. Finally, I assume that EHR adoption is not correlated with other hospital changes that could also affect physician work environment. To mitigate concerns along these lines, I present a hospital level analysis in Section \ref{sec:hospanalysis}, where I show that observable hospital behaviors are not associated with EHR adoption.
+To interpret these estimators as the causal effect of EHR exposure on various labor market outcomes, there are additional institutional assumptions necessary. First, I assume that when a hospital adopts an EHR, hospitalists working in that hospital are direct users of the technology. While some hospitalists may create work-arounds to ease the burden of EHR use, it is inevitable that they will need to interact with the technology in some capacity. Additionally, I rely on physician-facing applications in the HIMSS data to ensure the technology is relevant to hospitalists. Second, I assume that exposure to EHRs is exogenous. That is, hospitalists do not influence the hospital's decision to implement an EHR. Third, I assume that EHR adoption is not correlated with other hospital changes that could also affect physician work environment. To mitigate concerns along these lines, I present a hospital level analysis in Section \ref{sec:hospanalysis}, where I show that observable hospital behaviors are not associated with EHR adoption. Finally, my identification strategy requires that inpatient EHR adoption not be confounded with ambulatory EHR adoption in the physician's local market, since the HITECH Act incentivized both settings simultaneously. In Appendix~\ref{sec:ambulatory_timing} I show that ambulatory EHR adoption meaningfully lagged inpatient adoption throughout the sample period, that ambulatory systems were functionally simpler even where adopted, and that under standard assumptions about forward-looking behavior, any remaining correlation in adoption timing would bias my estimates conservatively rather than upward.
 
 
 \section{Effect of EHR Exposure on Labor Market Outcomes}\label{sec:results}
@@ -432,13 +428,17 @@ Using the staggered difference-in-differences estimator of
 \citeauthor{callaway2021difference} (\citeyear{callaway2021difference}), I
 estimate the association between EHR adoption and each outcome. The results are shown in Table~\ref{tab:hosp_outcomes}. I do not interpret these estimates causally, but use them to assess whether other changes occur concurrently with adoption. Because the table reports fourteen outcomes, I adjust for multiple testing using the Benjamini-Hochberg procedure, which controls the false discovery rate. 
 
-\input{Table Code/hosp_analysis}
+%\input{Table Code/hosp_analysis}
 
 No outcome is statistically distinguishable from zero after adjustment. Two
 estimates are marginally significant on an unadjusted basis, capital expenditure on equipment ($p = 0.06$) and bed count ($p = 0.03$), but neither survives correction, with adjusted $p$-values of 0.58 and 0.53 respectively. The bed-count estimate of 4.1 additional beds is also small relative to a pre-treatment mean of 110. The confidence intervals are tight enough to rule out economically meaningful changes in most cases: adoption is associated with a change in subsidiary ownership of at most 2.6 percentage points and in administrator turnover of at most 5.3 percentage points, against pre-treatment means of 0.156 and 0.155. The pre-trends tests do not reject at conventional levels for any outcome. While I cannot rule out unobserved changes, the absence of observable ones mitigates the concern that concurrent hospital initiatives drive the main findings.
 
 
 \subsection{Re-allocation of Hospitalists}
+
+\textcolor{red}{I'm going to need to update this section based on reviewer 2's comments. This first paragraph is new.}
+
+The AHA integration variables (IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS) describe a hospital's overall relationships with affiliated physicians and are not specific to hospitalists. Because these categories may correspond more closely to non-hospital-based specialties such as primary care (in the case of IPAs) than to hospital-based specialties such as hospitalist medicine (in the case of integrated salary models), we cannot verify whether hospital-level integration status reflects the specific contractual arrangement governing the hospitalists in our sample. We therefore interpret Figure 8 as evidence that the estimated effect does not vary with a hospital's overall degree of physician integration, rather than as a direct test of whether hospitalist contract form moderates the response to EHR adoption.
 
 As discussed in Section \ref{sec:worksetting}, hospitalists may shift work settings either by personal preference to avoid EHRs or due to hospital-driven reallocation enabled by EHRs. Although inpatient and outpatient EHRs differ, some substitution across settings is possible. To explore this mechanism, I conduct a heterogeneity analysis by hospital-physician contract type, which limits certain re-allocation channels.
 
@@ -769,8 +769,125 @@ This pattern indicates that the increase in office-based practice does not opera
 
 
 
+\subsection{Ambulatory EHRs}\label{sec:ambulatory_timing}
 
+A concern with interpreting the shift toward exit or office-based work documented in
+Sections ~\ref{sec:retire} \& ~\ref{sec:office} as caused by inpatient EHR exposure is that the HITECH
+Act incentivized the adoption of electronic health records in both hospital and
+ambulatory settings simultaneously. If ambulatory EHR adoption occurred at the
+same time and in the same local markets as the hospital adoption I use for
+identification, then hospitalists who appear to relocate toward office-based
+work in response to inpatient EHR burden may in fact have been moving toward a
+setting that was, or was about to be, similarly burdensome. This section
+addresses this concern along three dimensions: the relative timing of inpatient
+and ambulatory adoption, the relative functional complexity of inpatient and
+ambulatory systems, and the direction in which any remaining correlation in
+adoption timing would bias my estimates.
+ 
+I compare the timing of inpatient and ambulatory EHR adoption using two
+independent data sources. The first is HIMSS Analytics, which surveys hospitals
+and hospital-owned ambulatory entities on whether specific clinical applications
+are live and operational. Unlike the hospital-side data, HIMSS does not record
+ambulatory adoption at the level of individual clinical functions: it tracks
+ambulatory systems as a single undifferentiated ``Ambulatory'' category
+containing three items---Ambulatory EMR, Practice Management, and Ambulatory
+PACS---of which only Ambulatory EMR constitutes clinical documentation
+functionality comparable to what I measure on the hospital side. This lack of
+granularity means the physician-facing measure I use in the main analysis, which
+requires computerized physician order entry, physician documentation, or a
+physician portal specifically, has no direct ambulatory counterpart. I therefore
+construct the timing comparison in this section using the broadest available
+hospital-side measure: whether any of the six tracked clinical components,
+including but not limited to the physician-facing ones, is live and
+operational. Because hospital adoption of
+physician-facing components typically follows adoption of at least one other
+clinical component, this broader hospital-side measure adopts weakly earlier
+than my main physician-facing measure, so any timing gap identified here is, if
+anything, an understatement of the true gap between the technology hospitalists
+in my sample are exposed to and the technology available in the ambulatory
+settings they might move toward.
+ 
+Figure~\ref{fig:timing_evidence} reports the
+share of each setting with EMR live and operational, by year. In 2009, the first
+year of my panel, 92.5 percent of surveyed hospitals already had EMR live,
+compared with 42.4 percent of surveyed ambulatory entities, a gap of 50.1
+percentage points. This gap narrowed steadily over the sample period but did not
+close: by 2015, the final year of the panel, 98.4 percent of hospitals had EMR
+live compared with 87.3 percent of ambulatory entities, a gap of 11.1 percentage
+points. The second source is Meaningful Use attestation data from the Office of the
+National Coordinator for Health Information Technology (ONC), which records the
+Meaningful Use stage each provider attested to under the Medicare and Medicaid
+EHR Incentive Programs. Stage 2, which introduced more demanding interoperability
+and patient-engagement requirements, first took effect in 2014. In that year,
+40.6 percent of attestations using an inpatient-certified product had progressed
+to Stage 2, compared with 25.6 percent of attestations using an
+ambulatory-certified product. As with the HIMSS comparison, this gap narrowed
+over time, falling to 0.7 percentage points in 2015 and 1.6 points in 2016. Both
+data sources therefore indicate that inpatient EHR adoption led ambulatory
+adoption throughout the sample period, and particularly during its early years,
+when most of the hospital adoption events I use for identification occur.
 
+%\input{Table Code/himss_timing}
+
+\begin{figure}
+    \centering
+    \caption{Timing of EHR Adoption in Ambulatory versus Inpatient Setting}
+    \includegraphics[width=0.8\textwidth]{Objects/timing_evidence_panels.pdf}
+    \label{fig:timing_evidence}
+\end{figure}
+
+ 
+A limitation of this comparison is the HIMSS ambulatory sample is
+restricted to hospital-owned outpatient clinics, since HIMSS does not survey
+independent ambulatory practices. Hospital-owned clinics plausibly have access
+to their parent hospital's information technology budget, staff, and vendor
+relationships, and are therefore likely to adopt more quickly than an average
+independent practice would. If even this comparatively well-resourced segment of
+the ambulatory market lagged hospital adoption, the true gap between hospital and independent
+ambulatory adoption is plausibly larger, not smaller. 
+ 
+A second dimension of the concern is that even if ambulatory EHR adoption lagged
+inpatient adoption, a hospitalist moving to an office setting might still
+encounter an EHR shortly thereafter, undermining a full escape from
+technology-related burden. The HIMSS taxonomy provides indirect evidence that
+this concern is of limited quantitative importance, because ambulatory systems
+are recorded as functionally simpler than inpatient systems even where adopted. HIMSS tracks hospital electronic medical record adoption across six distinct
+clinical components, described above. Ambulatory adoption, by contrast, is
+tracked as three items under a single "Ambulatory" category---Ambulatory EMR,
+Practice Management, and Ambulatory PACS---of which only Ambulatory EMR
+constitutes comparable clinical documentation functionality; the other two are
+operational and imaging systems rather than systems a physician uses to document
+patient care. This asymmetry in HIMSS's own data collection is suggestive of a
+broader industry understanding that ambulatory systems during this period
+offered a narrower range of clinical functionality than inpatient systems.
+ 
+Consistent with this, among hospitals with any live clinical EMR component, the
+median hospital has 5 of the 6 tracked components live and operational (mean
+4.85, across 35,890 hospital entity-years). No comparable multi-component measure
+is available for ambulatory entities, since only one clinical component is
+tracked for that setting. A hospitalist who relocates to an office setting before
+or shortly after that setting's Ambulatory EMR system goes live is therefore
+likely to face a narrower set of required clinical documentation tasks than the
+hospitalist faced in the inpatient setting, even setting aside the timing gap
+documented above.
+  
+Even granting some correlation between inpatient and ambulatory adoption timing,
+the direction in which this would bias my estimates is not obvious, and
+plausibly works against finding a positive effect on office-based work. As discussed in Section ~\ref{sec:background}, a
+hospitalist's decision to shift labor market behavior reflects the expected utility of
+working in each setting, which a forward-looking physician would form using not
+only the current EHR burden in each setting but also their expectations about
+future EHR burden. If hospitalists correctly anticipated that ambulatory EHR
+adoption was coming soon nationally, this anticipation would be priced into the expected
+utility of relocating, narrowing rather than widening the utility gap between
+remaining in the hospital and moving to an office setting. Under this
+interpretation, the positive effect I estimate on exit and office-based work is a lower
+bound: hospitalists appear to shift toward office-based practice even though
+that setting's technological advantage was not expected to persist indefinitely.
+A hospitalist responding only to current, realized burden differentials, with no
+forward-looking adjustment, would face no such attenuation. In neither case does
+correlated ambulatory adoption bias the estimated effect away from zero in a
+direction that would overstate the paper's central finding.
 
 
 
