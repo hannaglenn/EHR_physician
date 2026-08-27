@@ -1,0 +1,17 @@
+\begin{table}[!h]
+\centering
+\caption{\label{tab:tab:balanced_robustness}Robustness to Balanced Cohort Sample (Cohorts 2012--2014, Event Window $-3$ to $+3$)}
+\centering
+\begin{tabular}[t]{lllll}
+\toprule
+Outcome & Main Sample & Balanced Sample & Pre-Trends p & N Physicians\\
+\midrule
+Ever Exit Clinical Work & 0.013 (0.007) & 0.006 (0.007) & 0.57 & 2,133\\
+Fraction Patients in Office & 0.111 (0.008) & 0.073 (0.006) & 0.18 & 1,866\\
+Work in an Office & 0.115 (0.016) & 0.077 (0.015) & 0.24 & 1,866\\
+Number of Patients & 18.521 (6.796) & 13.146 (6.439) & 0.96 & 860\\
+Claims per Patient & -0.246 (0.101) & -0.178 (0.069) & <0.01 & 860\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}\textit{Note: } Main Sample column reports overall ATT (SE) from the full estimation sample, pooling all cohorts. Balanced Sample column restricts to hospitalists first exposed to EHRs in 2012--2014, so that a full event window of three years before and after exposure is observed for every included physician. Pre-Trends p reports the p-value from a joint Wald test that pre-treatment event-study coefficients within the balanced sample are equal to zero.}\\
+\end{tabular}
+\end{table}
