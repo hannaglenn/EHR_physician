@@ -126,9 +126,11 @@ Physicians of any age may also leave clinical roles for careers in administratio
 
 \subsubsection{Work Setting}\label{sec:worksetting}
 
-For physicians who remain practicing, their choice set may contain several distinct settings in which to work. Specifically, if EHRs affect job satisfaction in hospitals, a hospitalist may shift more working hours toward or away from the hospital. This is particularly salient for hospitalists who contract time, as not all have binding contracts. A 2013 survey estimated that 36\% of hospitalists also worked outside the hospital in primary care, long-term care, or hospice settings (\cite{Today}). Many internists also split time across inpatient and office settings (\cite{gray2022evolving}).
+For physicians who remain practicing, their choice set may contain several distinct settings in which to work. Specifically, if EHRs affect job satisfaction in hospitals, a hospitalist may shift more working hours toward or away from the hospital. This is particularly salient for hospitalists who contract time, as not all have binding contracts. A 2013 survey estimated that 36\% of hospitalists also worked outside the hospital in primary care, long-term care, or hospice settings (\cite{Today}). Many internists also split time across inpatient and office settings (\cite{gray2022evolving}). Even salaried hospitalists may shift to outpatient settings if their hospital owns such facilities. While office and inpatient services are not fully interchangeable, changes in claims from hospital to office settings can signal shifts in practice location. If EHRs influence how hospitals allocate physicians, this shift may reflect hospital-level decisions rather than physician preferences.
 
-Even salaried hospitalists may shift to outpatient settings if their hospital owns such facilities. While office and inpatient services are not fully interchangeable, changes in claims from hospital to office settings can signal shifts in practice location. If EHRs influence how hospitals allocate physicians, this shift may reflect hospital-level decisions rather than physician preferences. My sample includes both salaried hospitalists and internists who split time across settings. Although I cannot observe individual physician contracts, I use hospital-level integration to explore whether changes reflect hospital or physician-driven decisions.
+Whether such a shift reflects the physician's own preferences or a hospital's staffing decisions plausibly depends on the nature of the physician's employment relationship with the hospital. Hospitalists employed directly by a hospital are more likely to be subject to internal staffing decisions, including reallocation to outpatient facilities the hospital itself owns. Hospitalists employed by a larger health system may be moved across sites within that system independent of any single hospital's preferences. By contrast, hospitalists who work under contract with a third-party staffing arrangement are supplying inpatient coverage as a discrete service; a shift away from inpatient work for these physicians is less likely to reflect a hospital reallocating them internally, and more likely to reflect either the physician's own choice to reduce inpatient hours or a change in which facility the contract covers. Physicians in solo or independent practice are, almost by definition, making an individual choice about where to practice.
+
+My sample includes both salaried hospitalists and internists who split time across settings. Although I cannot observe individual physician contracts, I use information on the physician's employment relationship to explore whether shifts in work setting reflect physician or employer-driven decisions.
 
 \subsubsection{Care/Billing Activity}
 
@@ -144,7 +146,9 @@ I construct a balanced hospitalist-level panel data set spanning from 2009-2017 
 
 \subsection{Sample Construction}\label{sec:sample}
 
-I first gather physician information from the Medicare Data on Provider Practice and Specialty (MD-PPAS), a provider-level database CMS constructs from provider enrollment records and the 100 percent file of Original Medicare Part B non-institutional claims. It reports demographics, specialty, practice affiliation, the number of unique Medicare beneficiaries seen, and the share of claim line items delivered in each of eight places of service. Patient counts therefore capture traditional fee-for-service Medicare only, excluding Medicare Advantage enrollees and patients with other insurance. I only include physicians classified as hospitalists\footnote{Physician who self-identifies as hospitalist or has 70\% of patients in inpatient setting. I cannot distinguish between types of hospitalists as the data source manipulates this definition based on percent of patients seen in a hospital, so these can be formal hospitalists or internists.}, internal medicine, general practice or family practice in at least one year. I drop physicians with consistently less than 70\% of patients in a hospital setting, as the focus is on physicians with sufficient exposure to hospitals.\footnote{I consider thresholds of 50\% and 90\% as robustness checks in Appendix Section \ref{sec:changes}.} I use this data to construct the dependent variables in my analysis, which I describe in detail in Section \ref{sec:sumstats}. 
+I first gather physician information from the Medicare Data on Provider Practice and Specialty (MD-PPAS), a provider-level database CMS constructs from provider enrollment records and the 100 percent file of Original Medicare Part B non-institutional claims. It reports demographics, specialty, practice affiliation, the number of unique Medicare beneficiaries seen, and the share of claim line items delivered in each of eight places of service. Patient counts therefore capture traditional fee-for-service Medicare only, excluding Medicare Advantage enrollees and patients with other insurance. I only include physicians classified as hospitalists\footnote{Physician who self-identifies as hospitalist or has 70\% of patients in inpatient setting. I cannot distinguish between types of hospitalists as the data source manipulates this definition based on percent of patients seen in a hospital, so these can be formal hospitalists or internists.}, internal medicine, general practice or family practice in at least one year. I drop physicians with consistently less than 70\% of patients in a hospital setting, as the focus is on physicians with sufficient exposure to hospitals.\footnote{I consider thresholds of 50\% and 90\% as robustness checks in Appendix Section \ref{sec:changes}.}
+
+MD-PPAS also reports the legal name of the taxable organization (TIN) under which each physician predominantly bills. Because Medicare requires claims to be billed under the TIN of the employing or contracting organization rather than the individual physician, this variable identifies who receives payment on the hospitalist's behalf, which need not be the hospital where they physically practice. I use it to classify each hospitalist's billing entity type into one of four categories: hospital direct, where the physician bills under the hospital's own name and is presumably a hospital employee; integrated system group, where the name indicates a larger multi-specialty medical group, health system, or physician organization affiliated with but organizationally distinct from a single hospital; staffing company, indicating the physician is contracted through a third party rather than employed by the hospital or system directly; and independent, where the billing name is the physician's own name paired with a small-practice legal suffix (e.g., LLC, PC, PA). This classification lets me separate a hospitalist's place of clinical practice (the hospital) from their organizational and financial affiliation.
 
 To gather information on which hospitals a physician is working in, I utilize the CMS Shared Patient Data, which provide annual information on how often the same patient is seen by different providers, available from 2009 to 2015. For instance, when a primary care physician refers a patient to a specialist, the two providers become a pair who share at least one patient. I focus on shared patients between physician and hospital entities, specifically those seen on the same day, to identify physicians closely affiliated with hospitals. To refine the sample, I restrict to physician-hospital pairs with non-missing tax codes and at least 30 same-day shared patients per year.\footnote{I consider thresholds of 10 and 60 as robustness checks in Appendix Section \ref{sec:changes}.} This allows me to exclude office-based primary care physicians and ensures consistency with physicians identified in the MD-PPAS dataset. 
 
@@ -160,13 +164,12 @@ identification comes from comparisons with hospitalists not yet exposed. This ha
 
 All dependent variables are built based on the MD-PPAS physician-level data set described in Section \ref{sec:sample}. The first dependent variable I consider is the decision for a hospitalist to stop seeing patients, which I refer to as exit. Exit is an indicator variable equal to 1 in the first year that a hospitalist has no patients recorded in any future year. This indicator variable turns on in the year of exit and remains one in every year after, so it is a cumulative measure of exit. 
 
-The next variables I construct capture whether a hospitalist changes work setting. The first variables used focus on the physical place of work, the fraction of patients a physician sees in an office, and an indicator variable equal to one if a physician sees any positive number of patients in an office. Additionally, I classify each physician's primary billing entity using tax identification data from MD-PPAS, sorting entities into hospital-direct employment, system-affiliated physician groups, third-party staffing companies, and solo or independent practice based on the entity's legal name. 
+The next variables I construct capture whether a hospitalist changes work setting. The primary variables focus on the physical place of work: the fraction of patients a physician sees in an office, and an indicator variable equal to one if a physician sees any positive number of patients in an office. To investigate mechanisms for switching office setting, I utilize indicator variables of the main financial entity tied to each physician discussed in Section \ref{sec:sample}: hospital direct, system integration, staffing company, or independent practice.
 
 Finally, I consider outcome variables which explore care/billing patterns,
 the number of patients seen and claims filed per patient. The number of
 unique patients captures beneficiaries seen by the physician in any
-setting, so it reflects a physician's total patient volume rather than volume in a specific setting.\footnote{It would be preferable to examine patient volume in inpatient and outpatient settings separately, particularly given the
-office-based reallocation documented in Section~\ref{sec:office}.
+setting, so it reflects a physician's total patient volume rather than volume in a specific setting.\footnote{It would be preferable to examine patient volume in inpatient and outpatient settings separately, particularly given the office-based reallocation documented in Section~\ref{sec:office}.
 However, constructing setting-specific patient counts in MD-PPAS requires
 apportioning total claims across settings using the place-of-service
 shares described above, which is problematic here because those shares
@@ -327,6 +330,31 @@ coincide. The continuous measure captures the same behavior on the intensive
 margin and yields informative bounds.
 
 \subsubsection{Reallocation Across Employer Types}
+
+\subsubsection{Mechanisms: Employer Type and Office Reallocation}\label{sec:employermech}
+
+The previous results show that hospitalists shift work away from the inpatient setting following EHR exposure, but leave open the question of what is driving this shift: are hospitalists exercising a preference to work in settings with more autonomy, or are hospitals reallocating their affiliated hospitalists to outpatient facilities they own? To investigate this, I examine two complementary margins: whether hospitalists change the type of entity they bill under following EHR exposure, and whether the office-reallocation effect itself differs by hospitalists' baseline employer type.
+
+I first estimate the effect of EHR exposure on a hospitalist's likelihood of billing under specific types of entities: hospitals, physician-hospital integrated systems, hospitalist staffing companies, or independent practices. I limit this analysis to hospitalists who reallocated some of their work to an office setting.\footnote{The results hold without this limitation, though the baseline means and point estimates are dampened by those who do not reallocate at all.} I present the results from this analysis in Figure \ref{fig:employer_type}. Among hospitalists who reallocate their work, there is no change in the likelihood of billing under a hospital or integrated system after EHR exposure. Instead, the reallocation seems to come from hospitalists who are shifting away from billing directly under a staffing company that hires hospitalists and towards an independent practice affiliation. While the baseline rate of hospitalists affiliated mainly with independent practices is low (2.4\%), EHR exposure causes an increase of 2.5--7.5 percentage points in each year following exposure. A much larger fraction of hospitalists started out billing under a staffing company (20.7\%), but the probability of billing under a staffing company decreases every year after EHR exposure, up to a 50 percentage point decrease in year four.
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Effect of EHR Exposure on Employer Type Indicators}
+    \includegraphics[width=0.9\textwidth]{Objects/employer_types_shifters_eventstudy_appendix.pdf}
+    \label{fig:employer_type}
+\end{figure}
+
+The absence of a detectable shift in hospital-direct or integrated-system billing does not necessarily imply that hospital-employed hospitalists are unaffected by EHR exposure; rather than changing employers, these physicians may be adjusting their behavior within the same employment relationship, a margin the employer-switching outcome above cannot capture. To test this directly, I re-estimate the effect of EHR exposure on office-fraction separately by hospitalists' baseline employer type, measured in the year prior to EHR exposure,\footnote{I use baseline rather than contemporaneous employer type to avoid conditioning on a post-treatment outcome. I group hospital-direct and integrated-system hospitalists together as ``hospital-affiliated,'' consistent with their similar behavior in the employer-switching results above.} rather than restricting to hospitalists who switch entities. I present these estimates in Figure \ref{fig:office_by_employer}. Hospital-affiliated hospitalists show a positive and steadily increasing effect on office-fraction, from roughly 3 percentage points in the year of exposure to roughly 8 percentage points by year four, despite no accompanying change in billing entity. Staffing-company hospitalists show the largest effect of the three groups, consistent with the employer-switching results, growing to roughly 30 percentage points by year four. Solo and independent hospitalists, who have a substantially higher baseline office-fraction (63.1\%) than the other two groups, show no clear pattern, consistent with limited room to increase office-based work from an already-high baseline. Pre-trends tests do not reject parallel trends for any of the three groups.
+
+\begin{figure}[ht!]
+    \centering
+    \caption{Effect of EHR Exposure on Office Work by Baseline Employer}
+    \includegraphics[width=0.9\textwidth]{Objects/pos_office_by_type.pdf}
+    \label{fig:office_by_type}
+\end{figure}
+
+
+Taken together, these results paint a more complete picture of the office-reallocation mechanism. Hospitalists contracted through staffing companies, who supply inpatient coverage as a discrete service rather than holding a long-term employment relationship with a single hospital, respond on two margins: some exit the staffing arrangement entirely in favor of independent practice, while those who remain under a staffing company still show the largest within-group increase in office-based work of any group. Hospital-employed and system-employed hospitalists, by contrast, respond only on the within-employer margin: their office-fraction rises steadily following EHR exposure without any corresponding change in billing entity, consistent with reallocation occurring inside the existing employment relationship rather than through a change in employer. This is consistent with hospital-employed hospitalists facing higher switching costs to leaving their employer altogether, even as they, too, shift time away from inpatient work.
 
 
 
@@ -525,7 +553,6 @@ To achieve physician-level measures of hospital characteristics, I aggregate the
 
 I combine the physician NPI in each physician-hospital pair with additional physician level information. I merge to CMS Physician Compare\footnote{\hyperlink{https://data.cms.gov/provider-data/dataset/mj5m-pzi6}{https://data.cms.gov/provider-data/dataset/mj5m-pzi6}} for information on each physician's graduation date. This data contains more information on physician quality, but I am limited to time-invariant information since Physician Compare spans 2012-2015 and 2010-2012 is a time of major EHR implementation. I drop any physicians who graduated medical school after 2005, since graduating after that means leaving residency or graduating during the span of the main data, 2009-2017, and potentially exhibiting labor market changes that seem associated with EHRs but are not. 
 
-
 This aggregated data contains year, physician NPI, graduation year, years of experience, number of hospitals worked with, first year exposed to EHR, number of systems worked with, and an indicator for whether the physician changes hospitals. I complete this data to include years 2016 and 2017, but leave time varying variables missing for those years. Thus, this is a balanced panel of physicians.
 
 \subsection{Dependent Variables}\label{sec:appmdppas}
@@ -594,10 +621,26 @@ Because this restriction conditions on an outcome that treatment may itself
 affect, the resulting sample is potentially selected; I report Lee (2009) bounds
 in Section~\ref{sec:changes}.
 
+As a proxy for what type of office physicians shift work towards, I construct a categorical measure of each hospitalist's billing entity type from the legal name of their primary tax affiliated entity (TIN) in MD-PPAS. I first collect the set of distinct names appearing in the sample, then apply a rule-based classifier that searches each name for category-specific keyword patterns, evaluated in the following priority order:
+
+\begin{enumerate}
+    \item \textbf{Staffing company}: names containing inpatient-staffing terminology (``HOSPITALIST,'' ``HOSPITAL MEDICINE,'' ``INPATIENT [CONSULTANT/PHYSICIAN/TEAM/SERVICES/CARE]'') or matching known national or regional hospitalist, emergency medicine, or critical care staffing firms (e.g., TeamHealth, Sound Physicians, IPC Healthcare, EmCare, Schumacher, Apogee, Vituity, Cogent, 24 On Physicians, Emergency Staffing/Consults/Services Associates, Critical Care Consortium/Consultants).
+    
+    \item \textbf{Hospital-direct}: names containing ``HOSPITAL,'' ``MEDICAL CENTER,'' ``HEALTH CENTER,'' ``PUBLIC HOSPITAL DISTRICT,'' or ``HOSPITALS CORPORATION,'' \textit{excluding} names that also contain terms indicating an affiliated-but-separate group practice (``GROUP,'' ``CLINIC,'' ``FOUNDATION,'' ``ASSOCIATES,'' ``PHYSICIAN(S) ORG,'' ``PHYSICIAN SERVICES,'' ``CARE SERVICES''), since these typically indicate a hospital-affiliated corporate entity rather than the hospital itself as employer.
+    
+    \item \textbf{Integrated system group}: names containing broader organizational terms consistent with multi-specialty groups, health systems, or physician-organization structures (e.g., ``HEALTH SYSTEM,'' ``HEALTHCARE,'' ``MEDICAL FOUNDATION,'' ``MEDICAL GROUP,'' ``PHYSICIANS ORGANIZATION,'' ``CLINIC,'' ``PERMANENTE,'' ``PHYSICIAN NETWORK,'' ``PRIMARY CARE,'' ``MEDICAL ASSOCIATES,'' ``CORPORATION,'' ``PHYSICIAN GROUP,'' ``PROFESSIONAL SERVICES,'' ``MEDICAL PRACTICE,'' and related variants).
+    
+    \item \textbf{Solo/independent}: names containing a physician title marker (``M.D.,'' ``DR.'') \textit{and} a small-practice legal suffix (``LLC,'' ``PLLC,'' ``PC,'' ``PA,'' ``SC,'' ``CHTD,'' ``LLP,'' or ``professional [medical] corporation''); or, separately, names matching small specialty-practice terminology (e.g., ``URGENT CARE,'' ``FAMILY MEDICINE/PRACTICE,'' ``GASTROENTEROLOGY,'' ``COMMUNITY CARE'') combined with a small-practice legal suffix.
+    
+    \item Any name matching none of the above patterns is temporarily labeled \textbf{unclassified}.
+\end{enumerate}
+
+\noindent Some legal names, particularly small independent practices with idiosyncratic naming, do not match any keyword pattern above. For names left unclassified after the keyword-based step, I check whether the billing name contains the physician's own first and last name (exact substring match, case-insensitive) as recorded in MD-PPAS. If both the physician's first and last name appear in the TIN's legal name, I reclassify the entity as solo/independent, on the logic that a practice billing under the physician's own name is very likely that physician's individual or small private practice rather than an unrecognized organizational form. I apply this classification to the universe of distinct legal names appearing under either a physician's primary TIN, then merge the resulting category back onto the physician-year panel by legal name. 
+
 Finally, I use the number of unique Medicare beneficiaries seen in a year as a measure of total patient volume in any setting, and the ratio of total claims to unique patients as a measure of billing intensity per patient. Both are reported directly in MD-PPAS. For these outcomes I impose two further restrictions. First, I keep only physicians who never exit. Second, I keep only physicians who remain hospital-based throughout the post-adoption period, defined as treating at least 70 percent of their patients in the inpatient setting in every year following EHR adoption. This holds the setting of practice fixed, so that movements in volume and billing intensity reflect changes in productivity within hospital-based practice rather than a reallocation of effort toward office-based work. As above, I account for selection on the included samlple by employing Lee Bounds (\cite{lee2009training}). These volume measures reflect traditional fee-for-service Medicare only, so the estimated effects should be read as lower bounds on the change in a physician's total patient panel. 
 
 For a subset of years I observe the composition of a physician's
-billing activity. The Medicare Physician and Other Practitioners public use file, which is
+billing activity for specific claims. The Medicare Physician and Other Practitioners public use file, which is
 available from 2013 onward, reports the number of services delivered under each
 HCPCS code. I group evaluation and management codes into eight categories:
 initial hospital inpatient care, subsequent hospital inpatient care, hospital
@@ -611,8 +654,7 @@ present it as descriptive.
 
 \subsection{Summary Statistics by Subgroup}
 
-Tables~\ref{tab:means_age} and~\ref{tab:means_int} report means for the subgroups
-used in the relevant heterogeneity analyses. Table~\ref{tab:means_age} splits hospitalists at age 60. The two groups are
+Table~\ref{tab:means_age} splits hospitalists at age 60. The two groups are
 similar on most dimensions: they work with a comparable number of hospitals (1.27
 and 1.27 in the exit sample) and hospital systems, and are affiliated with
 hospitals at similar levels of physician-hospital integration. Older hospitalists
@@ -637,27 +679,27 @@ against 3.41). These baseline differences are important for interpreting the
 heterogeneity results, since a given absolute effect represents a different
 proportional change for each group.
 
-Table~\ref{tab:means_int} reports means by the level of physician-hospital
-integration at the hospitals a hospitalist works with. The four categories are
-not mutually exclusive, since a hospital may operate more than one arrangement
-and a hospitalist may work with several hospitals. Open physician-hospital
-organizations are by far the most common, covering 5,241 hospitalists, while
-closed organizations are the least common at 740.
+% Table~\ref{tab:means_int} reports means by the level of physician-hospital
+% integration at the hospitals a hospitalist works with. The four categories are
+% not mutually exclusive, since a hospital may operate more than one arrangement
+% and a hospitalist may work with several hospitals. Open physician-hospital
+% organizations are by far the most common, covering 5,241 hospitalists, while
+% closed organizations are the least common at 740.
 
-\input{Table Code/overall_stats_by_integration}
+% \input{Table Code/overall_stats_by_integration}
 
-Hospitalists are similar across the four categories on nearly every dimension.
-Mean age ranges only from 45.7 to 46.8, the share female from 34 to 36 percent,
-and the mean year of first EHR exposure is 2011 in all four. Outcomes are
-likewise similar: the share ever exiting practice ranges from 10 to 12 percent,
-the fraction of patients seen in an office is 8 percent in all four categories,
-and mean patient counts range from 282 to 292. The one dimension on which the
-groups differ noticeably is the number of hospitals worked with, which is highest
-for hospitalists at independent practice association hospitals (1.41) and lowest
-at open physician-hospital organizations (1.28). This similarity across
-integration types is consistent with the heterogeneity results reported in
-Figure~\ref{fig:heter}, which show no clear differences in the estimated effects
-along this dimension.
+% Hospitalists are similar across the four categories on nearly every dimension.
+% Mean age ranges only from 45.7 to 46.8, the share female from 34 to 36 percent,
+% and the mean year of first EHR exposure is 2011 in all four. Outcomes are
+% likewise similar: the share ever exiting practice ranges from 10 to 12 percent,
+% the fraction of patients seen in an office is 8 percent in all four categories,
+% and mean patient counts range from 282 to 292. The one dimension on which the
+% groups differ noticeably is the number of hospitals worked with, which is highest
+% for hospitalists at independent practice association hospitals (1.41) and lowest
+% at open physician-hospital organizations (1.28). This similarity across
+% integration types is consistent with the heterogeneity results reported in
+% Figure~\ref{fig:heter}, which show no clear differences in the estimated effects
+% along this dimension.
 
 
 
