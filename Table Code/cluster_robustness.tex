@@ -10,16 +10,16 @@
 \toprule
 Outcome & Estimate & \makecell{SE\\(Physician)} & \makecell{$p$-value\\(Physician)} & \makecell{SE\\(Hospital)} & \makecell{$p$-value\\(Hospital)}\\
 \midrule
-Ever Exit Clinical Work & 0.013 & 0.007 & 0.06 & 0.009 & 0.15\\
-Fraction Patients in Office & 0.111 & 0.008 & $<$0.01 & 0.011 & $<$0.01\\
-Work in an Office & 0.115 & 0.016 & $<$0.01 & 0.021 & $<$0.01\\
-Number of Patients & 18.500 & 6.800 & $<$0.01 & 12.300 & 0.13\\
-Claims per Patient & -0.246 & 0.101 & 0.01 & 0.135 & 0.07\\
+Ever Exit Clinical Work & 0.013 & 0.007 & 0.06 & 0.011 & 0.21\\
+Fraction Patients in Office & 0.111 & 0.008 & $<$0.01 & 0.013 & $<$0.01\\
+Work in an Office & 0.115 & 0.016 & $<$0.01 & 0.024 & $<$0.01\\
+Number of Patients & 18.521 & 6.796 & $<$0.01 & 11.556 & 0.11\\
+Claims per Patient & -0.246 & 0.101 & 0.01 & 0.146 & 0.09\\
 \bottomrule
 \end{tabular}
 \end{table}
 \begin{tablenotes}
-\item \textit{Note: } Estimate reports the overall average treatment effect on the treated from the main specification. SE (Physician) reports the standard error under the main specification's physician-level clustering; SE (Hospital) reports the standard error when instead clustering by each physician's baseline hospital, identified as the hospital pair with the most shared patients in the year immediately preceding (or, if unavailable, the year of) EHR exposure. $p$-values in each column are calculated using the corresponding standard error.
+\item \textit{Note: } Estimate reports the overall average treatment effect on the treated from the main specification. SE (Physician) reports the standard error under the main specification's physician-level clustering; SE (Hospital) reports the standard error when instead clustering by the hospital responsible for the physician's EHR exposure timing, identified as the hospital with EHR adoption in the physician's treatment year with the most shared patients. $p$-values in each column are calculated using the corresponding standard error.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
