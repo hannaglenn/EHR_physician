@@ -2,11 +2,7 @@
 \centering
 \caption{\label{tab:cluster_robustness}Robustness to Hospital-Level Clustering}
 \begin{threeparttable}
-\begin{table}[!h]
-\centering
-\caption{\label{tab:tab:cluster_robustness}Robustness to Hospital-Level Clustering}
-\centering
-\begin{tabular}[t]{lccccc}
+\begin{tabular}{lccccc}
 \toprule
 Outcome & Estimate & \makecell{SE\\(Physician)} & \makecell{$p$-value\\(Physician)} & \makecell{SE\\(Hospital)} & \makecell{$p$-value\\(Hospital)}\\
 \midrule
@@ -17,7 +13,6 @@ Number of Patients & 18.521 & 6.796 & $<$0.01 & 11.556 & 0.11\\
 Claims per Patient & -0.246 & 0.101 & 0.01 & 0.146 & 0.09\\
 \bottomrule
 \end{tabular}
-\end{table}
 \begin{tablenotes}
 \item \textit{Note: } Estimate reports the overall average treatment effect on the treated from the main specification. SE (Physician) reports the standard error under the main specification's physician-level clustering; SE (Hospital) reports the standard error when instead clustering by the hospital responsible for the physician's EHR exposure timing, identified as the hospital with EHR adoption in the physician's treatment year with the most shared patients. $p$-values in each column are calculated using the corresponding standard error.
 \end{tablenotes}

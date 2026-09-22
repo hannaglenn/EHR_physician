@@ -1,7 +1,7 @@
 \begin{table}[!h]
 \centering
 \caption{\label{tab:ehr_construct}EHR Source Comparison}
-\centering
+\begin{threeparttable}
 \begin{tabular}[t]{lrrc}
 \toprule
  & Hospital-years & Share & EHR indicator\\
@@ -30,4 +30,8 @@
 \hspace{1em}\quad Clinical decision support & 21,861 & 89.1\% & Not counted\\
 \bottomrule
 \end{tabular}
+\begin{tablenotes}
+\item \textit{Note: } Table reports the joint distribution of hospital-year EHR adoption status across the two data sources used to construct EHR exposure. Panel A cross-tabulates each hospital-year's self-reported status in the AHA Survey against whether a physician-facing application (computerized physician order entry, physician documentation, or a physician portal) is live and operational in HIMSS. Panel B reports, for each of the six HIMSS clinical application categories tracked, the share of hospital-years in which that application is live and operational, and whether it is counted toward the physician-facing definition.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
