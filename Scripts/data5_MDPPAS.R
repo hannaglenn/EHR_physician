@@ -15,27 +15,29 @@ library(lubridate)
 
 # Read in MDPPAS data
 for (i in 2009:2017) {
-  year <- read_csv(paste0(raw_data_path,"/MDPPAS/PhysicianData_",i,".csv"))
-  year <- year %>%
-    dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_2,
-                  -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
-                  -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
-                  -claim_count12, -spec_prim_2_name, -tin1_legal_name, -tin2_legal_name,
-                  -group1, -group2)
+  year <- read_csv(paste0(raw_data_path,"/MDPPAS/PhysicianData_",i,".csv"),
+                   guess_max = Inf)
+  # year <- year %>%
+  #   dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_2,
+  #                 -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
+  #                 -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
+  #                 -claim_count12, -spec_prim_2_name, -tin1_legal_name, -tin2_legal_name,
+  #                 -group1, -group2)
   assign(paste0("MDPPAS",i),year)
 }
 
 MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
 
-# Read in Physician Utilization Files for 2013-2015
-for (i in 13:15){
-  year <- read_csv(paste0(raw_data_path,"/MUP_PHY/MUP_PHY_R19_P04_V10_D",i,"_Prov_Svc_zip",".csv")) %>%
-    mutate(year=2000+i)
-  assign(paste0("MUP_PHY",i),year)
+# Read in Physician Utilization Files for 2013-2017
+for (i in 2013:2017){
+  year <- read_csv(paste0(raw_data_path, "/MUP_PHYS/Medicare_Physician_Other_Practitioners_by_Provider_and_Service_", i, ".csv"),
+                   guess_max = Inf) %>%
+    mutate(year = i)
+  assign(paste0("MUP_PHY", i), year)
 }
 
-MUP_PHY <- rbind(MUP_PHY13, MUP_PHY14, MUP_PHY15)
-rm(MUP_PHY13, MUP_PHY14, MUP_PHY15, year, MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
+MUP_PHY <- rbind(MUP_PHY2013, MUP_PHY2014, MUP_PHY2015, MUP_PHY2016, MUP_PHY2017)
+rm(MUP_PHY2013, MUP_PHY2014, MUP_PHY2015, MUP_PHY2016, MUP_PHY2017, year, MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
 
 # summarize the public use data to the physician level for specific claims I need
 MUP_PHY <- MUP_PHY %>%
@@ -45,6 +47,9 @@ MUP_PHY <- MUP_PHY %>%
 
 MUP_PHY <- MUP_PHY %>%
   filter(str_detect(HCPCS_Cd, "^992"))
+
+codes <- MUP_PHY %>%
+  distinct(HCPCS_Cd, HCPCS_Desc, Avg_Sbmtd_Chrg)
 
 # group HCPCS codes that are the same (with varied time components)
 MUP_PHY <- MUP_PHY %>%
@@ -56,6 +61,12 @@ MUP_PHY <- MUP_PHY %>%
          group = ifelse(str_detect(HCPCS_Desc, "New patient office or other outpatient visit"), "new_patient_office", group),
          group = ifelse(str_detect(HCPCS_Desc, "Subsequent hospital inpatient care"), "subs_hosp_inpat", group),
          group = ifelse(str_detect(HCPCS_Desc, "Subsequent observation care"), "subs_obs_care", group))
+
+
+avg_summary <- MUP_PHY %>%
+  group_by(group) %>%
+  summarise_at("Avg_Sbmtd_Chrg", mean, na.rm=T)
+
 
 MUP_PHY <- MUP_PHY %>%
   filter(!is.na(group)) %>%
@@ -73,7 +84,7 @@ MUP_PHY_wide <- MUP_PHY %>%
 
 
 # Read in Aggregated Pairs data from "data4_physician_level.R"
-Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs.rds"))
+Aggregated_Pairs <- read_rds(paste0(created_data_path,"Aggregated_Pairs_NEW.rds"))
 
 
 # Merge MDPPAS to main dataset and fill time invariant variables
@@ -87,6 +98,22 @@ Physician_Data <- Aggregated_Pairs %>%
   dplyr::ungroup() %>%
   dplyr::mutate(female=ifelse(sex=='F',1,0)) 
 
+# Flag MDPPAS coverage BEFORE any NA -> 0 recoding.
+# NA here means the NPI did not appear in that year's MDPPAS file.
+Physician_Data <- Physician_Data %>%
+  dplyr::mutate(in_mdppas = !is.na(npi_unq_benes)) %>%
+  dplyr::group_by(DocNPI) %>%
+  dplyr::mutate(
+    n_mdppas_yrs    = sum(in_mdppas),
+    first_mdppas_yr = ifelse(any(in_mdppas), min(year[in_mdppas]), NA_integer_),
+    last_mdppas_yr  = ifelse(any(in_mdppas), max(year[in_mdppas]), NA_integer_),
+    missing_early   = any(year %in% c(2009, 2010) & !in_mdppas),
+    late_entrant    = first_mdppas_yr > 2009
+  ) %>%
+  dplyr::ungroup()
+
+observe <- Physician_Data %>%
+  filter(in_mdppas==0)
 
 # Create age variable
 Physician_Data <- Physician_Data %>%
@@ -103,33 +130,31 @@ Physician_Data <- Physician_Data %>%
   dplyr::group_by(DocNPI) %>%
   dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
   dplyr::filter(max>.7) 
-  # 178k obs
+  # 300k obs
 
 # join public use file 
 Physician_Data <- Physician_Data %>%
   left_join(MUP_PHY_wide, by=c("DocNPI"="Rndrng_NPI", "year"))
 
 
-## Read in Medicare Opt-Out Data
-opt_out <- read_csv(paste0(raw_data_path,"/Study_01.164.01_2022.04.15_Opt_Out_List_March.csv"), 
-                                                          col_types = cols(`Optout Effective Date` = col_date(format = "%m/%d/%Y"), 
-                                                                           `Optout End Date` = col_date(format = "%m/%d/%Y")))
-
-opt_out <- opt_out %>%
-  mutate(optout_year=year(`Optout Effective Date`)) %>%
-  filter(optout_year>2008 & optout_year<2018) %>%
-  select(NPI,Specialty,optout_year) 
-
-Physician_Data <- Physician_Data %>%
-  left_join(opt_out,by=c("DocNPI"="NPI"))
-# I see zero doctors actually opt out of medicare.
+# ## Read in Medicare Opt-Out Data
+# opt_out <- read_csv(paste0(raw_data_path,"/Study_01.164.01_2022.04.15_Opt_Out_List_March.csv"), 
+#                                                           col_types = cols(`Optout Effective Date` = col_date(format = "%m/%d/%Y"), 
+#                                                                            `Optout End Date` = col_date(format = "%m/%d/%Y")))
+# 
+# opt_out <- opt_out %>%
+#   mutate(optout_year=year(`Optout Effective Date`)) %>%
+#   filter(optout_year>2008 & optout_year<2018) %>%
+#   select(NPI,Specialty,optout_year) 
+# 
+# Physician_Data <- Physician_Data %>%
+#   left_join(opt_out,by=c("DocNPI"="NPI"))
+# # I see zero doctors actually opt out of medicare.
 
 
 # CREATE DEPENDENT VARIABLES -----------------------------------------------------------------------------------------
 
 # RETIREMENT ####
-
-
 
 # For retirement, I can combine all claim counts into one
 Physician_Data <- Physician_Data %>%
@@ -268,6 +293,14 @@ Physician_Data <- Physician_Data %>%
          rel_p3=1*(rel_expandyear==3),
          rel_p4=1*(rel_expandyear==4))
 
+Physician_Data <- Physician_Data %>%
+  dplyr::group_by(DocNPI) %>%
+  mutate(missing_pretreat = any(minyr_EHR > 0 &
+                                  year < minyr_EHR &
+                                  year >= first_mdppas_yr &
+                                  !in_mdppas)) %>%
+  dplyr::ungroup()
+
 
 # Limit to physicians who have majority patients in hospital the year prior to exposure (I don't want to pick up
 # people becoming hospitalists at the time a hospital implements an EHR)
@@ -284,27 +317,147 @@ Physician_Data <- Physician_Data %>%
   fill(Rndrng_Prvdr_State_Abrvtn, .direction="downup") %>%
   ungroup()
 
+##=============================================================
+## TIN classifier, v6:
+##   - merges small_independent_practice into solo_independent
+##   - drops the risky bare-personal-name regex
+##   - adds fuzzy name-matching: solo if the TIN legal name
+##     contains the physician's own first/last name
+##
+## Requires physician name fields on Physician_Data. Adjust the
+## column names below to match what you actually have (commonly
+## something like `name_first`/`name_last`, or provider name
+## fields from NPPES).
+##=============================================================
+
+library(dplyr)
+library(stringr)
+library(stringdist)   # install.packages("stringdist") if needed
+
+##---- 0. Check what name fields you actually have ------------------------------
+names(Physician_Data)[grepl("name", names(Physician_Data), ignore.case = TRUE)]
+
+##---- 1. Classifier function, v6 -----------------------------------------------
+classify_tin <- function(name) {
+  n <- toupper(name)
+  
+  academic_pat  <- "UNIVERSITY|REGENTS|MEDICAL COLLEGE|SCHOOL OF MEDICINE|FACULTY (PHYSICIAN|PHYS)|COLLEGE OF MEDICINE|FACULTY PRACTICE"
+  staffing_pat  <- "HOSPITALIST|HOSPTIALIST|HOSPITAL MEDICINE|IN.?PATIENT (CONSULTANT|PHYSICIAN|TEAM|MEDICAL SERVICE|SPECIALIST|SERVICES|CARE|MEDICINE)|IPC HEALTHCARE|TEAMHEALTH|SOUND PHYSICIAN|EMCARE|SCHUMACHER|APOGEE MEDICAL|VITUITY|COGENT|24 ON PHYSICIANS|EMERGENCY (STAFFING|CONSULTS|SERVICES ASSOCIATES)|CRITICAL CARE (CONSORTIUM|CONSULTANTS)"
+  govt_pat      <- "\\bCOUNTY OF\\b|DEPARTMENT OF (AGING|HEALTH|SOCIAL)|PUBLIC HEALTH COMMISSION|INDIAN COMMUNITY|\\bCITY OF\\b|STATE OF\\b"
+  hosp_pat      <- "\\bHOSPITAL\\b|MEDICAL CENTER|HEALTH CENTER|PUBLIC HOSPITAL DISTRICT|HOSPITALS CORPORATION"
+  hosp_exclude  <- "GROUP|CLINIC|FOUNDATION|ASSOCIATES|PHYSICIANS ORG|PHYSICIAN SERVICES|CARE SERVICES"
+  system_pat    <- paste0(
+    "HEALTH SYSTEM|HEALTHCARE INC|HEALTH SERVICES|HEALTHCARE\\b|",
+    "MEDICAL FOUNDATION|MEDICAL GROUP|PHYSICIANS ORGANIZATION|\\bCLINIC\\b|",
+    "PERMANENTE|PHYSICIAN(S)? NETWORK|PHYSICIAN SERVICES|PROVIDER NETWORK|",
+    "PARTNERS IN HEALTH|PRIMARY CARE|COMMUNITY PHYSICIANS|MEDICAL ASSOCIATES|",
+    "HEALTH AND HOSPITALS|CARE SERVICES|MEDICAL PARTNERS|HEALTH PLAN|",
+    "CORPORATION|PHYSICIAN GROUP|PHYSICIANS GROUP|PROFESSIONAL SERVICES|",
+    "MEDICAL PRACTICE|PHYSICIAN[S]? INC|MEDICAL SERVICES|HEALTH &|HEALTH AND|",
+    "FACULTY PRACTICE|PHYSICIANS & SURGEONS|MEDICAL RESEARCH|",
+    "PHYSICIAN SPECIALISTS|PHYSICIAN PARTNERS|PHYSICIAN PRACTICES|",
+    "PHYSICIAN ASSOCIATES|PHYSICIAN MANAGEMENT|EMPLOYED PHYSICIANS|",
+    "OUTPATIENT CLINICS|PHYSICIAN PROFESSIONALS|MEDICAL PROFESSIONALS|",
+    "\\bHEALTH\\b$|\\bHEALTH INC\\b|\\bHEALTH NETWORK\\b|",
+    "DEPT OF (GENERAL )?INTERNAL MEDICINE|INTERNAL MEDICINE, LLC|",
+    "MEDICAL INSTITUTE|MEDICAL CONSULTATION GROUP"
+  )
+  solo_title_pat  <- "\\bM\\.?D\\.?\\b|\\bDR\\.?\\b"
+  solo_suffix_pat <- "LLC|PLLC|\\bPC\\b|\\bP\\.C\\.|\\bPA\\b|\\bP\\.A\\.|\\bSC\\b|\\bS\\.C\\.|CHTD|\\bLLP\\b|PROF MED CORP|A PROF(ESSIONAL)? (MED(ICAL)?)? CORP"
+  small_practice_pat <- paste0(
+    "URGENT CARE|MEDICAL CARE|FAMILY (DOCTORS|MEDICINE|PRACTICE)|",
+    "GASTROENTEROLOGY|RESPIRATORY ASSOCIATES|CARDIOLOGY INSTITUTE|",
+    "KIDNEY INSTITUTE|VASCULAR|VEIN AND WOUND|COMMUNITY CARE|",
+    "INFECTIOUS DISEASE|CHEST DISEASES|HEART \\bPLLC\\b|MEDICINE OF"
+  )
+  
+  case_when(
+    is.na(name) ~ NA_character_,
+    str_detect(n, academic_pat) ~ "academic",
+    str_detect(n, govt_pat)     ~ "government",
+    str_detect(n, staffing_pat) ~ "staffing_company",
+    str_detect(n, hosp_pat) & !str_detect(n, hosp_exclude) ~ "hospital_direct",
+    str_detect(n, system_pat) ~ "integrated_system_group",
+    str_detect(n, solo_title_pat) & str_detect(n, solo_suffix_pat) ~ "solo_independent",
+    str_detect(n, small_practice_pat) &
+      str_detect(n, "LLC|PLLC|\\bPC\\b|\\bINC\\b|LLP|\\bPA\\b") ~ "solo_independent",
+    TRUE ~ "unclassified"
+  )
+}
+
+##---- 2. Fuzzy name match: does the TIN name contain the physician's own name? --
+## ADJUST these column names to match what you actually have
+name_check <- function(tin_name, first, last) {
+  if (is.na(tin_name) | is.na(first) | is.na(last)) return(FALSE)
+  n <- toupper(tin_name)
+  f <- toupper(first)
+  l <- toupper(last)
+  ## exact substring match on last name (strong signal) AND first name present
+  str_detect(n, fixed(l)) & str_detect(n, fixed(f))
+}
+
+## reclassify "unclassified" cases as solo_independent if the TIN name
+## contains the physician's own first AND last name
+reclassify_by_name <- function(df, tin_col, type_col, first_col, last_col) {
+  df %>%
+    mutate(
+      name_match = mapply(name_check, .data[[tin_col]], .data[[first_col]], .data[[last_col]]),
+      !!type_col := ifelse(.data[[type_col]] == "unclassified" & name_match,
+                           "solo_independent", .data[[type_col]])
+    ) %>%
+    select(-name_match)
+}
+
+## example application -- fill in the real column names once step 0 confirms them:
+# Physician_Data <- Physician_Data %>%
+#   reclassify_by_name("tin1_legal_name", "tin1_type", "name_first", "name_last")
+
+##=============================================================
+## Apply name-match reclassification using name_first / name_last
+##=============================================================
+
+## make sure classification columns exist first (tin1_type / tin2_type,
+## built the same way as before but with the v6 classify_tin function)
+
+all_names <- Physician_Data %>%
+  ungroup() %>%
+  select(tin1_legal_name, tin2_legal_name) %>%
+  pivot_longer(everything(), values_to = "legal_name") %>%
+  filter(!is.na(legal_name)) %>%
+  distinct(legal_name) %>%
+  mutate(employer_type = classify_tin(legal_name))
+
+Physician_Data <- Physician_Data %>%
+  ungroup() %>%
+  select(-any_of(c("tin1_type", "tin2_type"))) %>%
+  left_join(all_names %>% rename(tin1_legal_name = legal_name, tin1_type = employer_type),
+            by = "tin1_legal_name") %>%
+  left_join(all_names %>% rename(tin2_legal_name = legal_name, tin2_type = employer_type),
+            by = "tin2_legal_name")
+
+## before reclassification -- baseline counts
+cat("\n== Before name-match reclassification ==\n")
+Physician_Data %>% count(tin1_type, sort = TRUE)
+
+## apply reclassification to tin1_type and tin2_type
+Physician_Data <- Physician_Data %>%
+  reclassify_by_name("tin1_legal_name", "tin1_type", "name_first", "name_last") %>%
+  reclassify_by_name("tin2_legal_name", "tin2_type", "name_first", "name_last")
+
+cat("\n== After name-match reclassification ==\n")
+Physician_Data %>% count(tin1_type, sort = TRUE)
+
+## how many were actually reclassified?
+cat("\n== Examples of reclassified names ==\n")
+Physician_Data %>%
+  filter(!is.na(tin1_legal_name)) %>%
+  mutate(would_match = mapply(name_check, tin1_legal_name, name_first, name_last)) %>%
+  filter(would_match) %>%
+  distinct(name_first, name_last, tin1_legal_name, tin1_type) %>%
+  slice_head(n = 20) %>%
+  print(n = 20)
+
+
 # Save the data
-saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data.rds"))
-
-
-
-
-  
-  
-  
-  
-  
-  
-  
-
-
-
-
-
-
-
-
-
-
+saveRDS(Physician_Data,file=paste0(created_data_path,"Physician_Data_NEW2.rds"))
 

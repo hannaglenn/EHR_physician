@@ -32,16 +32,16 @@ for (t in 2009:2015){
   
   SP.year<- SP.year %>%
     left_join(temp_npidata, by=c("npi1"="npi")) %>%
-    rename(PCP1=PCP,hospital1=hospital) 
+    dplyr::rename(PCP1=PCP,hospital1=hospital) 
   
   SP.year <- SP.year %>%
     left_join(temp_npidata, by=c("npi2"="npi")) %>%
-    rename(PCP2=PCP,hospital2=hospital) %>%
+    dplyr::rename(PCP2=PCP,hospital2=hospital) %>%
     select(npi1,npi2,samedaycount,year,PCP1,PCP2,hospital1,hospital2)
   
   # filter so that all is left is hospital-physician pairs
   SP.year <- SP.year %>%
-    filter((PCP1==1 & hospital2==1) | (hospital1==1 & PCP2==1))
+    dplyr::filter((PCP1==1 & hospital2==1) | (hospital1==1 & PCP2==1))
   
   assign(paste0("PSPD",t),SP.year)
 }
@@ -68,7 +68,7 @@ phys_hosp_pairs <- phys_hosp_pairs %>%
   ungroup() %>%
   select(year,HospNPI,DocNPI,samedaycount_combine) %>%
   distinct() %>%
-  rename(samedaycount=samedaycount_combine)
+  dplyr::rename(samedaycount=samedaycount_combine)
 # 7.1 million obs. 
 
 
@@ -114,375 +114,467 @@ Data_List <- lapply(Data_List, function(x){
 })
 
 ### DATA 4 -------------------------------------------------------------------------------------
-PhysCompare <- read_csv(paste0(raw_data_path,"DAC_NationalDownloadableFile.csv"))
+TAGS <- c("10", "30", "60")   # must match the order of Data_List
 
-PhysCompare <- PhysCompare %>%
-  dplyr::rename(gender=gndr,grad_year=Grd_yr) %>%
-  select(NPI,grad_year) 
+## PART 1 -- Reference data, loaded once ----------
 
-Data_List <- lapply(Data_List, function(x){
-  data <- x %>%
-    left_join(PhysCompare, by=c("DocNPI"="NPI")) %>%
-    distinct() %>%
-    filter(grad_year<2005)
-})
+##---- Physician Compare --------------------------------------
+PhysCompare <- read_csv(paste0(raw_data_path, "DAC_NationalDownloadableFile.csv")) %>%
+  dplyr::rename(gender = gndr, grad_year = `Grd_yr`) %>%
+  select(NPI, grad_year)
 
-rm(PhysCompare)
+##---- AHA-NPI crosswalk --------------------------------------
+AHANPI_cw <- read_rds(paste0(created_data_path, "AHANPI_cw.rds"))
 
-# Read in AHA crosswalk
-AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
+##---- AHA main survey ----------------------------------------
+AHAmainsurvey <- read_csv(paste0(raw_data_path, "AHAdata_20052023.csv")) %>%
+  select(ID, YEAR, MCRNUM, MNAME, MADMIN, SYSID, SUBS, EHLTH,
+         BDTOT, FTMDTF, FTRES, PTMDTF, PTRES, JNTPH, PHYGP,
+         IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS, IPAP, OPHP, CPHP, ISMP, FTRNTF) %>%
+  filter(!is.na(MCRNUM)) %>%
+  mutate(ID = as.character(ID)) %>%
+  filter(YEAR <= 2015 & YEAR >= 2009)
 
-# Merge crosswalk to main data
-Data_List <- lapply(Data_List, function(x){
-  data <- x %>%
-    mutate(HospNPI=as.double(HospNPI)) %>%
-    left_join(AHANPI_cw,by=c("HospNPI"="NPI")) %>%
-    filter(!is.na(AHAID))
-})
+##---- HIMSS ---------------------------------------------------
+years <- 2009:2015
+read_years <- function(years, f) bind_rows(lapply(years, f))
 
-# Read in AHA main survey
-AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
+HAEntity <- read_years(years, function(t) {
+  read_xlsx(file.path(raw_data_path, "HIMSS", paste0("HAEntity", t, ".xlsx")),
+            col_types = "text") %>%
+    mutate(year = t) %>%
+    select(HAEntityId, SurveyId, ParentId, UniqueId, year,
+           HAEntityType, MedicareNumber, Name, City, State) %>%
+    mutate(across(c(HAEntityId, SurveyId, ParentId, UniqueId), as.integer),
+           MedicareNumber = na_if(trimws(MedicareNumber), ""))
+}) %>%
+  filter(!is.na(MedicareNumber))
 
-# I define low integration and high integration as in Madison (2004, HSR)
-AHAmainsurvey <- AHAmainsurvey %>%
-  mutate(ID=as.character(ID)) %>%
-  mutate(low_integration=ifelse(IPAHOS==1 | OPHOHOS==1 | CPHOHOS==1,1,0),
-         high_integration=ifelse(GPWWHOS==1 | MSOHOS==1 | ISMHOS==1 | EQMODHOS==1,1,0)) %>%
-  dplyr::rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
-                joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
-  select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
-  select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS,
-         -total_physicians, -joint_phys, -phys_owned)
+HAEntityApplication <- read_years(years, function(t) {
+  read_csv(file.path(raw_data_path, "HIMSS",
+                     paste0("HAEntityApplication", t, ".csv")),
+           show_col_types = FALSE) %>%
+    mutate(year = t) %>%
+    select(HAEntityId, year, Application, Category, Status)
+}) %>%
+  filter(Category == "Electronic Medical Record")
 
+app <- HAEntityApplication %>%
+  left_join(HAEntity %>%
+              select(HAEntityId, year, UniqueId, SurveyId,
+                     HAEntityType, MedicareNumber, Name, State),
+            by = c("HAEntityId", "year")) %>%
+  mutate(Application = recode(Application,
+                              "Clinical Data Repository/EMR" = "Clinical Data Repository"))
 
-Data_List <- lapply(Data_List, function(x){
-  data <- x %>% ungroup() %>%
-    mutate(AHAID=as.character(AHAID)) %>%
-    left_join(AHAmainsurvey,by=c("AHAID"="ID","year"),na_matches="never")
-})
+status_levels <- c("Not Reported", "Not Automated", "Not Yet Contracted",
+                   "Contracted/Not Yet Installed", "Installation in Process",
+                   "To be Replaced", "Live and Operational")
 
-Data_List <- lapply(Data_List, function(x){
-  data <- x %>% group_by(AHAID) %>%
-    mutate(firstyear_0=min(year[EHLTH==0],na.rm=T),lastyear_0=max(year[EHLTH==0],na.rm=T)) %>%
-    mutate(firstyear_0=ifelse(is.infinite(firstyear_0),NA,firstyear_0),lastyear_0=ifelse(is.infinite(lastyear_0),NA,lastyear_0)) %>%
-    mutate(EHLTH=ifelse(firstyear_0<year & year<lastyear_0 & is.na(EHLTH),0,EHLTH)) %>%
-    mutate(firstyear_1=min(year[EHLTH==1],na.rm=T),lastyear_1=max(year[EHLTH==1],na.rm=T)) %>%
-    mutate(firstyear_1=ifelse(is.infinite(firstyear_1),NA,firstyear_1),lastyear_1=ifelse(is.infinite(lastyear_1),NA,lastyear_1)) %>%
-    mutate(EHLTH=ifelse(firstyear_1<year & year<lastyear_1 & is.na(EHLTH),1,EHLTH)) %>%
-    mutate(firstyear_2=min(year[EHLTH==2],na.rm=T),lastyear_2=max(year[EHLTH==2],na.rm=T)) %>%
-    mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
-    mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
-    ungroup() %>%
-    select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
-})
+app <- app %>%
+  mutate(Status = trimws(Status),
+         Status = recode(Status,
+                         "To Be Replaced"            = "To be Replaced",
+                         "Installation In Process"   = "Installation in Process",
+                         "NotAutomatedNot Automated" = "Not Automated"))
 
-# Get rid of physicians who only work on VA hospitals
+unmapped <- setdiff(unique(app$Status), status_levels)
+if (length(unmapped)) stop("Unmapped Status: ", paste(unmapped, collapse = " | "))
 
-Data_List <- lapply(Data_List, function(x){
-  VA <- x %>%
-    mutate(VA=ifelse(str_detect(Hospital_name,"Veteran"),1,0)) %>%
-    filter(VA==1) %>%
-    distinct(pairID,VA)
+app <- app %>% mutate(Status = factor(Status, levels = status_levels, ordered = TRUE))
+
+collapsed <- app %>%
+  group_by(UniqueId, year, Application) %>%
+  summarise(HAEntityId     = first(HAEntityId),
+            SurveyId       = first(SurveyId),
+            HAEntityType   = first(HAEntityType),
+            MedicareNumber = first(MedicareNumber),
+            Status         = max(Status),
+            n_products     = n(),
+            .groups = "drop")
+
+himss_hosp <- collapsed %>%
+  filter(!is.na(MedicareNumber)) %>%
+  mutate(live = Status %in% c("Live and Operational", "To be Replaced"))
+
+app_short <- c(
+  "Clinical Data Repository"                     = "cdr",
+  "Clinical Decision Support System (CDSS)"      = "cdss",
+  "Computerized Practitioner Order Entry (CPOE)" = "cpoe",
+  "Order Entry (Includes Order Communications)"  = "order_entry",
+  "Physician Documentation"                      = "phys_doc",
+  "Physician Portal"                             = "phys_portal",
+  "Patient Portal"                               = "patient_portal",
+  "Business Intelligence - Clinical"             = "bi_clinical")
+
+himss_hosp <- himss_hosp %>% mutate(app = unname(app_short[Application]))
+stopifnot(!any(is.na(himss_hosp$app)))
+
+ccn_app <- himss_hosp %>%
+  group_by(MedicareNumber, year, app) %>%
+  summarise(live = any(live), n_entities = n_distinct(UniqueId), .groups = "drop")
+
+wide <- ccn_app %>%
+  select(MedicareNumber, year, app, live) %>%
+  pivot_wider(id_cols = c(MedicareNumber, year),
+              names_from = app, values_from = live)
+
+phys_apps      <- c("cpoe", "phys_doc", "phys_portal")
+phys_apps_cdss <- c(phys_apps, "cdss")
+core_apps      <- c("cdr", "cdss", "cpoe", "order_entry", "phys_doc", "phys_portal")
+present <- function(v) intersect(v, names(wide))
+
+himss_analysis <- wide %>%
+  mutate(
+    n_phys_facing = rowSums(across(all_of(present(phys_apps))), na.rm = TRUE),
+    n_any         = rowSums(across(all_of(present(core_apps))), na.rm = TRUE),
+    phys_facing_any = n_phys_facing > 0,
+    phys_facing_all = n_phys_facing == length(present(phys_apps)),
+    any_app         = n_any > 0,
+    phys_facing_any_cdss =
+      rowSums(across(all_of(present(phys_apps_cdss))), na.rm = TRUE) > 0) %>%
+  relocate(MedicareNumber, year)
+
+stopifnot(!any(duplicated(himss_analysis[, c("MedicareNumber", "year")])))
+
+##---- HCRIS HITECH exposure ----------------------------------
+hcris <- read_csv(paste0(raw_data_path, "/final_hcris_data.csv")) %>%
+  select(-fy_start, -fy_end, -date_processed, -date_created, -source)
+
+exposure <- hcris %>%
+  filter(year >= 2006 & year <= 2008) %>%
+  distinct(year, provider_number, tot_operating_exp, tot_discharges,
+           mcare_beddays, mcaid_beddays, total_beddays) %>%
+  group_by(provider_number) %>%
+  select(-year) %>%
+  summarise_all(list(mean)) %>%
+  ungroup() %>%
+  mutate(discharges_fun = ifelse(tot_discharges < 1150, 2000000,
+                                 ifelse(tot_discharges > 23000, 4370200,
+                                        1770000 + (200 * tot_discharges)))) %>%
+  mutate(mcaid_exposure = discharges_fun * (mcaid_beddays / total_beddays),
+         mcare_exposure = discharges_fun * (mcare_beddays / total_beddays)) %>%
+  distinct(provider_number, mcaid_exposure, mcare_exposure)
+pairs <- Data_List[[1]]
+build_physician_data <- function(pairs, tag, write_files = TRUE,
+                                 make_ehr_table = FALSE) {
   
-  data <- x %>%
-    left_join(VA,by="pairID") %>%
+  message("\n===== Building sample: ", tag, " =====")
+  
+  ##---- Graduation year, drop post-2005 grads ----------------
+  data <- pairs %>%
+    ungroup() %>%
+    left_join(PhysCompare, by = c("DocNPI" = "NPI")) %>%
+    distinct() %>%
+    filter(grad_year < 2005 | is.na(grad_year))
+  
+  ##---- AHA crosswalk ----------------------------------------
+  data <- data %>%
+    mutate(HospNPI = as.double(HospNPI)) %>%
+    left_join(AHANPI_cw, by = c("HospNPI" = "NPI")) %>%
+    filter(!is.na(AHAID))
+  
+  ##---- AHA main survey --------------------------------------
+  data <- data %>%
+    ungroup() %>%
+    mutate(AHAID = as.character(AHAID)) %>%
+    left_join(AHAmainsurvey, by = c("AHAID" = "ID", "year" = "YEAR"),
+              na_matches = "never") %>%
+    filter(!is.na(MCRNUM))
+  
+  ##---- Integration type indicators --------------------------
+  data <- data %>%
+    group_by(MCRNUM) %>%
+    mutate(ever_IPA  = ifelse(IPAHOS   == 1, 1, NA),
+           ever_OPHO = ifelse(OPHOSHOS == 1, 1, NA),
+           ever_CPHO = ifelse(CPHOHOS  == 1, 1, NA),
+           ever_ISM  = ifelse(ISMHOS   == 1, 1, NA)) %>%
+    fill(ever_IPA, ever_OPHO, ever_CPHO, ever_ISM, .direction = "downup") %>%
+    ungroup() %>%
+    group_by(DocNPI) %>%
+    mutate(phys_ever_IPA  = ifelse(ever_IPA  == 1, 1, NA),
+           phys_ever_OPHO = ifelse(ever_OPHO == 1, 1, NA),
+           phys_ever_CPHO = ifelse(ever_CPHO == 1, 1, NA),
+           phys_ever_ISM  = ifelse(ever_ISM  == 1, 1, NA)) %>%
+    fill(phys_ever_IPA, phys_ever_OPHO, phys_ever_CPHO, phys_ever_ISM,
+         .direction = "downup") %>%
+    mutate(across(c(phys_ever_IPA, phys_ever_OPHO, phys_ever_CPHO, phys_ever_ISM),
+                  ~ ifelse(is.na(.), 0, .))) %>%
+    ungroup()
+  
+  ##---- HIMSS -------------------------------------------------
+  data <- data %>%
+    left_join(himss_analysis, by = c("year", "MCRNUM" = "MedicareNumber"),
+              na_matches = "never")
+  
+  ##---- Interpolate EHLTH between equal-valued years ---------
+  for (lev in 0:2) {
+    data <- data %>%
+      group_by(AHAID) %>%
+      mutate(fy = suppressWarnings(min(year[EHLTH == lev], na.rm = TRUE)),
+             ly = suppressWarnings(max(year[EHLTH == lev], na.rm = TRUE)),
+             fy = ifelse(is.infinite(fy), NA, fy),
+             ly = ifelse(is.infinite(ly), NA, ly),
+             EHLTH = ifelse(!is.na(fy) & fy < year & year < ly & is.na(EHLTH),
+                            lev, EHLTH)) %>%
+      select(-fy, -ly) %>%
+      ungroup()
+  }
+  
+  ##---- Define EHR --------------------------------------------
+  data <- data %>%
+    mutate(any_EHR = case_when(
+      EHLTH == 2                ~ 1L,
+      phys_facing_any %in% TRUE ~ 1L,
+      EHLTH %in% c(0, 1)        ~ 0L,
+      TRUE                      ~ NA_integer_))
+  
+  if (make_ehr_table) build_ehr_table(data, tag)
+  
+  ##---- Drop VA-only physicians ------------------------------
+  VA <- data %>%
+    mutate(VA = ifelse(str_detect(MNAME, "Veteran|\\sVA\\s|\\sVHA\\s"), 1, 0)) %>%
+    filter(VA == 1) %>%
+    distinct(pairID, VA)
+  
+  data <- data %>%
+    left_join(VA, by = "pairID") %>%
     filter(is.na(VA)) %>%
     select(-VA)
   
-  return(data)
-})
-
-# Descriptive Variables
-Data_List <- lapply(Data_List, function(x){
-  low_beds <- x %>% ungroup() %>%
-    distinct(HospNPI, year, beds) %>%
-    filter(beds<10) %>%
+  ##---- HITECH exposure ---------------------------------------
+  data <- data %>%
+    left_join(exposure, by = c("MCRNUM" = "provider_number"))
+  
+  ##---- Drop very small hospitals ----------------------------
+  low_beds <- data %>%
+    ungroup() %>%
+    distinct(HospNPI, year, BDTOT) %>%
+    filter(BDTOT < 10) %>%
     distinct(HospNPI) %>%
-    mutate(low_beds=1)
+    mutate(low_beds = 1)
   
-  data <- x %>%
-    left_join(low_beds, by="HospNPI") %>%
+  data <- data %>%
+    left_join(low_beds, by = "HospNPI") %>%
     filter(is.na(low_beds)) %>%
-    select(-low_beds) %>%
-    group_by(DocNPI,year) %>%
-    mutate(avg_beds=mean(beds,na.rm=T)) %>%
-    mutate(avg_beds=round(avg_beds,1)) %>%
+    select(-low_beds)
+  
+  data <- data %>%
+    group_by(DocNPI, year) %>%
+    mutate(avg_beds = round(mean(BDTOT, na.rm = TRUE), 1)) %>%
     ungroup() %>%
-    mutate(experience=year-grad_year)
+    mutate(experience = year - grad_year)
   
-  return(data)
-})
-
-# Read in HIMSS data for additional EHR information
-for (t in 2009:2017){
-  year <- readxl::read_xlsx(paste0(raw_data_path,"/HIMSS/HostedSoftware",t,".xlsx")) %>%
-    mutate(year=t) %>%
-    select(HAEntityId, SurveyId, VendorName, year)
+  ##---- EHR exposure measures --------------------------------
+  data <- data %>%
+    group_by(DocNPI, year) %>%
+    mutate(num_hospitals        = n(),
+           num_hosp_EHR         = sum(any_EHR, na.rm = TRUE),
+           num_hosp_anyphys_EHR = sum(phys_facing_any, na.rm = TRUE),
+           num_hosp_cpoe_EHR    = sum(cpoe, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(frac_EHR         = ifelse(num_hospitals > 0, num_hosp_EHR / num_hospitals, NA),
+           frac_anyphys_EHR = ifelse(num_hospitals > 0, num_hosp_anyphys_EHR / num_hospitals, NA),
+           frac_cpoe_EHR    = ifelse(num_hospitals > 0, num_hosp_cpoe_EHR / num_hospitals, NA))
   
-  assign(paste0("HostedSoftware",t),year)
-}
-
-HostedSoftware <- rbind(HostedSoftware2009, HostedSoftware2010, HostedSoftware2011, HostedSoftware2012, HostedSoftware2013, HostedSoftware2014, HostedSoftware2015, HostedSoftware2016, HostedSoftware2017)
-rm(HostedSoftware2009, HostedSoftware2010, HostedSoftware2011, HostedSoftware2012, HostedSoftware2013, HostedSoftware2014, HostedSoftware2015, HostedSoftware2016, HostedSoftware2017)
-
-# Remove duplicates in Hosted Software
-HostedSoftware <- HostedSoftware %>%
-  distinct()
-
-for (t in 2009:2017){
-  year <- readxl::read_xlsx(paste0(raw_data_path,"/HIMSS/HAEntity",t,".xlsx")) %>%
-    mutate(year=t) %>%
-    select(HAEntityId, SurveyId, ParentId, UniqueId, year, HAEntityType, MedicareNumber)
+  ##---- First year of exposure, three definitions ------------
+  first_year <- function(d, fracvar, newname) {
+    d %>%
+      ungroup() %>%
+      distinct(DocNPI, year, .data[[fracvar]]) %>%
+      filter(.data[[fracvar]] > 0) %>%
+      group_by(DocNPI) %>%
+      summarise(!!newname := min(year), .groups = "drop")
+  }
   
-  assign(paste0("HAEntity",t),year)
-}
-
-HAEntity <- rbind(HAEntity2009, HAEntity2010, HAEntity2011, HAEntity2012, HAEntity2013, HAEntity2014, HAEntity2015, HAEntity2016, HAEntity2017)
-rm(HAEntity2009, HAEntity2010, HAEntity2011, HAEntity2012, HAEntity2013, HAEntity2014, HAEntity2015, HAEntity2016, HAEntity2017)
-
-# Merge HIMSS data sets into one
-HIMSS <- HAEntity %>%
-  left_join(HostedSoftware, by=c("HAEntityId","SurveyId", "year"), na.matches="never") 
-# This created repeats because some hospitals have multiple EHR systems.
-
-# Convert HIMSS from long to wide in Vendor name
-HIMSS <- HIMSS %>%
-  distinct() %>%
-  mutate(VendorName=ifelse(VendorName %in% c("ALLSCRIPTS", "CERNER CORPORATION", "eClinicalWorks",
-                                             "ECLIPSYS CORPORATION", "EPIC", "ATHENAHEALTH",
-                                             "MCKESSON PROVIDER TECHNOLOGIES", "MEDITECH", "NEXTGEN HEALTHCARE",
-                                             "QUADRAMED", "SAGE", "SAGE SOFTWARE INC.", "SIEMENS HEALTHCARE",
-                                             "SELF-DEVELOPED"), VendorName, NA)) %>%
-  filter(!is.na(VendorName) & !is.na(MedicareNumber)) %>%
-  group_by(MedicareNumber, year) %>%
-  mutate(num=row_number()) %>%
-  ungroup() %>%
-  select(year, MedicareNumber, VendorName, num) %>%
-  filter(num<4)
-
-HIMSS <- HIMSS %>% ungroup() %>%
-  mutate(EHR_HIMSS1=ifelse(num==1, VendorName, NA)) %>%
-  mutate(EHR_HIMSS2=ifelse(num==2, VendorName, NA)) %>%
-  mutate(EHR_HIMSS3=ifelse(num==3, VendorName, NA)) %>%
-  group_by(MedicareNumber, year) %>%
-  fill(EHR_HIMSS1, .direction="downup") %>%
-  fill(EHR_HIMSS2, .direction="downup") %>%
-  fill(EHR_HIMSS3, .direction="downup") %>%
-  select(-VendorName, -num) %>%
-  distinct() %>%
-  select(year, MedicareNumber, EHR_HIMSS1)
-
-rm(HAEntity, HostedSoftware, year, observe)
-
-
-# EHR Variables
-Data_List <- lapply(Data_List, function(x){
-  data <- x %>%
-    left_join(HIMSS, by=c("year","MCRNUM"="MedicareNumber"), na_matches="never") %>%
-    mutate(EHR=ifelse(EHLTH==2 | !is.na(EHR_HIMSS1),1,0)) %>%
-    select(-EHLTH, -EHR_HIMSS1)
+  data <- data %>%
+    ungroup() %>%
+    left_join(first_year(data, "frac_EHR",         "minyr_EHR"),         by = "DocNPI") %>%
+    left_join(first_year(data, "frac_anyphys_EHR", "minyr_anyphys_EHR"), by = "DocNPI") %>%
+    left_join(first_year(data, "frac_cpoe_EHR",    "minyr_cpoe_EHR"),    by = "DocNPI") %>%
+    mutate(across(c(minyr_EHR, minyr_anyphys_EHR, minyr_cpoe_EHR),
+                  ~ ifelse(is.na(.), 0, .)))
   
-  # In some cases, 2009 or 2015 can be filled in to not have a missing value. 
-  # Create dataset to fill in 2009 or 2015 conditionally
-  fill_in <- data %>%
-    filter((year==2010 & EHR==0) | (year==2014 & EHR==1)) %>%
-    mutate(change2009=ifelse(year==2010,1,0),
-           change2015=ifelse(year==2014,1,0)) %>%
-    select(HospNPI,DocNPI,year,EHR,change2009,change2015) %>%
-    distinct(HospNPI,year,EHR,change2009,change2015)
-  
-  fill_in <- fill_in %>%
+  ##---- Hospital system changes ------------------------------
+  hosp_sys <- data %>%
+    ungroup() %>%
+    distinct(HospNPI, year, SYSID) %>%
+    arrange(HospNPI, year) %>%
     group_by(HospNPI) %>%
-    mutate(change2009=ifelse(sum(change2009)>0,1,0),
-           change2015=ifelse(sum(change2015)>0,1,0)) %>%
+    mutate(prev_sys   = dplyr::lag(SYSID),
+           prev_year  = dplyr::lag(year),
+           contiguous = !is.na(prev_year) & prev_year == year - 1,
+           joined_sys = contiguous &  is.na(prev_sys) & !is.na(SYSID),
+           left_sys   = contiguous & !is.na(prev_sys) &  is.na(SYSID),
+           switch_sys = contiguous & !is.na(prev_sys) & !is.na(SYSID) & SYSID != prev_sys,
+           sys_change = joined_sys | left_sys | switch_sys) %>%
     ungroup() %>%
-    distinct(HospNPI,change2009,change2015)
+    select(HospNPI, year, switch_sys) %>%
+    group_by(HospNPI) %>%
+    summarise(change_years = list(year[switch_sys]), .groups = "drop")
   
-  # Merge it back to original
   data <- data %>%
-    left_join(fill_in,by="HospNPI")
-  
-  # Fill in the qualifying missing values
-  data <- data %>%
-    mutate(EHR=ifelse(year==2009 & change2009==1 & is.na(EHR),0,EHR)) %>%
-    mutate(EHR=ifelse(year==2015 & change2015==1 & is.na(EHR),1,EHR)) %>%
-    select(-change2009, -change2015) %>%
+    left_join(hosp_sys, by = "HospNPI") %>%
+    group_by(DocNPI, year) %>%
+    mutate(doc_sc_years = list(sort(unique(unlist(change_years))))) %>%
     ungroup()
   
-  return(data)
-})
-
-Data_List <- lapply(Data_List, function(x){
-  # Create measure of number of hospitals a physician works with that use an EHR
-  # Create number of hospitals variables
-  data <- x %>%
-    group_by(DocNPI,year) %>%
-    mutate(count=1) %>%
-    mutate(num_hospitals=sum(count)) %>%
-    select(-count)
+  ##---- Number of systems ------------------------------------
+  count_sys <- data %>%
+    ungroup() %>%
+    distinct(DocNPI, year, SYSID) %>%
+    count(DocNPI, year, name = "num_systems")
   
+  data <- data %>% left_join(count_sys, by = c("year", "DocNPI"))
   
-  # Create number hospitals with general EHR, dec EHR, doc EHR
-  data <- data %>% ungroup() %>%
-    group_by(DocNPI,year) %>%
-    mutate(num_hosp_EHR=sum(EHR,na.rm=T)) %>%
+  if (write_files)
+    saveRDS(data, paste0(created_data_path, "cleaned_pairs_", tag, ".rds"))
+  
+  ##---- Patient counts ---------------------------------------
+  data <- data %>%
+    ungroup() %>%
+    group_by(DocNPI, year) %>%
+    mutate(hosp_patient_count = sum(samedaycount)) %>%
     ungroup()
   
+  EHR_hosp <- data %>%
+    filter(any_EHR == 1) %>%
+    group_by(year, DocNPI) %>%
+    summarise(hosp_patient_count_EHRhosp = sum(samedaycount), .groups = "drop")
   
-  # Variables: fraction of hospitals with EHR (three types)
-  data <- data %>% ungroup() %>%
-    mutate(frac_EHR=ifelse(num_hospitals>0,num_hosp_EHR/num_hospitals,NA))
-
-  return(data)
+  noEHR_hosp <- data %>%
+    filter(any_EHR == 0) %>%
+    group_by(year, DocNPI) %>%
+    summarise(hosp_patient_count_noEHRhosp = sum(samedaycount), .groups = "drop")
   
-})
-
-
-
-Data_List <- lapply(Data_List, function(x){
-  # Treatment Variable: Indicator for Exposed to EHR in any hospital (general EHR and decision making EHR)
-  # Create variable for first year a doc was exposed to EHR
-  minyr_EHR <- x %>% ungroup() %>%
-    distinct(DocNPI, year, frac_EHR) %>%
-    filter(frac_EHR>0) %>%
-    group_by(DocNPI) %>%
-    mutate(minyr_EHR=min(year)) %>%
-    ungroup() %>%
-    distinct(DocNPI,minyr_EHR)
+  data <- data %>%
+    left_join(EHR_hosp,   by = c("year", "DocNPI")) %>%
+    left_join(noEHR_hosp, by = c("year", "DocNPI")) %>%
+    mutate(across(c(hosp_patient_count_EHRhosp, hosp_patient_count_noEHRhosp),
+                  ~ ifelse(is.na(.), 0, .)))
   
-  data <- x %>% ungroup() %>%
-    left_join(minyr_EHR, by="DocNPI") %>%
-    mutate(minyr_EHR=ifelse(is.na(minyr_EHR),0,minyr_EHR))
-  
-  return(data)
-})
-
-Data_List <- lapply(Data_List, function(x){
-  minyr_EHR_int <- x %>% ungroup() %>%
-    distinct(DocNPI, year, frac_EHR,high_integration) %>%
-    filter(frac_EHR>0 & high_integration==0) %>%
-    group_by(DocNPI) %>%
-    mutate(minyr_EHR_int=min(year)) %>%
-    ungroup() %>%
-    distinct(DocNPI,minyr_EHR_int)
-  
-  data <- x %>% ungroup() %>%
-    left_join(minyr_EHR_int, by="DocNPI") %>%
-    mutate(minyr_EHR_int=ifelse(is.na(minyr_EHR_int),0,minyr_EHR_int))
-  
-  return(data)
-  
-})
-
-Data_List <- lapply(Data_List, function(x){
-  count_sys <- x %>%
-    ungroup() %>%
-    distinct(DocNPI,year,SYSID) %>%
-    count(DocNPI,year,name="num_systems")
-  
-  data <- x %>%
-    left_join(count_sys,by=c("year","DocNPI"))
-  
-  return(data)
-})
-
-Data_List <- lapply(Data_List, function(x){
-  # Create variable: new NPI introduced
-  data <- x %>%
+  ##---- New NPI introduced -----------------------------------
+  ## same == 1 in the year the physician reaches their max
+  ## number of affiliations; newnpi flags the year they get there.
+  data <- data %>%
     group_by(DocNPI) %>%
     mutate(max_numhosp = max(num_hospitals)) %>%
+    ungroup() %>%
+    mutate(same = ifelse(num_hospitals == max_numhosp, 1, 0))
+  
+  same_wide <- data %>%
+    distinct(DocNPI, year, same) %>%
+    pivot_wider(names_from = year, values_from = same, names_prefix = "same") %>%
+    group_by(DocNPI) %>%
+    fill(everything(), .direction = "downup") %>%
     ungroup()
   
-  data <- data %>%
-    mutate(same=ifelse(num_hospitals==max_numhosp,1,0))
+  data <- data %>% left_join(same_wide, by = "DocNPI")
+  
+  yrs <- 2010:2015
+  data <- data %>% mutate(newnpi = 0)
+  for (y in yrs) {
+    prev <- paste0("same", y - 1); cur <- paste0("same", y)
+    if (all(c(prev, cur) %in% names(data))) {
+      data <- data %>%
+        mutate(newnpi = ifelse(year == y &
+                                 .data[[prev]] == 0 & .data[[cur]] == 1,
+                               1, newnpi))
+    }
+  }
   
   data <- data %>%
-    mutate(same2009=ifelse(year==2009 & same==1, 1,NA),
-           same2009=ifelse(year==2009 & same==0, 0,same2009),
-           same2010=ifelse(year==2010 & same==1, 1,NA),
-           same2010=ifelse(year==2010 & same==0, 0,same2010),
-           same2011=ifelse(year==2011 & same==1, 1,NA),
-           same2011=ifelse(year==2011 & same==0, 0,same2011),
-           same2012=ifelse(year==2012 & same==1, 1,NA),
-           same2012=ifelse(year==2012 & same==0, 0,same2012),
-           same2013=ifelse(year==2013 & same==1, 1,NA),
-           same2013=ifelse(year==2013 & same==0, 0,same2013),
-           same2014=ifelse(year==2014 & same==1, 1,NA),
-           same2014=ifelse(year==2014 & same==0, 0,same2014),
-           same2015=ifelse(year==2015 & same==1, 1,NA),
-           same2015=ifelse(year==2015 & same==0, 0,same2015)) %>%
+    select(-same, -starts_with("same20")) %>%
     group_by(DocNPI) %>%
-    fill(same2009,.direction="downup") %>%
-    fill(same2010,.direction="downup") %>%
-    fill(same2011,.direction="downup") %>%
-    fill(same2012,.direction="downup") %>%
-    fill(same2013,.direction="downup") %>%
-    fill(same2014,.direction="downup") %>%
-    fill(same2015,.direction="downup") %>%
+    mutate(never_newnpi = ifelse(sum(newnpi, na.rm = TRUE) == 0, 1, 0)) %>%
     ungroup()
   
-  data <- data %>%
-    mutate(newnpi=ifelse(year==2010 & same2009==0 & same2010==1,1,NA)) %>%
-    mutate(newnpi=ifelse(year==2011 & same2010==0 & same2011==1,1,newnpi)) %>%
-    mutate(newnpi=ifelse(year==2012 & same2011==0 & same2012==1,1,newnpi)) %>%
-    mutate(newnpi=ifelse(year==2013 & same2012==0 & same2013==1,1,newnpi)) %>%
-    mutate(newnpi=ifelse(year==2014 & same2013==0 & same2014==1,1,newnpi)) %>%
-    mutate(newnpi=ifelse(year==2015 & same2014==0 & same2015==1,1,newnpi)) %>%
-    mutate(newnpi=ifelse(is.na(newnpi),0,newnpi))
+  ##---- Hospital-level file ----------------------------------
+  hosp_data <- data %>%
+    distinct(year, HospNPI, MCRNUM, MADMIN, EHLTH, cpoe, cdr, cdss, order_entry,
+             phys_doc, phys_portal, SYSID, SUBS, BDTOT, FTMDTF, FTRES,
+             PTMDTF, PTRES, JNTPH, PHYGP, IPAHOS, OPHOSHOS, CPHOHOS, ISMHOS,
+             FTRNTF, IPAP, OPHP, CPHP, ISMP, mcare_exposure, mcaid_exposure,
+             change_years, any_EHR)
   
-  data <- data %>%
-    select(-same,-same2009,-same2010,-same2011,-same2012,-same2013,-same2014,-same2015)
+  if (write_files)
+    saveRDS(hosp_data, paste0(created_data_path, "hosp_data_", tag, ".rds"))
   
-  # Create variable for never adds a new npi
+  ##---- Weighted average HITECH exposure ---------------------
   data <- data %>%
-    group_by(DocNPI) %>%
-    mutate(sum=sum(newnpi)) %>%
+    group_by(MCRNUM, year) %>%
+    mutate(total_exposure = sum(mcaid_exposure, mcare_exposure)) %>%
     ungroup() %>%
-    mutate(never_newnpi=ifelse(sum==0,1,0)) %>%
-    select(-sum)
-
+    group_by(DocNPI, year) %>%
+    mutate(weightedavg_exposure       = weighted.mean(total_exposure,  samedaycount, na.rm = TRUE),
+           weightedavg_mcaid_exposure = weighted.mean(mcaid_exposure,  samedaycount, na.rm = TRUE),
+           weightedavg_mcare_exposure = weighted.mean(mcare_exposure,  samedaycount, na.rm = TRUE)) %>%
+    ungroup()
   
-  return(data)
+  ##---- Collapse to physician-year ---------------------------
+  Aggregated_Pairs <- data %>%
+    distinct(year, DocNPI, grad_year, avg_beds, experience,
+             num_hospitals, doc_sc_years,
+             frac_EHR, minyr_EHR, frac_anyphys_EHR, frac_cpoe_EHR,
+             minyr_anyphys_EHR, minyr_cpoe_EHR,
+             num_systems, hosp_patient_count, hosp_patient_count_EHRhosp,
+             hosp_patient_count_noEHRhosp,
+             newnpi, never_newnpi, weightedavg_exposure,
+             weightedavg_mcaid_exposure, weightedavg_mcare_exposure,
+             phys_ever_IPA, phys_ever_OPHO, phys_ever_CPHO, phys_ever_ISM)
   
-})
-
-Aggregated_Pairs_list <- lapply(Data_List, function(x){
-  data <- x %>%
-    distinct(year, DocNPI,grad_year, avg_beds, experience, 
-             num_hospitals,
-             frac_EHR, minyr_EHR,
-             num_systems, 
-             newnpi, never_newnpi)
-  
-  return(data)
-})
-
-Aggregated_Pairs_list <- lapply(Aggregated_Pairs_list, function(x){
-  # Now complete the data
-  data <- complete(x,DocNPI,year=2009:2017)
-  
-  data <- data %>%
+  Aggregated_Pairs <- complete(Aggregated_Pairs, DocNPI, year = 2009:2017) %>%
     group_by(DocNPI) %>%
-    fill(minyr_EHR,.direction="downup") %>%
-    fill(grad_year,.direction="downup") %>%
-    fill(avg_beds,.direction="downup") %>%
-    fill(num_hospitals,.direction="downup") %>%
-    fill(num_systems,.direction="downup") %>%
+    fill(minyr_EHR, minyr_anyphys_EHR, minyr_cpoe_EHR, doc_sc_years,
+         .direction = "downup") %>%
+    fill(grad_year, avg_beds, num_hospitals, .direction = "downup") %>%
+    fill(num_systems, weightedavg_exposure, phys_ever_IPA, phys_ever_OPHO,
+         phys_ever_CPHO, phys_ever_ISM, .direction = "downup") %>%
     ungroup() %>%
-    mutate(experience=year-grad_year) %>%
-    mutate(anyEHR_exposed=ifelse(minyr_EHR>0 & year>=minyr_EHR,1,0))
-
+    mutate(experience = year - grad_year,
+           anyEHR_exposed = ifelse(minyr_EHR > 0 & year >= minyr_EHR, 1, 0))
   
-  return(data)
+  if (write_files)
+    saveRDS(Aggregated_Pairs,
+            file = paste0(created_data_path, "Aggregated_Pairs_", tag, ".rds"))
+  
+  ##---- Checks -----------------------------------------------
+  bal <- Aggregated_Pairs %>% select(year, DocNPI)
+  message("  balanced panel: ", is.pbalanced(bal))
+  message("  physicians: ", n_distinct(Aggregated_Pairs$DocNPI))
+  message("  hospitals:  ", n_distinct(hosp_data$HospNPI))
+  print(Aggregated_Pairs %>% distinct(DocNPI, minyr_EHR) %>% count(minyr_EHR))
+  
+  list(pairs = data, hosp = hosp_data, agg = Aggregated_Pairs, tag = tag)
+}
+
+
+## Run for all three samples-----------------------
+Built <- purrr::map2(Data_List, TAGS, function(p, tg) {
+  build_physician_data(p, tag = tg,
+                       write_files = FALSE,
+                       make_ehr_table = FALSE)
+})
+names(Built) <- TAGS
+
+##---- Side-by-side comparison of the three samples -----------
+purrr::map_dfr(Built, function(b) {
+  tibble(sample     = b$tag,
+         n_phys     = n_distinct(b$agg$DocNPI),
+         n_hosp     = n_distinct(b$hosp$HospNPI),
+         n_pairs    = nrow(b$pairs),
+         share_treated = mean(b$agg$minyr_EHR > 0),
+         mean_hosp_per_doc = mean(b$agg$num_hospitals, na.rm = TRUE))
 })
 
 #### DATA 5 -------------------------------------------------
 
 # Read in MDPPAS data
 for (i in 2009:2017) {
-  year <- read_csv(paste0(raw_data_path,"/MDPPAS/PhysicianData_",i,".csv"))
+  year <- read_csv(paste0(raw_data_path,"/MDPPAS/PhysicianData_",i,".csv"),
+                   guess_max = Inf)
   year <- year %>%
-    dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_1, -spec_prim_2,
+    dplyr::select(-name_middle, -name_first, -spec_broad, -spec_prim_2,
                   -phy_zip7, -claim_count7, -phy_zip8, -claim_count8, -phy_zip9, -claim_count9,
                   -phy_zip10, -claim_count10, -phy_zip11, -claim_count11, -phy_zip12, 
                   -claim_count12, -spec_prim_2_name, -tin1_legal_name, -tin2_legal_name,
@@ -492,698 +584,603 @@ for (i in 2009:2017) {
 
 MDPPAS <- rbind(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, MDPPAS2016, MDPPAS2017)
 
-Physician_Data_list <- lapply(Aggregated_Pairs_list, function(x){
-  Physician_Data <- x %>%
-    mutate(DocNPI=as.numeric(DocNPI)) %>%
-    dplyr::left_join(MDPPAS, by=c("DocNPI"="npi", "year"="Year")) %>%
-    dplyr::group_by(DocNPI) %>%
-    tidyr::fill(sex, .direction="downup") %>%
-    tidyr::fill(birth_dt, .direction="downup") %>%
-    tidyr::fill(frac_EHR,.direction = "downup") %>%
-    tidyr::fill(never_newnpi,.direction="downup") %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(female=ifelse(sex=='F',1,0)) 
-  
-  
-  # Create age variable
-  Physician_Data <- Physician_Data %>%
-    dplyr::mutate(birth_year=substr(birth_dt,start=6, stop=9)) %>%
-    dplyr::mutate(birth_year=as.numeric(birth_year)) %>%
-    dplyr::mutate(age=year-birth_year) %>%
-    dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(max_age=max(age)) %>%
-    dplyr::ungroup() 
-  
-  return(Physician_Data)
+##---- MUP-PHY claim-type shares, 2013-2017 -------------------
+MUP_PHY <- map_dfr(2013:2017, function(i) {
+  read_csv(paste0(raw_data_path,
+                  "/MUP_PHYS/Medicare_Physician_Other_Practitioners_by_Provider_and_Service_",
+                  i, ".csv"), guess_max = Inf) %>%
+    mutate(year = i)
 })
 
-Physician_Data_list <- lapply(Physician_Data_list, function(x){
-  data <- x %>%
-    dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(max=max(pos_inpat,na.rm=T)) %>%
-    mutate(max_70=ifelse(max>.7,1,0),
-           max_90=ifelse(max>.9,1,0),
-           max_50=ifelse(max>.5,1,0))%>%
-    filter(max_50==1 | max_70==1 | max_90==1)
+MUP_PHY <- MUP_PHY %>%
+  group_by(Rndrng_NPI, year) %>%
+  mutate(total_claims = sum(Tot_Srvcs, na.rm = TRUE)) %>%
+  ungroup() %>%
+  filter(str_detect(HCPCS_Cd, "^992")) %>%
+  mutate(group = case_when(
+    str_detect(HCPCS_Desc, "Critical care delivery critically ill or injured patient") ~ "crit_care_delivery",
+    str_detect(HCPCS_Desc, "Established patient office or other outpatient")           ~ "est_patient_office",
+    str_detect(HCPCS_Desc, "Hospital discharge day management")                        ~ "hosp_disch_day",
+    str_detect(HCPCS_Desc, "Hospital observation")                                     ~ "hosp_obs_care",
+    str_detect(HCPCS_Desc, "Initial hospital inpatient care")                          ~ "initial_hosp_inpat",
+    str_detect(HCPCS_Desc, "New patient office or other outpatient visit")             ~ "new_patient_office",
+    str_detect(HCPCS_Desc, "Subsequent hospital inpatient care")                       ~ "subs_hosp_inpat",
+    str_detect(HCPCS_Desc, "Subsequent observation care")                              ~ "subs_obs_care",
+    TRUE                                                                               ~ NA_character_))
+
+MUP_PHY_wide <- MUP_PHY %>%
+  filter(!is.na(group)) %>%
+  group_by(Rndrng_NPI, group, year) %>%
+  mutate(num_services = sum(Tot_Srvcs, na.rm = TRUE)) %>%
+  ungroup() %>%
+  distinct(year, Rndrng_NPI, group, num_services, total_claims,
+           Rndrng_Prvdr_State_Abrvtn) %>%
+  mutate(frac_services = num_services / total_claims) %>%
+  select(-num_services, -total_claims) %>%
+  pivot_wider(id_cols = c("Rndrng_NPI", "year", "Rndrng_Prvdr_State_Abrvtn"),
+              names_from = "group", values_from = "frac_services") %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), 0, .)))
+
+rm(MUP_PHY)
+
+INPAT_THRESH <- c(0.5, 0.7, 0.9)
+
+names(Built) <- TAGS      # "10", "30", "60"
+names(Built)                 # confirm
+
+build_analysis_data <- function(Aggregated_Pairs, tag, inpat_thresh = 0.7, write_files = TRUE) {
   
-  data <- data %>%
-    mutate(yearbefore=ifelse(year==minyr_EHR-1,pos_inpat,NA)) %>%
+  full_tag <- paste0(tag, "_", inpat_thresh * 100)
+  message("\n===== data5 for sample: ", full_tag, " =====")
+  
+  ##---- Merge MDPPAS, fill time-invariant fields -------------
+  Physician_Data <- Aggregated_Pairs %>%
+    left_join(MDPPAS, by = c("DocNPI" = "npi", "year" = "Year")) %>%
     group_by(DocNPI) %>%
-    fill(yearbefore,.direction="downup")
+    fill(sex, birth_dt, frac_EHR, never_newnpi, .direction = "downup") %>%
+    ungroup() %>%
+    mutate(female = ifelse(sex == 'F', 1, 0))
   
-  data <- data %>%
-    filter(yearbefore>.5 | is.na(yearbefore))
-  
-  return(data)
-})
-
-rm(MDPPAS2009, MDPPAS2010, MDPPAS2011, MDPPAS2012, MDPPAS2013, MDPPAS2014, MDPPAS2015, 
-   MDPPAS2016, MDPPAS2017, observe, Physician_Data_10, Physician_Data_30, Physician_Data_60, 
-   year, AHAmainsurvey, AHANPI_cw, Hosp_with_DA, phys_hosp_pairs)
-
-# Retirement
-Physician_Data_list <- lapply(Physician_Data_list, function(x){
-  # For retirement, I can combine all claim counts into one
-  Physician_Data <- x %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(claim_count_total=ifelse(is.na(claim_count1),NA,sum(dplyr::c_across(tidyr::starts_with("claim_count")),na.rm=T))) %>%
-    dplyr::ungroup() 
-  
-  
-  # Create a variable that sums up the claim count in all future years
+  ##---- MDPPAS coverage flags, BEFORE any NA -> 0 recoding ---
   Physician_Data <- Physician_Data %>%
-    dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(future_claims=ifelse(year==2009,sum(claim_count_total[year>2009],na.rm=T),NA))
+    mutate(in_mdppas = !is.na(npi_unq_benes)) %>%
+    group_by(DocNPI) %>%
+    mutate(n_mdppas_yrs    = sum(in_mdppas),
+           first_mdppas_yr = ifelse(any(in_mdppas), min(year[in_mdppas]), NA_integer_),
+           last_mdppas_yr  = ifelse(any(in_mdppas), max(year[in_mdppas]), NA_integer_),
+           missing_early   = any(year %in% c(2009, 2010) & !in_mdppas),
+           late_entrant    = first_mdppas_yr > 2009) %>%
+    ungroup()
   
-  for (i in 2010:2017){
-    Physician_Data <- Physician_Data %>%
-      dplyr::group_by(DocNPI) %>%
-      dplyr::mutate(future_claims=ifelse(year==i,sum(claim_count_total[year>i],na.rm=T),future_claims))
-  } 
+  ##---- Age ---------------------------------------------------
+  Physician_Data <- Physician_Data %>%
+    mutate(birth_year = as.numeric(substr(birth_dt, start = 6, stop = 9)),
+           age = year - birth_year) %>%
+    group_by(DocNPI) %>%
+    mutate(max_age = max(age, na.rm = TRUE)) %>%
+    ungroup() %>%
+    filter(age != 24)
   
-  # Create retirement variable
+  ##---- Keep hospital-based physicians -----------------------
+  Physician_Data <- Physician_Data %>%
+    group_by(DocNPI) %>%
+    mutate(max_inpat = max(pos_inpat, na.rm = TRUE)) %>%
+    filter(max_inpat > inpat_thresh) %>%
+    ungroup()
+  
+  ##---- Claim-type shares and opt-out ------------------------
+  Physician_Data <- Physician_Data %>%
+    left_join(MUP_PHY_wide, by = c("DocNPI" = "Rndrng_NPI", "year")) 
+  
+  ##=========================================================
+  ## RETIREMENT
+  ##=========================================================
+  Physician_Data <- Physician_Data %>%
+    rowwise() %>%
+    mutate(claim_count_total = ifelse(is.na(claim_count1), NA,
+                                      sum(c_across(starts_with("claim_count")),
+                                          na.rm = TRUE))) %>%
+    ungroup()
+  
+  ## reverse cumulative sum: claims in all strictly future years
+  Physician_Data <- Physician_Data %>%
+    group_by(DocNPI) %>%
+    arrange(year, .by_group = TRUE) %>%
+    mutate(cc0 = ifelse(is.na(claim_count_total), 0, claim_count_total),
+           future_claims = rev(cumsum(rev(cc0))) - cc0) %>%
+    select(-cc0) %>%
+    ungroup()
+  
   minyr_retire <- Physician_Data %>%
-    dplyr::filter(future_claims==0 & year<2017) %>%
-    dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(minyr_retire=min(year)) %>%
-    dplyr::distinct(DocNPI, minyr_retire) %>%
-    dplyr::ungroup()
-  
-  
-  # This creates minimum year one year too early. Fix this
-  Physician_Data <- Physician_Data %>%
-    dplyr::left_join(minyr_retire, by="DocNPI") %>%
-    dplyr::mutate(minyr_retire=ifelse(!is.na(minyr_retire),minyr_retire+1,minyr_retire)) %>%
-    dplyr::mutate(minyr_retire=ifelse(minyr_retire==2017,NA,minyr_retire))
-  
-  
-  Physician_Data <- Physician_Data %>%
-    dplyr::mutate(retire=ifelse(is.na(minyr_retire),0,ifelse(year==minyr_retire,1,0)))
-  
-  # Create variable for whether the physician ever retires
-  Physician_Data <- Physician_Data %>% dplyr::ungroup() %>%
-    dplyr::mutate(ever_retire=ifelse(is.na(minyr_retire),0,1)) 
-  
-  return(Physician_Data)
-  
-})
-
-# Office
-Physician_Data_list <- lapply(Physician_Data_list, function(x){
-  Physician_Data <- x %>%
-    dplyr::mutate(claim_count_total=ifelse(is.na(claim_count_total),0,claim_count_total)) %>%
-    dplyr::mutate(pos_office=ifelse(is.na(pos_office),0,pos_office))
-  
-  # Since there is already a variable of fraction of claims in office setting, I don't need to do much. 
-  # I'll create an indicator or have positive patients in office setting to capture different variation. 
-  Physician_Data <- Physician_Data %>%
-    dplyr::mutate(work_in_office=ifelse(pos_office>0,1,0))
-  
-  # Create different fraction variables for whether they worked in an office already or not
-  Physician_Data <- Physician_Data %>%
-    mutate(office_yearprior=ifelse(year==minyr_EHR-1 & work_in_office==1, 1, NA)) %>%
-    mutate(office_yearprior=ifelse(year==minyr_EHR-1 & work_in_office==0, 0, office_yearprior)) %>%
+    filter(future_claims == 0 & year < 2017) %>%
     group_by(DocNPI) %>%
-    fill(office_yearprior, .direction="downup")
+    summarise(minyr_retire = min(year), .groups = "drop")
   
   Physician_Data <- Physician_Data %>%
-    mutate(pos_office_prior=ifelse(office_yearprior==1,pos_office,NA),
-           pos_office_noprior=ifelse(office_yearprior==0,pos_office,NA))
-  
-  # Additionally, I can create a variable for whether the physician works in hospitals
-  Physician_Data <-Physician_Data %>%
-    dplyr::mutate(work_in_hosp=ifelse(pos_inpat>0,1,0))
-  
-  # Create a variable for whether the physician ever works in an office
+    left_join(minyr_retire, by = "DocNPI") %>%
+    mutate(minyr_retire = ifelse(!is.na(minyr_retire), minyr_retire + 1, minyr_retire),
+           minyr_retire = ifelse(minyr_retire == 2017, NA, minyr_retire),
+           retire       = ifelse(is.na(minyr_retire), 0,
+                                 ifelse(year == minyr_retire, 1, 0)),
+           ever_retire  = ifelse(is.na(minyr_retire), 0, 1),
+           retired_ever = ifelse(!is.na(minyr_retire) & year >= minyr_retire, 1, 0))
+  ##=========================================================
+  ## OFFICE
+  ##=========================================================
   Physician_Data <- Physician_Data %>%
-    dplyr::group_by(DocNPI) %>%
-    dplyr::mutate(sum=sum(work_in_office)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(ever_work_in_office=ifelse(sum>0,1,0)) 
-
-  # Create variable for total number of patients in office
-  Physician_Data <- Physician_Data %>%
-    mutate(total_office=pos_office*npi_unq_benes)
+    mutate(claim_count_total = ifelse(is.na(claim_count_total), 0, claim_count_total),
+           pos_office        = ifelse(is.na(pos_office), 0, pos_office),
+           work_in_office    = ifelse(pos_office > 0, 1, 0))
   
   Physician_Data <- Physician_Data %>%
-    mutate(total_office_prior=ifelse(office_yearprior==1,total_office,NA),
-           total_office_noprior=ifelse(office_yearprior==0,total_office,NA))
+    mutate(office_yearprior = case_when(
+      year == minyr_EHR - 1 & work_in_office == 1 ~ 1,
+      year == minyr_EHR - 1 & work_in_office == 0 ~ 0,
+      TRUE                                        ~ NA_real_)) %>%
+    group_by(DocNPI) %>%
+    fill(office_yearprior, .direction = "downup") %>%
+    ungroup() %>%
+    mutate(pos_office_prior   = ifelse(office_yearprior == 1, pos_office, NA),
+           pos_office_noprior = ifelse(office_yearprior == 0, pos_office, NA),
+           work_in_hosp       = ifelse(pos_inpat > 0, 1, 0))
   
-  # Create variable for majority patients in office
   Physician_Data <- Physician_Data %>%
-    mutate(majority_in_office=ifelse(pos_office>pos_inpat,1,0))
+    group_by(DocNPI) %>%
+    mutate(ever_work_in_office = ifelse(sum(work_in_office, na.rm = TRUE) > 0, 1, 0)) %>%
+    ungroup()
   
-  return(Physician_Data)
-})
-
-#Zip Codes
-Physician_Data_list <- lapply(Physician_Data_list, function(x){
-  Physician_Data <- x %>% dplyr::ungroup() %>%
-    dplyr::mutate(multiple_zip=ifelse(is.na(phy_zip2),0,1),
-                  claim_count1=ifelse(is.na(claim_count1),0,claim_count1)) 
+  ##=========================================================
+  ## PRODUCTIVITY
+  ##=========================================================
+  Physician_Data <- Physician_Data %>%
+    mutate(npi_unq_benes      = ifelse(is.na(npi_unq_benes), 0, npi_unq_benes),
+           total_office       = pos_office * npi_unq_benes,
+           total_office_prior   = ifelse(office_yearprior == 1, total_office, NA),
+           total_office_noprior = ifelse(office_yearprior == 0, total_office, NA),
+           majority_in_office = ifelse(pos_office > pos_inpat, 1, 0),
+           claim_per_patient  = claim_count_total / npi_unq_benes,
+           only_office        = ifelse(pos_inpat < .05, 1, 0))
   
-  for (i in 1:9){
-    zipyear <- Physician_Data %>%
-      dplyr::filter(year==2008+i) %>%
-      dplyr::mutate(zip_list=ifelse(year==2008+i & is.na(phy_zip2),phy_zip1,NA),
-                    zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip3),
-                                    str_c(phy_zip1,phy_zip2,sep = ),zip_list),
-                    zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip4),
-                                    str_c(phy_zip1,phy_zip2,phy_zip3),zip_list),
-                    zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip5),
-                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4),zip_list),
-                    zip_list=ifelse(is.na(zip_list) & year==2008+i & is.na(phy_zip6),
-                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4,phy_zip5),zip_list),
-                    zip_list=ifelse(is.na(zip_list) & year==2008+i,
-                                    str_c(phy_zip1,phy_zip2,phy_zip3,phy_zip4,phy_zip5,phy_zip6),zip_list)) %>%
-      dplyr::select(DocNPI,zip_list)
-    
-    assign(paste0("zip",i+2008),zipyear)
-    
+  ##=========================================================
+  ## RELATIVE YEAR INDICATORS
+  ##=========================================================
+  Physician_Data <- Physician_Data %>%
+    mutate(rel_expandyear = ifelse(minyr_EHR > 0, year - minyr_EHR, NA))
+  
+  for (k in -4:4) {
+    nm <- if (k < 0) paste0("rel_m", abs(k)) else paste0("rel_p", k)
+    if (k == 0) nm <- "rel_0"
+    Physician_Data[[nm]] <- 1 * (Physician_Data$rel_expandyear == k)
   }
   
-  zip2009 <- zip2009 %>%
-    dplyr::rename(zip_list2009=zip_list)
-  zip2010 <- zip2010 %>%
-    dplyr::rename(zip_list2010=zip_list)
-  zip2011 <- zip2011 %>%
-    dplyr::rename(zip_list2011=zip_list)
-  zip2012 <- zip2012 %>%
-    dplyr::rename(zip_list2012=zip_list)
-  zip2013 <- zip2013 %>%
-    dplyr::rename(zip_list2013=zip_list)
-  zip2014 <- zip2014 %>%
-    dplyr::rename(zip_list2014=zip_list)
-  zip2015 <- zip2015 %>%
-    dplyr::rename(zip_list2015=zip_list)
-  zip2016 <- zip2016 %>%
-    dplyr::rename(zip_list2016=zip_list)
-  zip2017 <- zip2017 %>%
-    dplyr::rename(zip_list2017=zip_list)
-  
+  ##---- Pre-treatment MDPPAS coverage ------------------------
   Physician_Data <- Physician_Data %>%
-    dplyr::left_join(zip2009,by="DocNPI") %>%
-    dplyr::left_join(zip2010,by="DocNPI") %>%
-    dplyr::left_join(zip2011,by="DocNPI") %>%
-    dplyr::left_join(zip2012,by="DocNPI") %>%
-    dplyr::left_join(zip2013,by="DocNPI") %>%
-    dplyr::left_join(zip2014,by="DocNPI") %>%
-    dplyr::left_join(zip2015,by="DocNPI") %>%
-    dplyr::left_join(zip2016,by="DocNPI") %>%
-    dplyr::left_join(zip2017,by="DocNPI")
+    group_by(DocNPI) %>%
+    mutate(missing_pretreat = any(minyr_EHR > 0 &
+                                    year < minyr_EHR &
+                                    year >= first_mdppas_yr &
+                                    !in_mdppas)) %>%
+    ungroup()
   
+  ##---- Keep hospital-based at baseline ----------------------
   Physician_Data <- Physician_Data %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(change_zip=ifelse(year==2010 & !(str_detect(zip_list2009,zip_list2010)[1] |
-                                                     str_detect(zip_list2010,zip_list2009)[1]) ,1,NA)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2010 & is.na(change_zip) & !(is.na(zip_list2009) | 
-                                                                         is.na(zip_list2010)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2011 & !(str_detect(zip_list2010,zip_list2011)[1] |
-                                                     str_detect(zip_list2011,zip_list2010)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2011 & is.na(change_zip) & !(is.na(zip_list2010) |
-                                                                         is.na(zip_list2011)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2012 & !(str_detect(zip_list2011,zip_list2012)[1] |
-                                                     str_detect(zip_list2012,zip_list2011)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2012 & is.na(change_zip) & !(is.na(zip_list2011) | 
-                                                                         is.na(zip_list2012)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2013 & !(str_detect(zip_list2012,zip_list2013)[1] |
-                                                     str_detect(zip_list2013,zip_list2012)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2013 & is.na(change_zip) & !(is.na(zip_list2012) | 
-                                                                         is.na(zip_list2013)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2014 & !(str_detect(zip_list2013,zip_list2014)[1] |
-                                                     str_detect(zip_list2014,zip_list2013)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2014 & is.na(change_zip) & !(is.na(zip_list2013) |
-                                                                         is.na(zip_list2014)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2015 & !(str_detect(zip_list2014,zip_list2015)[1] |
-                                                     str_detect(zip_list2015,zip_list2014)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2015 & is.na(change_zip) & !(is.na(zip_list2014) | 
-                                                                         is.na(zip_list2015)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2016 & !(str_detect(zip_list2015,zip_list2016)[1] |
-                                                     str_detect(zip_list2016,zip_list2015)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2016 & is.na(change_zip) & !(is.na(zip_list2015) | 
-                                                                         is.na(zip_list2016)),0,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2017 & !(str_detect(zip_list2016,zip_list2017)[1] |
-                                                     str_detect(zip_list2017,zip_list2016)[1]) ,1,change_zip)) %>%
-    dplyr::mutate(change_zip=ifelse(year==2017 & is.na(change_zip) & !(is.na(zip_list2016) | is.na(zip_list2017)),0,change_zip))
+    mutate(yearbefore = ifelse(year == minyr_EHR - 1, pos_inpat, NA)) %>%
+    group_by(DocNPI) %>%
+    fill(yearbefore, .direction = "downup") %>%
+    ungroup() %>%
+    filter(yearbefore > .5 | is.na(yearbefore)) %>%
+    group_by(DocNPI) %>%
+    mutate(stable_inpat = all(pos_inpat > 0.7, na.rm = TRUE)) %>%
+    fill(Rndrng_Prvdr_State_Abrvtn, .direction = "downup") %>%
+    ungroup() 
+    
   
+  if (write_files)
+    saveRDS(Physician_Data,
+            file = paste0(created_data_path, "Physician_Data_", full_tag, ".rds"))
   
-  Physician_Data <- Physician_Data %>%
-    dplyr::mutate(change_zip=ifelse(year==2009,0,change_zip)) 
-})
-
-
-
-# Productivity
-Physician_Data_list <- lapply(Physician_Data_list, function(x){
-  Physician_Data <- x %>%
-    mutate(npi_unq_benes=ifelse(is.na(npi_unq_benes),0,npi_unq_benes))
+  ##---- Checks -----------------------------------------------
+  message("  physicians: ", n_distinct(Physician_Data$DocNPI))
+  message("  rows: ", nrow(Physician_Data))
+  message("  ever retire: ",
+          n_distinct(Physician_Data$DocNPI[Physician_Data$ever_retire == 1]))
+  print(Physician_Data %>% distinct(DocNPI, minyr_EHR) %>% count(minyr_EHR))
   
-  Physician_Data <- Physician_Data %>%
-    mutate(claim_per_patient=claim_count_total/npi_unq_benes)
-  
-  # Create relative year variables
-  Physician_Data <- Physician_Data %>%
-    mutate(rel_expandyear=ifelse(minyr_EHR==0,NA,
-                                 ifelse(minyr_EHR>0,year-minyr_EHR,NA)))
-  
-  Physician_Data <- Physician_Data %>%
-    mutate(rel_m4=1*(rel_expandyear==-4),
-           rel_m3=1*(rel_expandyear==-3),
-           rel_m2=1*(rel_expandyear==-2),
-           rel_m1=1*(rel_expandyear==-1),
-           rel_0=1*(rel_expandyear==0),
-           rel_p1=1*(rel_expandyear==1),
-           rel_p2=1*(rel_expandyear==2),
-           rel_p3=1*(rel_expandyear==3),
-           rel_p4=1*(rel_expandyear==4))
-  
-  # Create age bins to do analysis separately 
-  Physician_Data <- Physician_Data %>% ungroup() %>%
-    select(DocNPI, year, grad_year, minyr_EHR, never_newnpi,
-           pos_office, npi_unq_benes, max_70, max_90, max_50, claim_count_total, retire,
-           ever_retire, work_in_office, num_hospitals, max_age)
-  
-  
-  return(Physician_Data)
-})
-
-data_coms <- crossing(inpat_70=c(TRUE, FALSE), inpat_90=c(TRUE, FALSE),
-                      inpat_50=c(TRUE, FALSE),
-                      sp_30=c(TRUE,FALSE), sp_10=c(TRUE,FALSE), sp_60=c(TRUE,FALSE),
-                      anticipation=c(TRUE,FALSE), limit_years=c(TRUE,FALSE)) %>%
-  filter((inpat_70==FALSE & inpat_50==FALSE & inpat_90==TRUE) |
-           (inpat_70==FALSE & inpat_50==TRUE & inpat_90==FALSE) |
-           (inpat_70==TRUE & inpat_50==FALSE & inpat_90==FALSE)) %>%
-  filter((sp_30==FALSE & sp_10==FALSE & inpat_90==TRUE) |
-           (sp_30==FALSE & sp_10==TRUE & sp_60==FALSE) |
-           (sp_30==TRUE & sp_10==FALSE & sp_60==FALSE))
-
-Subsets_Data <- list()
-
-
-for (k in 1:32){
-  row <- data_coms[k,]
-  
-  if (row$sp_30==TRUE){
-    subset_data <- Physician_Data_list[[2]] %>%
-      {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
-      mutate(retiredrop=ifelse(minyr_EHR==0,1,0))}
-  if (row$sp_10==TRUE){
-    subset_data <- Physician_Data_list[[1]] %>%
-      {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
-      mutate(retiredrop=ifelse(minyr_EHR==0,1,0))}
-  
-  if (row$sp_60==TRUE){
-    subset_data <- Physician_Data_list[[3]] %>%
-      {if (row$inpat_50==TRUE) dplyr::filter(.,max_50==1) else if (row$inpat_90==TRUE) dplyr::filter(.,max_90==1) else if (row$inpat_70==TRUE) dplyr::filter(.,max_70==1)} %>%
-      mutate(retiredrop=ifelse(minyr_EHR==0,1,0))}
-  Subsets_Data[[k]] <- list(subset_data,row)
+  Physician_Data
 }
 
-saveRDS(Subsets_Data, paste0(created_data_path,"/Subsets_Data2.rds"))
+grid <- tidyr::expand_grid(sd = TAGS, inpat = INPAT_THRESH)
 
-
-#RETIRE SPECIFICATION CHART ---------------------------------------------------------------------
-models <- lapply(Subsets_Data, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "retire",                # LHS Variable
-                gname = "minyr_EHR",          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],retiredrop!=1 & year<2016)) else (dplyr::filter(x[[1]],retiredrop!=1)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
+Analysis <- pmap(grid, function(sd, inpat) {
+  build_analysis_data(Built[[sd]]$agg, tag = sd, inpat_thresh = inpat)
 })
+names(Analysis) <- paste0("sd", grid$sd, "_inpat", grid$inpat * 100)
 
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
+
+##=============================================================
+## Specification charts, all outcomes
+##   36 specifications per outcome:
+##     3 shared-patient thresholds (10 / 30 / 60)
+##   x 3 inpatient-share thresholds (50 / 70 / 90)
+##   x 2 anticipation (0 / 1 year)
+##   x 2 year windows (full / 2009-2015)
+##
+##   Never-treated controls are handled in a separate script.
+##
+## Requires: Analysis (named list from data5_robustness.R),
+##           function_path
+##=============================================================
+
+#source("./Scripts/spec_chart_function.R")
+
+SD_TAGS      <- c("10", "30", "60")
+INPAT_THRESH <- c(50, 70, 90)
+
+MAIN_SD    <- "30"          # main specification, for highlighting
+MAIN_INPAT <- 70
+
+SAVE_PDF <- TRUE            # FALSE to draw in the Plots pane
+
+OUTCOMES <- c(retired_ever      = "Exit from Clinical Practice",
+              pos_office        = "Fraction of Patients in Office",
+              work_in_office    = "Works in an Office",
+              npi_unq_benes     = "Number of Patients",
+              claim_per_patient = "Claims per Patient")
+
+##=============================================================
+## PART 1 -- Sample preparation
+##=============================================================
+prep_sample <- function(d, year_spec, yname) {
   
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
+  d <- d %>%
+    ungroup() %>%
+    ## drop physicians whose first exposure coincides with a
+    ## hospital system change
+    mutate(bundled = purrr::map2_lgl(doc_sc_years, minyr_EHR,
+                                     ~ !is.null(.x) && .y > 0 &&
+                                       any(abs(.x - .y) <= 0))) %>%
+    group_by(DocNPI) %>%
+    mutate(drop_md = any(bundled)) %>%
+    ungroup() %>%
+    filter(!drop_md) %>%
+    filter(first_mdppas_yr == 2009) %>%   # MDPPAS coverage from panel start
+    filter(minyr_EHR != 0,                # no never-treated in this script
+           minyr_EHR != 2009)             # 2009 cohort has no clean pre-period
   
-  list(agg=agg, row=row)
-})
+  ## outcome-specific restrictions, matching the main analysis
+  if (yname %in% c("pos_office", "work_in_office"))
+    d <- d %>% filter(ever_retire == 0)
+  if (yname %in% c("npi_unq_benes", "claim_per_patient"))
+    d <- d %>% filter(ever_retire == 0, stable_inpat == 1)
+  
+  if (year_spec == "limited") d <- d %>% filter(year <= 2015)
+  
+  d
+}
 
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
+##=============================================================
+## PART 2 -- Specification grid
+##=============================================================
+spec_grid <- expand_grid(sd           = SD_TAGS,
+                         inpat        = INPAT_THRESH,
+                         anticipation = c(FALSE, TRUE),
+                         year_spec    = c("full", "limited")) %>%
+  mutate(spec_id  = row_number(),
+         data_key = paste0("sd", sd, "_inpat", inpat))
 
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
+##=============================================================
+## PART 3 -- Estimate one specification
+##=============================================================
+run_spec <- function(sd, inpat, anticipation, year_spec, spec_id, data_key,
+                     yname) {
+  
+  d <- prep_sample(Analysis[[data_key]], year_spec, yname)
+  
+  mp <- tryCatch(
+    att_gt(yname         = yname,
+           gname         = "minyr_EHR",
+           idname        = "DocNPI",
+           tname         = "year",
+           xformla       = NULL,
+           data          = d,
+           est_method    = "dr",
+           control_group = "notyettreated",
+           clustervars   = "DocNPI",
+           anticipation  = as.integer(anticipation),
+           base_period   = "universal"),
+    error = function(e) {message("   spec ", spec_id, " failed: ", e$message); NULL})
+  
+  if (is.null(mp))
+    return(tibble(spec_id = spec_id, coef = NA_real_, se = NA_real_,
+                  n_phys = NA_integer_))
+  
+  ag <- aggte(mp, type = "dynamic", na.rm = TRUE)
+  
+  tibble(spec_id = spec_id, coef = ag$overall.att,
+         se = ag$overall.se, n_phys = mp$n)
+}
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, anticipation, limit_years) 
-
-par(oma=c(1,0,1,1))
-source(paste0(function_path,"spec_chart_function.R"))
-
-# Create plot
-labels <- list("Perc. Inpatient Threshold: "=c("50% ", "70% ", "90% "),
-               "Shared Patient Threshold: "=c("10 ", "30 ", "60 "),
+##=============================================================
+## PART 4 -- Run all specifications for one outcome, then chart
+##=============================================================
+labels <- list("Perc. Inpatient Threshold: " = c("50% ", "70% ", "90% "),
+               "Shared Patient Threshold: "  = c("10 ", "30 ", "60 "),
                "Anticipation: 1 year ",
-               "Limited Years ")
+               "Limited Years (2009-2015) ")
 
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
-
-
-schart(chart_data_frame, labels, highlight=29, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-pdf(file="retire_chart.pdf")
-
-
-
-
-
-
-# FRACTION IN OFFICE SPECIFICATION CHART --------------------------------------------
-models <- lapply(Subsets_Data, function(x) {
-  row <- x[[2]]
+make_spec_chart <- function(yname, label) {
   
-  all <- att_gt(yname = "pos_office",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
+  message("\n===== ", label, " =====")
   
-  list(all=all, row=row)
+  results <- pmap_dfr(spec_grid, run_spec, yname = yname)
+  
+  cdf <- spec_grid %>%
+    left_join(results, by = "spec_id") %>%
+    mutate(inpat_50     = as.integer(inpat == 50),
+           inpat_70     = as.integer(inpat == 70),
+           inpat_90     = as.integer(inpat == 90),
+           sp_10        = as.integer(sd == "10"),
+           sp_30        = as.integer(sd == "30"),
+           sp_60        = as.integer(sd == "60"),
+           anticipation = as.integer(anticipation),
+           limit_years  = as.integer(year_spec == "limited"))
+  
+  ## drop failures before anything positional
+  n_fail <- sum(is.na(cdf$coef))
+  if (n_fail) message("  dropping ", n_fail, " failed specifications")
+  cdf <- cdf %>% filter(!is.na(coef))
+  
+  ## locate the main specification by its characteristics
+  main_idx <- which(cdf$sd == MAIN_SD & cdf$inpat == MAIN_INPAT &
+                      cdf$anticipation == 0 & cdf$limit_years == 0)
+  stopifnot(length(main_idx) == 1)
+  
+  chart_df <- cdf %>%
+    select(coef, se, inpat_50, inpat_70, inpat_90,
+           sp_10, sp_30, sp_60, anticipation, limit_years) %>%
+    as.data.frame()
+  
+  ## sort here rather than inside schart, so `highlight` is unambiguous
+  srt        <- order(chart_df$coef)
+  chart_srt  <- chart_df[srt, ]
+  rownames(chart_srt) <- NULL
+  main_pos   <- which(srt == main_idx)
+  
+  message("  main spec: coef = ", sprintf("%.4f", chart_srt$coef[main_pos]),
+          ", position ", main_pos, " of ", nrow(chart_srt))
+  
+  mu   <- mean(chart_srt$coef)
+  sd_c <- sd(chart_srt$coef)
+  
+  if (SAVE_PDF)
+    pdf(file = paste0("Objects/spec_chart_", yname, ".pdf"),
+        width = 9, height = 6.5)
+  
+  par(oma = c(1, 0, 1, 1))
+  
+  schart(chart_srt, labels,
+         highlight    = main_pos,
+         heights      = c(1, .75),
+         band.ref     = c(mu + 1.96 * sd_c, mu - 1.96 * sd_c),
+         col.band.ref = "#E8E4E6",
+         col.est      = c("grey70", "#16324F"),
+         col.dot      = c("grey70", "grey90", "#16324F", "#16324F"),
+         ylab         = "Coefficient and 95% C.I.")
+  
+  legend("bottomright", cex = .8, lwd = 2:2,
+         col = c("#E8E4E6", "#16324F"),
+         c("Average Conf. Interval", "Main Specification"), inset = .02)
+  
+  if (SAVE_PDF) dev.off()
+  
+  ## summary row for the console / a companion table
+  tibble(outcome   = label,
+         outcome_raw = yname,
+         n_specs   = nrow(chart_srt),
+         main_coef = chart_srt$coef[main_pos],
+         main_se   = chart_srt$se[main_pos],
+         min_coef  = min(chart_srt$coef),
+         max_coef  = max(chart_srt$coef),
+         share_sig = mean(abs(chart_srt$coef / chart_srt$se) > 1.96),
+         share_same_sign = mean(sign(chart_srt$coef) ==
+                                  sign(chart_srt$coef[main_pos])))
+}
+
+##=============================================================
+## PART 5 -- Run for every outcome
+##=============================================================
+if (!SAVE_PDF) while (!is.null(dev.list())) dev.off()
+
+spec_summary <- imap_dfr(OUTCOMES, ~ make_spec_chart(.y, .x))
+
+print(spec_summary, width = Inf)
+
+
+
+
+##=============================================================
+## Never-treated comparison group: diagnostics and estimates
+##
+## Produces:
+##   Table A: characteristics of never-treated vs treated
+##   Table B: estimates under never-treated vs not-yet-treated
+##
+## Requires: Analysis (from data5_robustness.R), varlist
+##=============================================================
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(did)
+library(kableExtra)
+
+DATA_KEY <- "sd30_inpat70"     # main sample
+varlist <- list("retired_ever", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient", "claims_inpat", "claims_office", "claims_opd")
+vl <- unlist(varlist)
+
+LABS <- c(retired_ever      = "Exit from Clinical Practice",
+          pos_office        = "Fraction of Patients in Office",
+          work_in_office    = "Works in an Office",
+          npi_unq_benes     = "Number of Patients",
+          claim_per_patient = "Claims per Patient")
+
+##=============================================================
+## PART 1 -- Build the truncated panel with never-treated units
+##=============================================================
+base <- Analysis[[DATA_KEY]] %>%
+  ungroup() %>%
+  mutate(bundled = map2_lgl(doc_sc_years, minyr_EHR,
+                            ~ !is.null(.x) && .y > 0 && any(abs(.x - .y) <= 0))) %>%
+  group_by(DocNPI) %>%
+  mutate(drop_md = any(bundled)) %>%
+  ungroup() %>%
+  filter(!drop_md, first_mdppas_yr == 2009, minyr_EHR != 2009)
+
+## truncate at 2015 and recode later adopters as never-treated
+nt_panel <- base %>%
+  filter(year <= 2015) %>%
+  mutate(minyr_EHR = ifelse(minyr_EHR > 2015, 0, minyr_EHR),
+         group = ifelse(minyr_EHR == 0, "Never treated", "Treated"))
+
+## comparable not-yet-treated panel: same truncation, no never-treated
+nyt_panel <- nt_panel %>% filter(minyr_EHR != 0)
+
+##=============================================================
+## PART 2 -- Who are the never-treated?
+##=============================================================
+char_vars <- c("num_hospitals", "num_systems", "avg_beds",
+               "max_age", "female", "experience",
+               "npi_unq_benes", "pos_inpat", "pos_office")
+char_vars <- intersect(char_vars, names(nt_panel))
+
+## one row per physician, measured in the baseline year
+char_tab <- nt_panel %>%
+  filter(year == 2009) %>%
+  select(DocNPI, group, all_of(char_vars)) %>%
+  pivot_longer(all_of(char_vars), names_to = "var", values_to = "val") %>%
+  group_by(var, group) %>%
+  summarise(m = mean(val, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = group, values_from = m)
+
+## difference in means with a t-test
+diff_tab <- map_dfr(char_vars, function(v) {
+  d <- nt_panel %>% filter(year == 2009)
+  tt <- t.test(d[[v]] ~ d$group)
+  tibble(var = v,
+         diff = unname(diff(rev(tt$estimate))),
+         p    = tt$p.value)
 })
 
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
+char_tab <- char_tab %>%
+  left_join(diff_tab, by = "var") %>%
+  left_join(nt_panel %>% filter(year == 2009) %>%
+              count(group) %>%
+              pivot_wider(names_from = group, values_from = n,
+                          names_prefix = "n_"),
+            by = character())
+
+print(char_tab, width = Inf)
+
+n_never   <- n_distinct(nt_panel$DocNPI[nt_panel$minyr_EHR == 0])
+n_treated <- n_distinct(nt_panel$DocNPI[nt_panel$minyr_EHR > 0])
+cat("\nNever treated: ", n_never, " | Treated: ", n_treated, "\n", sep = "")
+
+##=============================================================
+## PART 3 -- Estimates under both comparison groups
+##=============================================================
+restrict <- function(d, yname) {
+  if (yname %in% c("pos_office", "work_in_office"))
+    d <- filter(d, ever_retire == 0)
+  if (yname %in% c("npi_unq_benes", "claim_per_patient"))
+    d <- filter(d, ever_retire == 0, stable_inpat == 1)
+  d
+}
+
+fit_one <- function(yname, panel, ctrl) {
+  d <- restrict(panel, yname)
+  mp <- tryCatch(
+    att_gt(yname = yname, gname = "minyr_EHR", idname = "DocNPI",
+           tname = "year", xformla = NULL, data = d,
+           est_method = "dr", control_group = ctrl,
+           clustervars = "DocNPI", anticipation = 0,
+           base_period = "universal"),
+    error = function(e) {message("  ", yname, " / ", ctrl, ": ", e$message); NULL})
+  if (is.null(mp)) return(tibble(att = NA_real_, se = NA_real_, n = NA_integer_))
+  ag <- aggte(mp, type = "dynamic", na.rm = TRUE)
+  tibble(att = ag$overall.att, se = ag$overall.se, n = mp$n)
+}
+
+est_tab <- map_dfr(vl, function(y) {
+  message("estimating: ", y)
+  nyt <- fit_one(y, nyt_panel, "notyettreated")
+  nt  <- fit_one(y, nt_panel,  "nevertreated")
+  tibble(outcome_raw = y,
+         Outcome     = unname(LABS[y]),
+         att_nyt = nyt$att, se_nyt = nyt$se, n_nyt = nyt$n,
+         att_nt  = nt$att,  se_nt  = nt$se,  n_nt  = nt$n)
 })
 
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
+print(est_tab, width = Inf)
 
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
+##=============================================================
+## PART 4 -- LaTeX tables
+##=============================================================
+fmt_num <- function(x) ifelse(is.na(x), "---",
+                              ifelse(abs(x) >= 100, formatC(x, format = "d", big.mark = ","),
+                                     ifelse(abs(x) >= 1,   sprintf("%.2f", x),
+                                            sprintf("%.3f", x))))
+fmt_p <- function(p) ifelse(is.na(p), "---",
+                            ifelse(p < 0.01, "$<$0.01", sprintf("%.2f", p)))
 
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, anticipation, limit_years) 
+VAR_LABS <- c(num_hospitals = "Hospitals worked with",
+              num_systems   = "Systems worked with",
+              avg_beds      = "Average hospital beds",
+              max_age       = "Age",
+              female        = "Female",
+              experience    = "Years since graduation",
+              npi_unq_benes = "Medicare patients",
+              pos_inpat     = "Share of claims, inpatient",
+              pos_office    = "Share of claims, office")
 
-par(oma=c(1,0,1,1))
+tabA <- char_tab %>%
+  mutate(Variable = recode(var, !!!VAR_LABS),
+         `Never treated` = fmt_num(`Never treated`),
+         Treated         = fmt_num(Treated),
+         Difference      = fmt_num(diff),
+         `$p$-value`     = fmt_p(p)) %>%
+  select(Variable, Treated, `Never treated`, Difference, `$p$-value`) %>%
+  kbl(format = "latex", booktabs = TRUE, escape = FALSE,
+      align = c("l", rep("c", 4)),
+      caption = "Characteristics of treated and never-treated hospitalists",
+      label = "nt_chars") %>%
+  kable_styling(latex_options = "hold_position", full_width = FALSE) %>%
+  kableExtra::footnote(general = paste(
+    "Means measured in 2009, the first year of the panel.",
+    "Never-treated hospitalists are those with no EHR-adopting hospital",
+    "affiliation through 2015.",
+    "$p$-values are from two-sided $t$-tests of equality of means."),
+    threeparttable = TRUE, escape = FALSE)
 
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- mean(chart_data_frame$se)
+tabB <- est_tab %>%
+  transmute(Outcome,
+            `Not-yet-treated` = sprintf("%s (%s)", fmt_num(att_nyt), fmt_num(se_nyt)),
+            `N (NYT)`         = formatC(n_nyt, format = "d", big.mark = ","),
+            `Never-treated`   = sprintf("%s (%s)", fmt_num(att_nt), fmt_num(se_nt)),
+            `N (NT)`          = formatC(n_nt, format = "d", big.mark = ",")) %>%
+  kbl(format = "latex", booktabs = TRUE, escape = FALSE,
+      align = c("l", rep("c", 4)),
+      caption = "Estimates using not-yet-treated and never-treated comparison groups",
+      label = "nt_estimates") %>%
+  add_header_above(c(" " = 1, "Comparison group" = 4)) %>%
+  kable_styling(latex_options = "hold_position", full_width = FALSE) %>%
+  kableExtra::footnote(general = paste(
+    "Both columns use a panel truncated at 2015.",
+    "The not-yet-treated column excludes hospitalists never exposed within",
+    "that window; the never-treated column retains them and uses them as the",
+    "comparison group. Standard errors in parentheses, clustered at the",
+    "physician level."),
+    threeparttable = TRUE, escape = FALSE)
 
-schart(chart_data_frame, labels, highlight=61, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-
-
-# OFFICE INDICATOR SPECIFICATION CHART -------------------------------------------
-models <- lapply(Subsets_Data, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "work_in_office",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- mean(chart_data_frame$se)
-
-schart(chart_data_frame, labels, highlight=61, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-# CHANGE ZIP SPECIFICATION CHART ---------------------------------------------- ####
-models <- lapply(Subsets_Data, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "change_zip",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, no_DA, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- sd(chart_data_frame$coef)
-
-schart(chart_data_frame, labels, highlight=117, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+sd, mu-sd),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-# PATIENT COUNT ------------------------------------------------------------- #####
-
-models <- lapply(Subsets_Data, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "npi_unq_benes",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0 & never_newnpi==1)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0 & never_newnpi==1)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- mean(chart_data_frame$se)
-
-schart(chart_data_frame, labels, highlight=61, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+(sd), mu-(sd)),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-Subsets_Data <- lapply(Subsets_Data, function(x){
-  row <- x[[2]]
-  data <- x[[1]] %>%
-    mutate(claim_per_patient=claim_count_total/npi_unq_benes)
-list(data,row)
-  })
-
-
-# CLAIMS PER PATIENT SPECIFICATION CHART ------------------------------------ ####
-models <- lapply(Subsets_Data, function(x) {
-  row <- x[[2]]
-  
-  all <- att_gt(yname = "claim_per_patient",                # LHS Variable
-                gname = x[[1]]$treat_variable[[1]],          # First year a unit is treated. (set to 0 if never treated)
-                idname = "DocNPI",               # ID
-                tname = "year",                  # Time Variable
-                xformla = ~grad_year,            # Time-invariant controls
-                data=if (row$limit_years==TRUE) (dplyr::filter(x[[1]],year<2016 & ever_retire==0 & never_newnpi==1)) else (dplyr::filter(x[[1]],retiredrop!=1 & ever_retire==0 & never_newnpi==1)),
-                est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-                control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-                clustervars = "DocNPI",          # Cluster Variables          
-                anticipation=ifelse(row$anticipation==TRUE,1,0),
-                base_period = "varying" # can set a number of years to account for anticipation effects
-  )
-  
-  list(all=all, row=row)
-})
-
-models_agg <- lapply(models, function(x) {
-  row <- x[[2]]
-  
-  agg <- aggte(x[[1]], type = "dynamic",na.rm=T)
-  
-  list(agg=agg, row=row)
-})
-
-chart_data <- lapply(models_agg, function(x) {
-  row <- x[[2]] %>%
-    mutate(coef=x[["agg"]][["overall.att"]],
-           se=x[["agg"]][["overall.se"]])
-  trow <- t(row)
-  list(trow)
-})
-
-chart_data_frame <- t(as.data.frame(chart_data))
-rownames(chart_data_frame) <- NULL
-
-chart_data_frame <- as.data.frame(chart_data_frame) %>%
-  select(coef, se, inpat_50, inpat_70, inpat_90, 
-         sp_10, sp_30, sp_60, main_EHR, anticipation,
-         limit_years) 
-
-par(oma=c(1,0,1,1))
-
-# Create plot
-mu  <- mean(chart_data_frame$coef) # mean of all coefficients
-sd  <- mean(chart_data_frame$se)
-
-schart(chart_data_frame, labels, highlight=61, 
-       order="increasing", heights=c(1,.75),
-       band.ref=c(mu+(1.96*sd), mu-(1.96*sd)),
-       col.band.ref="#E69F00",
-       col.est=c("grey70","#009E73"),
-       col.dot=c("grey70", "grey90", "#009E73", "#009E73"),
-       ylab="Coefficient and 95% C.I.")
-legend("bottomright", cex=.8, lwd=2:2, col=c("#E69F00", "#009E73"), c("Average Conf. Interval", "Main Specification"), inset=.02)
-
-
-
-
-
+writeLines(as.character(tabA), file.path("Table Code", "nt_chars.tex"))
+writeLines(as.character(tabB), file.path("Table Code", "nt_estimates.tex"))
+cat("\nWrote nt_chars.tex and nt_estimates.tex\n")

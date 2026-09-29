@@ -10,9 +10,7 @@ library(mvtnorm)
 library(eventstudyr)
 library(dplyr)
 library(modelsummary)
-
-
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+library(leebounds)
 
 
 ### --------------------  Sensitivity Analysis --------------------------
@@ -26,200 +24,296 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 # In this portion, I only consider "retire" as the dependent outcome and I compare estimators. 
 
 # Read in the main data created in "data5_MDPPAS.R"
-Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data.rds")) %>%
+Physician_Data <- readRDS(paste0(created_data_path,"Physician_Data_NEW2.rds")) %>%
   mutate(DocNPI=as.numeric(DocNPI))
 
+Physician_Data <- Physician_Data %>%
+  mutate(DocNPI=as.double(DocNPI))
 
+Physician_Data_EHR <- Physician_Data %>%
+  ungroup() %>%
+  mutate(bundled = purrr::map2_lgl(doc_sc_years, minyr_EHR,
+                                   ~ !is.null(.x) && .y > 0 && any(abs(.x - .y) <= 0))) %>%
+  group_by(DocNPI) %>%
+  mutate(drop_md = any(bundled)) %>%
+  ungroup() %>%
+  filter(!drop_md)
+
+Physician_Data_EHR <- Physician_Data_EHR %>%
+  filter(minyr_EHR!=0 & minyr_EHR!=2009)
+
+Physician_Data_EHR <- Physician_Data_EHR %>%
+  filter(first_mdppas_yr==2009) 
+
+Physician_Data_EHR %>%
+  group_by(minyr_EHR) %>%
+  distinct(DocNPI) %>%
+  count()
+
+Physician_Data_EHR <- Physician_Data_EHR %>%
+  mutate(retired_ever = ifelse(!is.na(minyr_retire) & year >= minyr_retire, 1, 0)) %>%
+  group_by(DocNPI) %>%
+  mutate(stable_inpat = all(pos_inpat > 0.7, na.rm = TRUE)) %>%
+  ungroup()
+
+avg_coef <- function(m, terms) {
+  b <- coef(m)
+  V <- vcov(m)                      # clustered, as specified in feols()
+  keep <- terms[terms %in% names(b)]
+  if (!length(keep)) stop("None of `terms` found. Available: ",
+                          paste(names(b), collapse = ", "))
+  if (length(keep) < length(terms))
+    warning("Dropped: ", paste(setdiff(terms, keep), collapse = ", "))
+  w   <- rep(1 / length(keep), length(keep))
+  est <- sum(w * b[keep])
+  se  <- sqrt(drop(t(w) %*% V[keep, keep, drop = FALSE] %*% w))
+  c(est = est, se = se, t = est / se, k = length(keep))
+}
 
 
 ## DIFFERENT ESTIMATORS ############################################################################################
-varlist <- list("retire", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient")
+varlist <- list("retired_ever", "pos_office", "work_in_office", "npi_unq_benes", "claim_per_patient")
 
 # Stacked Regression ###
-for (d in 2010:2015){
-  subgroup <- Physician_Data %>%
-    mutate(treated_unit=ifelse(minyr_EHR==d,1,0),
-           clean_control=ifelse(minyr_EHR>d,1,0),
-           years_included=ifelse(year>=d-1 & year<=d+1,1,0)) %>%
-    mutate(inclusion=years_included*(treated_unit+clean_control)) %>%
-    dplyr::filter(inclusion==1)
-  
-  assign(paste0("subgroup_",d),subgroup)
+##---- Sample restrictions, matching the main specification ---
+restrict <- function(d, yname) {
+  if (yname %in% c("pos_office", "work_in_office"))
+    d <- dplyr::filter(d, ever_retire == 0)
+  if (yname %in% c("npi_unq_benes", "claim_per_patient"))
+    d <- dplyr::filter(d, ever_retire == 0, stable_inpat==1)
+  d
 }
 
-stacked_data_1 <- rbind(subgroup_2010, subgroup_2011,subgroup_2012,subgroup_2013,subgroup_2014, subgroup_2015)
+##---- Build the stacked panel for a given sample -------------
+build_stack <- function(d) {
+  purrr::map_dfr(2010:2015, function(dd) {
+    d %>%
+      mutate(stack          = dd,
+             treated_unit   = ifelse(minyr_EHR == dd, 1, 0),
+             clean_control  = ifelse(minyr_EHR >  dd, 1, 0),
+             years_included = ifelse(year >= dd - 1 & year <= dd + 4, 1, 0),
+             inclusion      = years_included * (treated_unit + clean_control)) %>%
+      filter(inclusion == 1)
+  })
+}
 
-models_stacked_IV <- lapply(varlist, function(x){
-  feols(xpd(..lhs ~ 1 | DocNPI + year | anyEHR_exposed ~ weightedavg_exposure, ..lhs = x),
-        cluster="DocNPI",
-        data=stacked_data_1)
+##---- Estimate, one stack per outcome ------------------------
+POST_STK <- c("treated_unit:rel_0", "treated_unit:rel_p1",
+              "treated_unit:rel_p2", "treated_unit:rel_p3",
+              "treated_unit:rel_p4")
+
+models_stacked <- lapply(unlist(varlist), function(x) {
+  d <- build_stack(restrict(Physician_Data_EHR, x))
+  feols(xpd(..lhs ~ treated_unit:rel_0 + treated_unit:rel_p1 +
+              treated_unit:rel_p2 + treated_unit:rel_p3 + treated_unit:rel_p4 |
+              DocNPI^stack + year^stack, ..lhs = x),
+        cluster = "DocNPI", data = d)
 })
+names(models_stacked) <- unlist(varlist)
 
-etable(models_stacked_IV[[1]], stage=1, fitstat='ivf', tex=TRUE)
-
-
-ATT_stacked <- lapply(models_stacked, function(x){
-  c(x$fml[[2]],
-    round(x[["coefficients"]][["treated_unit:rel_p1"]],5), 
-    round(x[["se"]][["treated_unit:rel_p1"]], 5),
+ATT_stacked <- purrr::imap(models_stacked, function(m, x) {
+  a <- avg_coef(m, POST_STK)
+  c(x, round(unname(a["est"]), 5), round(unname(a["se"]), 5),
     "Stacked Regression")
 })
 
 stacked_values <- as.data.frame(do.call(rbind, ATT_stacked)) %>%
   dplyr::rename(Variable=V1, ATT=V2, SE=V3, Specification=V4) %>%
-  mutate(Variable=ifelse(Variable=="retire", "Retire",Variable),
-         Variable=ifelse(Variable=="pos_office", "Frac. Patients in Office",Variable),
+  mutate(Variable=ifelse(Variable=="retired_ever", "Exit",Variable),
+         Variable=ifelse(Variable=="pos_office", "Fraction in Office",Variable),
          Variable=ifelse(Variable=="work_in_office", "Work in Office",Variable),
          Variable=ifelse(Variable=="npi_unq_benes", "Number Patients",Variable),
          Variable=ifelse(Variable=="claim_per_patient", "Claims per Patient",Variable))
 
 
 # 2sDid #####
-models_2sdid <- lapply(varlist, function(x){
-  did2s(Physician_Data,
-        yname = x, 
-        first_stage = ~ 0 | DocNPI + year, 
-        second_stage = ~rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 +
-          rel_p2 + rel_p3 + rel_p4, 
-        treatment = "anyEHR_exposed",
-        cluster_var="DocNPI",
-        bootstrap=TRUE,
+models_2sdid <- lapply(unlist(varlist), function(x) {
+  did2s(restrict(Physician_Data_EHR, x),
+        yname        = x,
+        first_stage  = ~ 0 | DocNPI + year,
+        second_stage = ~ rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 +
+          rel_p2 + rel_p3 + rel_p4,
+        treatment    = "anyEHR_exposed",
+        cluster_var  = "DocNPI",
+        bootstrap    = TRUE,
         n_bootstraps = 250)
 })
+names(models_2sdid) <- unlist(varlist)
 
-agg_2sdid <- lapply(models_2sdid, function(x){
-  aggregate(x, agg="(rel_p)")
+agg_2sdid <- lapply(models_2sdid, function(x) aggregate(x, agg = "(rel_p)"))
+
+LABS_SHORT <- c(retired_ever      = "Exit",
+                pos_office        = "Fraction in Office",
+                work_in_office    = "Work in Office",
+                npi_unq_benes     = "Number Patients",
+                claim_per_patient = "Claims per Patient")
+
+ATT_2sdid <- purrr::imap(agg_2sdid, function(a, x) {
+  c(unname(LABS_SHORT[x]), round(a[[1]], 5), round(a[[2]], 5), "Two-Stage DiD")
 })
-
-ATT_2sdid <- lapply(agg_2sdid, function(x){
-  c("name",
-    round(x[[1]],5), 
-    round(x[[2]], 5),
-    "Two-Stage DiD")
-})
-
-ATT_2sdid[[1]][[1]] <- "Retire"
-ATT_2sdid[[2]][[1]] <- "Frac. Patients in Office"
-ATT_2sdid[[3]][[1]] <- "Work in Office"
-ATT_2sdid[[4]][[1]] <- "Number Patients"
-ATT_2sdid[[5]][[1]] <- "Claims per Patient"
 
 tsdid_values <- as.data.frame(do.call(rbind, ATT_2sdid)) %>%
-  dplyr::rename(Variable=V1, ATT=V2, SE=V3, Specification=V4)
+  dplyr::rename(Variable = V1, ATT = V2, SE = V3, Specification = V4)
 
-estimators <- rbind(stacked_values, tsdid_values,
-                    c("Retire", .0026, .00095, "Main (CS)"),
-                    c("Frac. Patients in Office", .0076, .0035, "Main (CS)"),
-                    c("Work in Office", .070, .0081, "Main (CS)"),
-                    c("Number Patients", 27.93, 4.89, "Main (CS)"),
-                    c("Claims per Patient", .33, .085, "Main (CS)")) %>%
-  rename(coef=ATT, se=SE) %>%
-  mutate(`Stacked Regression`=ifelse(Specification=="Stacked Regression",1,0),
-         `Two-Stage DiD`=ifelse(Specification=="Two-Stage DiD",1,0),
-         `Main (CS)`=ifelse(Specification=="Main (CS)",1,0)) %>%
-  select(-Specification) %>%
-  mutate(coef=as.numeric(coef),
-         se=as.numeric(se)) %>%
-  mutate(Estimator=ifelse(`Stacked Regression`==1,"Stacked Regression",NA),
-         Estimator=ifelse(`Two-Stage DiD`==1,"Two-Stage DiD", Estimator),
-         Estimator=ifelse(`Main (CS)`==1,"Main (CS)", Estimator)
-  ) %>%
-  mutate(Variable=as.character(Variable)) %>%
-  mutate(mean=ifelse(Variable=="Retire",.03,NA),
-         mean=ifelse(Variable=="Frac. Patients in Office",.08,mean),
-         mean=ifelse(Variable=="Work in Office",.27,mean),
-          mean=ifelse(Variable=="Number Patients",331,mean),
-         mean=ifelse(Variable=="Claims per Patient",4.09,mean)) %>%
-  mutate(estimate_perc=coef/mean) %>%
-  mutate(upper=(coef+(1.96*se))/mean,
-         lower=(coef-(1.96*se))/mean)
-estimators$Variable <- factor(estimators$Variable, levels=c("Retire", "Frac. Patients in Office", "Work in Office", "Number Patients", "Claims per Patient"))
+##=============================================================
+## TWFE: aggregate post-treatment coefficients into one ATT
+##=============================================================
+
+POST <- c("rel_p1", "rel_p2", "rel_p3", "rel_p4")
+PRE  <- c("rel_m4", "rel_m3", "rel_m2")
+VAR_MAP <- c(retired_ever      = "Exit",
+             pos_office        = "Fraction in Office",
+             work_in_office    = "Work in Office",
+             npi_unq_benes     = "Number Patients",
+             claim_per_patient = "Claims per Patient")
+
+## Wald test that a set of coefficients are jointly zero
+wald_terms <- function(b, V, terms) {
+  terms <- intersect(terms, names(b))
+  if (!length(terms)) return(c(W = NA, df = NA, p = NA))
+  bb <- b[terms]; VV <- V[terms, terms, drop = FALSE]
+  W  <- as.numeric(t(bb) %*% MASS::ginv(VV) %*% bb)
+  df <- qr(VV)$rank
+  c(W = W, df = df, p = 1 - pchisq(W, df))
+}
+
+twfe_models <- lapply(unlist(varlist), function(x) {
+  feols(xpd(..lhs ~ rel_m4 + rel_m3 + rel_m2 + rel_0 + rel_p1 +
+              rel_p2 + rel_p3 + rel_p4 | DocNPI + year, ..lhs = x),
+        cluster = "DocNPI",
+        data = restrict(Physician_Data_EHR, x))
+})
+names(twfe_models) <- unlist(varlist)
+
+twfe_values <- purrr::imap_dfr(twfe_models, function(m, x) {
+  a <- avg_coef(m, POST)
+  tibble(Variable  = unname(VAR_MAP[x]),
+         coef      = unname(a["est"]),
+         se        = unname(a["se"]),
+         Estimator = "TWFE")
+})
+
+##=============================================================
+## Specification chart: alternative staggered DiD estimators
+##   Main (CS) estimates and baseline means pulled from the
+##   fitted objects rather than hardcoded.
+##
+## Requires: models, models_agg, varlist, Physician_Data_EHR,
+##           stacked_values, tsdid_values
+
+
+##---- Map estimation variable -> display label ---------------
+VAR_MAP <- c(retired_ever      = "Exit",
+             pos_office        = "Fraction in Office",
+             work_in_office    = "Work in Office",
+             npi_unq_benes     = "Number Patients",
+             claim_per_patient = "Claims per Patient")
+
+##---- Baseline means -----------------------------------------
+var_means <- imap_dfr(VAR_MAP, function(label, yname) {
+  m <- Physician_Data_EHR %>%
+    ungroup() %>%
+    restrict(yname) %>%
+    dplyr::filter(year == minyr_EHR - 1) %>%
+    dplyr::summarise(m = mean(.data[[yname]], na.rm = TRUE)) %>%
+    dplyr::pull(m)
+  tibble(Variable = label, mean = m)
+})
+
+##---- Main (CS) estimates, pulled from models_agg ------------
+## models_agg[[i]] is list(all=, young=, old=); take `all`.
+vl <- unlist(varlist)
+
+cs_values <- map_dfr(seq_along(Models_agg), function(i) {
+  yname <- vl[i]
+  if (!yname %in% names(VAR_MAP)) return(NULL)   # skip outcomes not charted
+  a <- Models_agg[[i]]$all$agg
+  tibble(Variable = unname(VAR_MAP[yname]),
+         coef     = a$overall.att,
+         se       = a$overall.se,
+         Estimator = "Main (CS)")
+})
+
+##---- Combine and scale --------------------------------------
+alt_values <- bind_rows(
+  stacked_values %>%
+    dplyr::rename(coef = ATT, se = SE, Estimator = Specification) %>%
+    mutate(coef = as.numeric(coef), se = as.numeric(se)),
+  tsdid_values %>%
+    dplyr::rename(coef = ATT, se = SE, Estimator = Specification) %>%
+    mutate(coef = as.numeric(coef), se = as.numeric(se)),
+  twfe_values,
+  cs_values
+) %>%
+  mutate(Variable = as.character(Variable)) 
+
+##---- Combine and scale --------------------------------------
+estimators <- alt_values %>%
+  left_join(var_means, by = "Variable") %>%
+  mutate(estimate_perc = coef / mean,
+         upper = (coef + 1.96 * se) / mean,
+         lower = (coef - 1.96 * se) / mean,
+         Variable  = factor(Variable, levels = unname(VAR_MAP)),
+         Estimator = factor(Estimator,
+                            levels = c("Main (CS)", "TWFE",
+                                       "Stacked Regression", "Two-Stage DiD"))) %>%
+  arrange(Variable, Estimator)
 
 
 dodge <- position_dodge(width=0.5)
-ggplot(data=estimators, aes(x=Variable, y=estimate_perc, color=Estimator)) + geom_point(position = dodge) +
-  geom_errorbar(aes(ymax=upper,ymin=lower, color=Estimator),size=.5, position = dodge, width=.2) + 
-  scale_colour_manual(values=cbbPalette) + theme_bw() + geom_hline(yintercept=0, linetype="dashed") +
-  xlab("\nVariable") + ylab("Estimate and 95% CI\n")
+##---- Baseline in the strip label ----------------------------
+fmt_base <- function(x) ifelse(x >= 100, formatC(x, format = "d", big.mark = ","),
+                               ifelse(x >= 1,   sprintf("%.2f", x),
+                                      sprintf("%.3f", x)))
 
-ggsave("Objects/estimators_plot.pdf", width=8, height=5, units = "in")
+facet_labs <- var_means %>%
+  mutate(lab = sprintf("%s\n(baseline: %s)", Variable, fmt_base(mean))) %>%
+  arrange(factor(Variable, levels = unname(VAR_MAP)))
 
+estimators <- estimators %>%
+  left_join(select(facet_labs, Variable, lab), by = "Variable") %>%
+  mutate(lab = factor(lab, levels = facet_labs$lab))
 
-## TWO WAY FIXED EFFECTS ------------------------------------- ####
-twfe_models <- lapply(varlist, function(x){
-  feols(xpd(..lhs ~ rel_m4+rel_m3+ rel_m2+ rel_0+ rel_p1+
-              rel_p2+ rel_p3 + rel_p4 | DocNPI + year, ..lhs = x),
-        cluster="DocNPI",
-        data = if (x!= "retire") dplyr::filter(Physician_Data,minyr_EHR>0 & ever_retire==0) else dplyr::filter(Physician_Data,minyr_EHR>0)
+##---- Plot ---------------------------------------------------
+pal <- c("Main (CS)"          = "#000000",
+         "TWFE"               = "#16324F",
+         "Stacked Regression" = "#A34A5A",
+         "Two-Stage DiD"      = "#3D7068")
+
+shp <- c("Main (CS)"          = 16,   # filled circle
+         "TWFE"               = 17,   # filled triangle
+         "Stacked Regression" = 15,   # filled square
+         "Two-Stage DiD"      = 18)   # filled diamond
+
+p <- ggplot(estimators, aes(x = Estimator, y = coef,
+                            colour = Estimator, shape = Estimator)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey30") +
+  geom_errorbar(aes(ymin = coef - 1.96 * se, ymax = coef + 1.96 * se),
+                linewidth = 0.6, width = 0.25) +
+  geom_point(size = 2.4) +
+  facet_wrap(~ lab, scales = "free_y", nrow = 1) +
+  scale_colour_manual(values = pal) +
+  scale_shape_manual(values = shp) +
+  labs(x = NULL, y = "Point Estimate and 95% CI\n") +
+  theme_bw() +
+  scale_y_continuous(expand = expansion(mult = 0.15)) +
+  theme(
+    text          = element_text(size = 14),
+    axis.text.y   = element_text(size = 13),
+    axis.title.y  = element_text(size = 14),
+    axis.text.x   = element_blank(),
+    axis.ticks.x  = element_blank(),
+    strip.text    = element_text(size = 12.5, lineheight = 1.1),
+    legend.text   = element_text(size = 13),
+    legend.title  = element_blank(),
+    legend.position = "bottom",
+    legend.key.width = unit(1.6, "lines"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor   = element_blank()
   )
-})
-
-#Extract Needed Info from Regressions
-coefs <- lapply(twfe_models, function(x){
-  y <- as.data.frame(list(x$coefficients,x$se))
-   y <- y %>% rename(Estimate=names(y)[[1]]) %>%
-     rename(se=names(y)[[2]]) 
-   
-   y <- rbind(y[1:3, ],            
-                     c(0,0,"rel_m1"),
-                     y[4:8, ])
-   rownames(y)[rownames(y)=="4"] <- "rel_m1"
-   
-   y <- y %>%
-     mutate(vars=row.names(y),
-            se=as.numeric(se),
-            Estimate=as.numeric(Estimate)) %>%
-     mutate(vars=ifelse(vars=="rel_m4", "-4",vars),
-            vars=ifelse(vars=="rel_m3", "-3",vars),
-            vars=ifelse(vars=="rel_m2", "-2",vars),
-            vars=ifelse(vars=="rel_m1", "-1",vars),
-            vars=ifelse(vars=="rel_0", "0",vars),
-            vars=ifelse(vars=="rel_p1", "1",vars),
-            vars=ifelse(vars=="rel_p2", "2",vars),
-            vars=ifelse(vars=="rel_p3", "3",vars),
-            vars=ifelse(vars=="rel_p4", "4",vars)) %>%
-     mutate(vars=factor(vars,levels=unique(vars))) %>%
-     mutate(category=ifelse(vars=="-4"|vars=="-3"|vars=="-2"|vars=="-1","Pre","Post")) %>%
-     mutate(title=as.character(x[["fml"]][[2]]))      
-      
-    y <- y %>%
-      mutate(title=ifelse(title=="retire", "Outcome: Retire",title),
-             title=ifelse(title=="pos_office", "Outcome: Fraction of Patients Seen in Office",title),
-             title=ifelse(title=="work_in_office", "Outcome: Works in an Office",title),
-             title=ifelse(title=="npi_unq_benes", "Outcome: Number of Patients",title),
-             title=ifelse(title=="claim_per_patient", "Outcome: Number of Claims",title))
-      
-    return(y)
-})
-
-graphs <- lapply(coefs, function(x){
-  pd <- position_dodge(0.2) # move them .05 to the left and right
-  
-  y <- ggplot(x, aes(vars, Estimate)) + 
-    geom_hline(yintercept=0, lty=2, lwd=.5, colour="black") +
-    geom_errorbar(aes(ymin=Estimate - 1.96*se, ymax=Estimate + 1.96*se, color=category), 
-                  lwd=.5, width=.18) +
-    geom_point(aes(fill=category, color=category), size=1.5, pch=21) +
-    theme_bw() + theme(text=element_text(size=10),
-                       legend.title = element_blank()) + xlab("Event Time") +
-    ylab("Estimate and 95% CI") +
-    scale_color_manual(labels = c("Post", "Pre"), values=c("#E69F00", "#999999"),name="") +
-  scale_fill_manual(labels = c("Post", "Pre"), values=c("#E69F00", "#999999"),name="") + labs(title=x$title[[1]])
-  
-  return(y)
-})
-
-twfe_finalplot <- ggarrange(graphs[[1]]+ rremove("ylab") + rremove("xlab"),
-          graphs[[2]] + rremove("ylab") + rremove("xlab"),
-          graphs[[3]] + rremove("ylab") + rremove("xlab"),
-          graphs[[4]] + rremove("ylab") + rremove("xlab"),
-          graphs[[5]] + rremove("ylab") + rremove("xlab"),
-          ncol=2, nrow=3,
-          common.legend = TRUE,
-          labels=NULL,
-          legend="bottom")
-
-ggsave("Objects/twfe_plot.pdf", twfe_finalplot, height=9.5, width=8, units = "in")
+print(p)
+ggsave("Objects/estimators_plot.pdf", plot = p,
+       width = 11, height = 5, units = "in")
 
 
 
@@ -227,393 +321,216 @@ ggsave("Objects/twfe_plot.pdf", twfe_finalplot, height=9.5, width=8, units = "in
 
 #(Need results from analysis loaded)
 
-honest_did <- function(es, ...) {
-  UseMethod("honest_did", es)
+##=============================================================
+## HonestDiD sensitivity: relative magnitude restrictions
+##   Table 1 (main text): breakdown Mbar by outcome
+##   Table 2 (appendix):  full grid of robust CIs
+##
+## Requires: models (list of att_gt fits with $all/$young/$old),
+##           varlist, HonestDiD
+##=============================================================
+library(HonestDiD)
+
+vl <- unlist(varlist)
+
+LABS <- c(retired_ever      = "Exit",
+             pos_office        = "Fraction in Office",
+             work_in_office    = "Work in Office",
+             npi_unq_benes     = "Number Patients",
+             claim_per_patient = "Claims per Patient")
+
+## Event window used for the sensitivity exercise. Deeper leads
+## make the pre-treatment covariance ill-conditioned.
+MIN_E <- -3
+MAX_E <-  4
+
+## Grid: fine enough to locate breakdown, coarse enough to print
+MBAR_FINE  <- seq(0.05, 2, by = 0.05)     # for finding breakdown
+MBAR_TABLE <- c(0.25, 0.5, 0.75, 1, 1.5, 2)  # for the appendix table
+E_POST <- 2
+
+GROUPS <- c(all = "All", young = "Age $<$ 60", old = "Age $\\geq$ 60")
+
+##---- Run HonestDiD for one aggregated object ----------------
+run_honest <- function(mp, mbarvec, e = E_POST) {
+  
+  ag <- tryCatch(did::aggte(mp, type = "dynamic", na.rm = TRUE,
+                            min_e = MIN_E, max_e = MAX_E),
+                 error = function(err) NULL)
+  if (is.null(ag)) return(NULL)
+  
+  inf <- ag$inf.function$dynamic.inf.func.e
+  if (is.null(inf)) return(NULL)
+  n   <- nrow(inf)
+  V   <- t(inf) %*% inf / (n * n)
+  
+  npre  <- sum(ag$egt < 0)
+  npost <- nrow(V) - npre
+  if (npre < 1 || npost <= e) return(NULL)
+  
+  lvec <- HonestDiD::basisVector(index = e + 1, size = npost)
+  
+  ## search grid scaled to the outcome, not hardcoded to [-1, 1]
+  span <- max(abs(ag$att.egt), na.rm = TRUE) +
+    10 * max(ag$se.egt,  na.rm = TRUE)
+  
+  orig <- tryCatch(
+    HonestDiD::constructOriginalCS(betahat = ag$att.egt, sigma = V,
+                                   numPrePeriods = npre,
+                                   numPostPeriods = npost, l_vec = lvec),
+    error = function(err) NULL)
+  if (is.null(orig)) return(NULL)
+  
+  rob <- tryCatch(
+    HonestDiD::createSensitivityResults_relativeMagnitudes(
+      betahat = ag$att.egt, sigma = V,
+      numPrePeriods = npre, numPostPeriods = npost,
+      method = "C-LF", l_vec = lvec, Mbarvec = mbarvec,
+      alpha = 0.05, gridPoints = 1000,
+      grid.lb = -span, grid.ub = span),
+    error = function(err) NULL)
+  if (is.null(rob)) return(NULL)
+  
+  ## flag any bound sitting on the grid edge (would be truncated)
+  edge <- any(abs(abs(c(rob$lb, rob$ub)) - span) < 1e-6, na.rm = TRUE)
+  
+  list(robust_ci = rob,
+       benchmark = max(abs(ag$att.egt[ag$egt < 0]), na.rm = TRUE),
+       orig_lb   = as.numeric(orig$lb),
+       orig_ub   = as.numeric(orig$ub),
+       npre      = npre,
+       grid_edge = edge)
 }
 
-honest_did.AGGTEobj <- function(es,
-                                e=2,
-                                type=c("smoothness", "relative_magnitude"),
-                                method=NULL,
-                                bound="deviation from parallel trends",
-                                Mvec=NULL,
-                                Mbarvec=NULL,
-                                monotonicityDirection=NULL,
-                                biasDirection=NULL,
-                                alpha=0.05,
-                                parallel=FALSE,
-                                gridPoints=10^3,
-                                grid.ub=NA,
-                                grid.lb=NA,
-                                ...) {
-  
-  
-  type <- type[1]
-  
-  # make sure that user is passing in an event study
-  if (es$type != "dynamic") {
-    stop("need to pass in an event study")
-  }
-  
-  # check if used universal base period and warn otherwise
-  if (es$DIDparams$base_period != "universal") {
-    warning("it is recommended to use a universal base period for honest_did")
-  }
-  
-  # recover influence function for event study estimates
-  es_inf_func <- es$inf.function$dynamic.inf.func.e
-  
-  # recover variance-covariance matrix
-  n <- nrow(es_inf_func)
-  V <- t(es_inf_func) %*% es_inf_func / (n*n) 
-  
-  
-  nperiods <- nrow(V)
-  npre <- sum(1*(es$egt < 0))
-  npost <- nperiods - npre
-  
-  baseVec1 <- basisVector(index=(e+1),size=npost)
-  
-  orig_ci <- constructOriginalCS(betahat = es$att.egt,
-                                 sigma = V, numPrePeriods = npre,
-                                 numPostPeriods = npost,
-                                 l_vec = baseVec1)
-  
-  if (type=="relative_magnitude") {
-    if (is.null(method)) method <- "C-LF"
-    robust_ci <- createSensitivityResults_relativeMagnitudes(betahat = es$att.egt, sigma = V, 
-                                                             numPrePeriods = npre, 
-                                                             numPostPeriods = npost,
-                                                             bound=bound,
-                                                             method=method,
-                                                             l_vec = baseVec1,
-                                                             Mbarvec = Mbarvec,
-                                                             monotonicityDirection=monotonicityDirection,
-                                                             biasDirection=biasDirection,
-                                                             alpha=alpha,
-                                                             gridPoints=100,
-                                                             grid.lb=-1,
-                                                             grid.ub=1,
-                                                             parallel=parallel)
-    
-  } else if (type=="smoothness") {
-    robust_ci <- createSensitivityResults(betahat = es$att.egt,
-                                          sigma = V, 
-                                          numPrePeriods = npre, 
-                                          numPostPeriods = npost,
-                                          method=method,
-                                          l_vec = baseVec1,
-                                          monotonicityDirection=monotonicityDirection,
-                                          biasDirection=biasDirection,
-                                          alpha=alpha,
-                                          parallel=parallel)
-  }
-  
-  list(robust_ci=robust_ci, orig_ci=orig_ci, type=type)
+##---- Breakdown: smallest Mbar whose robust CI covers zero ---
+breakdown <- function(rob) {
+  d <- rob %>%
+    filter(Mbar > 0) %>%
+    arrange(Mbar) %>%
+    mutate(covers0 = lb <= 0 & ub >= 0)
+  if (all(is.na(d$lb))) return(c(bd = NA, last_sig = NA))
+  if (!any(d$covers0, na.rm = TRUE))
+    return(c(bd = NA, last_sig = max(d$Mbar, na.rm = TRUE)))
+  first_cover <- d$Mbar[which(d$covers0)[1]]
+  below <- d$Mbar[d$Mbar < first_cover & !d$covers0]
+  c(bd = first_cover, last_sig = if (length(below)) max(below) else NA)
 }
 
-
-smooth_year1 <- lapply(Models_agg, function(x){
-  all <- honest_did(x[["agg_all"]], type="smoothness")
+##---- Loop over outcomes -------------------------------------
+res <- map_dfr(seq_along(models), function(i) {
   
-  list(all=all)
-})
-
-plot_smooth_year1 <- lapply(smooth_year1, function(x){
-  all <- createSensitivityPlot(x$all$robust_ci, x$all$orig_ci)
+  yname <- vl[i]
+  if (!yname %in% names(LABS)) return(NULL)
   
-  list(all)
-})
-
-smooth_year2 <- lapply(Models_agg, function(x){
-  all <- honest_did(x[["agg_all"]], type="smoothness")
+  fine <- run_honest(models[[i]]$all, MBAR_FINE)
+  tab  <- run_honest(models[[i]]$all, MBAR_TABLE)
   
-  list(all=all)
-})
-
-plot_smooth_year2 <- lapply(smooth_year2, function(x){
-  all <- createSensitivityPlot(x$all$robust_ci, x$all$orig_ci)
+  if (is.null(fine) || is.null(tab)) {
+    return(tibble(outcome_raw = yname,
+                  Outcome     = unname(LABS[yname]),
+                  orig_lb = NA_real_, orig_ub = NA_real_,
+                  benchmark = NA_real_, npre = NA_integer_,
+                  bd = NA_real_, last_sig = NA_real_,
+                  grid_edge = NA, grid = list(NULL)))
+  }
   
-  list(all)
-})
-
-# Now that I have the plots saved, I need to fix them up for the paper.
-# Retire
-retire_all_yr1 <- plot_smooth_year1[[1]][[1]] + 
-  theme_bw()  +
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-retire_all_yr2 <- plot_smooth_year2[[1]][[1]] + 
-  theme_bw()  +
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-
-ggsave(retire_all_yr1, file="Objects/retire_pretrends_plot_yr1.pdf", height=3.5, width=5, units="in")  
-ggsave(retire_all_yr2, file="Objects/retire_pretrends_plot_yr2.pdf", height=3.5, width=5, units="in")  
-
-
-# Work in Office
-work_all_yr1 <- plot_smooth_year1[[3]][[1]] + 
-  theme_bw() +
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-ggsave(work_all_yr1, file="Objects/office_ind_pretrends_plot.pdf", height=3.5, width=5, units="in")  
-
-# Fraction Patients in Office
-frac_all_yr1 <- plot_smooth_year1[[2]][[1]] + 
-  theme_bw() +
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-ggsave(frac_all_yr1, file="Objects/office_frac_pretrends_plot.pdf", height=3.5, width=5, units="in")  
-
-#Change Zip Codes
-zip_all_yr1 <- plot_smooth_year1[[4]][[1]] + 
-  theme_bw() + 
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-ggsave(zip_all_yr1, file="Objects/zip_pretrends_plot.pdf", height=3.5, width=5, units="in")  
-
-
-#Patient Count
-pat_all_yr1 <- plot_smooth_year1[[5]][[1]] + 
-  theme_bw() + 
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-ggsave(pat_all_yr1, file="Objects/patient_pretrends_plot.pdf", height=3.5, width=5, units="in")  
-
-# Claim Count
-claim_all_yr1 <- plot_smooth_year1[[6]][[1]] + 
-  theme_bw() + 
-  scale_color_manual(labels = c("FLCI", "Original"), values=c("#999999", "#E69F00"),name="") +
-  theme(legend.position = "none", text = element_text(size = 12)) 
-
-ggsave(claim_all_yr1, file="Objects/claim_pretrends_plot.pdf", height=3.5, width=5, units="in")  
-
-
-
-
-## ANALYSIS ON WHETHER EHR IMPACTS NUMBER OF PHYSICIANS
-
-# Read in data on physician hospital pairs
-data <- read_rds(paste0(created_data_path, "phys_hosp_pairs.rds"))
-
-#Read in AHA-NPI crosswalk data
-AHANPI_cw <- read_rds(paste0(created_data_path,"AHANPI_cw.rds"))
-
-# Merge crosswalk to main data
-data <- data %>%
-  mutate(HospNPI=as.double(HospNPI)) %>%
-  left_join(AHANPI_cw,by=c("HospNPI"="NPI"))
-
-data <- data %>%
-  filter(!is.na(AHAID))
-
-
-# Read in main AHA survey data
-# I need to think about adding more hospital characteristics to this dataset
-AHAmainsurvey <- read_csv(paste0(raw_data_path,"AHA_mainsurvey.csv"))
-
-# I define low integration and high integration as in Madison (2004, HSR)
-AHAmainsurvey <- AHAmainsurvey %>%
-  mutate(ID=as.character(ID)) %>%
-  mutate(low_integration=ifelse(IPAHOS==1 | OPHOHOS==1 | CPHOHOS==1,1,0),
-         high_integration=ifelse(GPWWHOS==1 | MSOHOS==1 | ISMHOS==1 | EQMODHOS==1,1,0)) %>%
-  dplyr::rename(Hospital_name=MNAME, year=YEAR, full_year=FYR, 
-                joint_phys=JNTPH, total_physicians=FTMT, phys_owned=PHYGP, beds=BDTOT ) %>%
-  select(-IPAHOS, -OPHOHOS, -CPHOHOS, -GPWWHOS, -MSOHOS, -ISMHOS, -EQMODHOS) %>%
-  select(-IPAP, -GPWP, -OPHP, -CPHP, -ISMP, -EQMP, -FNDP, -full_year, -EHLTHI, -EHLTHS,
-         -total_physicians, -joint_phys, -phys_owned)
-
-data <- data %>% ungroup() %>%
-  mutate(AHAID=as.character(AHAID)) %>%
-  left_join(AHAmainsurvey,by=c("AHAID"="ID","year"),na_matches="never")
-
-
-
-# Find out how many hospital years have NA for EHR question (conditional on having an AHA ID)
-num_missing_EHR <- data %>%
-  filter(is.na(EHLTH)) %>%
-  group_by(year) %>%
-  distinct(HospNPI)
-# 7902 missing 
-
-# Find out how many hospitals are missing an answer in every year
-num_always_missing_EHR <- data %>% ungroup() %>%
-  filter(is.na(EHLTH)) %>%
-  mutate(EHLTH=ifelse(is.na(EHLTH),10,EHLTH)) %>%
-  group_by(HospNPI) %>%
-  mutate(always_missing=ifelse(sum(EHLTH)==60,1,0)) %>%
-  filter(always_missing==1) %>%
-  ungroup() %>%
-  distinct(HospNPI, .keep_all = T)
-# There are only 90 hospitals that never answer this question, but they typically have answers to the other questions in the survey
-
-# Fill in missing year for EHR if it's between two years that have the same answer for EHR question
-data <- data %>% group_by(AHAID) %>%
-  mutate(firstyear_0=min(year[EHLTH==0],na.rm=T),lastyear_0=max(year[EHLTH==0],na.rm=T)) %>%
-  mutate(firstyear_0=ifelse(is.infinite(firstyear_0),NA,firstyear_0),lastyear_0=ifelse(is.infinite(lastyear_0),NA,lastyear_0)) %>%
-  mutate(EHLTH=ifelse(firstyear_0<year & year<lastyear_0 & is.na(EHLTH),0,EHLTH))
-
-
-data <- data %>% group_by(AHAID) %>%
-  mutate(firstyear_1=min(year[EHLTH==1],na.rm=T),lastyear_1=max(year[EHLTH==1],na.rm=T)) %>%
-  mutate(firstyear_1=ifelse(is.infinite(firstyear_1),NA,firstyear_1),lastyear_1=ifelse(is.infinite(lastyear_1),NA,lastyear_1)) %>%
-  mutate(EHLTH=ifelse(firstyear_1<year & year<lastyear_1 & is.na(EHLTH),1,EHLTH))
-
-
-data <- data %>% group_by(AHAID) %>%
-  mutate(firstyear_2=min(year[EHLTH==2],na.rm=T),lastyear_2=max(year[EHLTH==2],na.rm=T)) %>%
-  mutate(firstyear_2=ifelse(is.infinite(firstyear_2),NA,firstyear_2),lastyear_2=ifelse(is.infinite(lastyear_2),NA,lastyear_2)) %>%
-  mutate(EHLTH=ifelse(firstyear_2<year & year<lastyear_2 & is.na(EHLTH),2,EHLTH)) %>%
-  ungroup()
-# Now down to 6822 missing 
-
-# Get rid of unneeded variables 
-data <- data %>% ungroup() %>%
-  select(-firstyear_0, -firstyear_1, -firstyear_2, -lastyear_0, -lastyear_1, -lastyear_2)
-
-low_beds <- data %>% ungroup() %>%
-  distinct(HospNPI, year, beds) %>%
-  filter(beds<10) %>%
-  distinct(HospNPI) %>%
-  mutate(low_beds=1)
-# 58 hospitals
-
-data <- data %>%
-  left_join(low_beds, by="HospNPI") %>%
-  filter(is.na(low_beds)) %>%
-  select(-low_beds)
-
-data <- data %>%
-  mutate(EHR=ifelse(EHLTH==2,1,ifelse(EHLTH==0 | EHLTH==1,0,NA))) %>%
-  select(-EHLTH)
-
-# In some cases, 2009 or 2015 can be filled in to not have a missing value. 
-# Create dataset to fill in 2009 or 2015 conditionally
-fill_in <- data %>%
-  filter((year==2010 & EHR==0) | (year==2014 & EHR==1)) %>%
-  mutate(change2009=ifelse(year==2010,1,0),
-         change2015=ifelse(year==2014,1,0)) %>%
-  select(HospNPI,DocNPI,year,EHR,change2009,change2015) %>%
-  distinct(HospNPI,year,EHR,change2009,change2015)
-
-fill_in <- fill_in %>%
-  group_by(HospNPI) %>%
-  mutate(change2009=ifelse(sum(change2009)>0,1,0),
-         change2015=ifelse(sum(change2015)>0,1,0)) %>%
-  ungroup() %>%
-  distinct(HospNPI,change2009,change2015)
-
-# Merge it back to original
-data <- data %>%
-  left_join(fill_in,by="HospNPI")
-
-# Fill in the qualifying missing values
-data <- data %>%
-  mutate(EHR=ifelse(year==2009 & change2009==1 & is.na(EHR),0,EHR)) %>%
-  mutate(EHR=ifelse(year==2015 & change2015==1 & is.na(EHR),1,EHR)) %>%
-  select(-change2009, -change2015) %>%
-  ungroup()
-
-# Create number of physicians variable
-data <- data %>%
-  mutate(n=1) %>%
-  group_by(HospNPI,year) %>%
-  mutate(num_phys=sum(n)) %>%
-  ungroup() %>%
-  select(-n)
-
-data <- data %>%
-  distinct(HospNPI, year, EHR, num_phys)
-
-minyr_EHR <- data %>% 
-  filter(EHR>0) %>%
-  group_by(HospNPI) %>%
-  mutate(minyr_EHR=min(year)) %>%
-  ungroup() %>%
-  distinct(HospNPI,minyr_EHR)
-
-data <- data %>% ungroup() %>%
-  left_join(minyr_EHR, by="HospNPI") %>%
-  mutate(minyr_EHR=ifelse(is.na(minyr_EHR),0,minyr_EHR))
-
-
-hosp_analysis <- att_gt(yname = "num_phys",                # LHS Variable
-              gname = "minyr_EHR",             # First year a unit is treated. (set to 0 if never treated)
-              idname = "HospNPI",               # ID
-              tname = "year",                  # Time Variable
-              xformla = NULL,      
-              data=data,
-              est_method = "dr",               # dr is for doubly robust. can also use "ipw" (inverse probability weighting) or "reg" (regression)
-              control_group = "notyettreated", # Set the control group to notyettreated or nevertreated
-              clustervars = "HospNPI",          # Cluster Variables          
-              anticipation=0,
-              base_period = "varying" # can set a number of years to account for anticipation effects
-)
-agg_hosp <- aggte(hosp_analysis, type = "dynamic",na.rm=T)
-
-ggdid(agg_hosp)
-
-
-data_hosp <- as.data.frame(agg_hosp[["egt"]]) %>%
-    dplyr::rename(year=1) %>%
-    cbind(as.data.frame(agg_hosp[["att.egt"]])) %>%
-    dplyr::rename(att=2) %>%
-    cbind(as.data.frame(agg_hosp[["se.egt"]])) %>%
-    dplyr::rename(se=3) %>%
-    mutate(upper=att+(1.96*se),
-           lower=att-(1.96*se),
-           year=as.factor(year))
-
-hosp_plot <- ggplot(data_hosp, aes(year, att)) +  
-  geom_vline(xintercept="0", linetype="dashed", colour="red") +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width=.0, size=1.1) +
-  geom_point(size=2.5) +
-  theme_bw() +
-  theme_light() +
-  geom_hline(yintercept=0, linetype="dashed") +
-  theme(legend.position = "none", text = element_text(size = 15)) +
-  xlab("") + ylab("Point Estimate and 95% CI\n") +
-  geom_vline(xintercept=0, linetype="dashed", color="red") +
-  theme(panel.grid.major.x = element_blank() ,
-        panel.grid.major.y = element_line(size=.05, color="lightgray" )) + 
-  theme(plot.caption=element_text(hjust = 0))
-
-ggsave(file="Objects/numberofphysicians_plot.pdf",plot=hosp_plot, width=10, height=7, units="in")
-
+  b <- breakdown(fine$robust_ci)
   
-# Look for physicians who follow the trend for fraction office results
-investigate <- Physician_Data %>%
-  mutate(pos_office_2009=ifelse(year==2009,pos_office,NA),
-         pos_office_2015=ifelse(year==2015,pos_office,NA)) %>%
-  group_by(DocNPI) %>%
-  fill(pos_office_2009,.direction="downup") %>%
-  fill(pos_office_2015,.direction="downup") %>%
-  ungroup() %>%
-  mutate(diff=pos_office_2015-pos_office_2009) %>%
-  distinct(DocNPI, diff, minyr_EHR, office_yearprior) %>%
-  filter(minyr_EHR!=2009 & minyr_EHR!=0)
+  tibble(outcome_raw = yname,
+         Outcome     = unname(LABS[yname]),
+         orig_lb     = fine$orig_lb,
+         orig_ub     = fine$orig_ub,
+         benchmark   = fine$benchmark,
+         npre        = fine$npre,
+         bd          = unname(b["bd"]),
+         last_sig    = unname(b["last_sig"]),
+         grid_edge   = fine$grid_edge,
+         grid        = list(tab$robust_ci))
+}) %>%
+  mutate(Outcome = factor(Outcome, levels = unname(LABS))) %>%
+  arrange(Outcome)
 
-Physician_Data <- Physician_Data %>%
-  mutate(miss=ifelse(is.na(spec_prim_1_name),1,0)) %>%
-  group_by(DocNPI) %>%
-  mutate(sum=sum(miss)) %>%
-  filter(sum==0)
+##---- Formatting helpers -------------------------------------
+fmt_num <- function(x) ifelse(is.na(x), "---",
+                              ifelse(abs(x) >= 100, formatC(x, format = "d", big.mark = ","),
+                                     ifelse(abs(x) >= 1,   sprintf("%.2f", x),
+                                            sprintf("%.4f", x))))
+
+##=============================================================
+## TABLE 1 (main text): breakdown values
+##=============================================================
+main_tab <- res %>%
+  transmute(Outcome,
+            `Original 95\\% CI` = sprintf("[%s, %s]", fmt_num(orig_lb), fmt_num(orig_ub)),
+            `Largest pre-treatment violation` = fmt_num(benchmark),
+            `Breakdown $\\bar{M}$` = ifelse(is.na(bd), "$>2$", sprintf("%.2f", bd)))
+
+out1 <- kbl(main_tab, format = "latex", booktabs = TRUE, escape = FALSE,
+            align = c("l", "c", "c", "c"),
+            caption = "Robustness to violations of parallel trends",
+            label = "honest_breakdown") %>%
+  kable_styling(latex_options = "hold_position", full_width = FALSE) %>%
+  kableExtra::footnote(general = paste(
+    "Sensitivity analysis follows Rambachan and Roth (2023).",
+    "The restriction bounds any post-treatment violation of parallel trends",
+    "at $\\bar{M}$ times the largest violation observed before treatment.",
+    "The breakdown value is the smallest $\\bar{M}$ at which the robust",
+    "confidence interval includes zero; values are searched on a grid of",
+    "width 0.05 up to $\\bar{M}=2$.",
+    sprintf("The event window is restricted to $e \\\\in [%d, %d]$.", MIN_E, MAX_E)),
+    threeparttable = TRUE, escape = FALSE)
+
+##=============================================================
+## TABLE 2 (appendix): full grid
+##=============================================================
+grid_tab <- res %>%
+  filter(!map_lgl(grid, is.null)) %>%
+  select(Outcome, orig_lb, orig_ub, grid) %>%
+  mutate(rows = map(grid, ~ .x %>%
+                      filter(Mbar > 0) %>%
+                      transmute(Mbar, ci = sprintf("[%s, %s]",
+                                                   fmt_num(lb), fmt_num(ub))))) %>%
+  select(-grid) %>%
+  unnest(rows) %>%
+  mutate(Mbar = sprintf("%.2f", Mbar)) %>%
+  select(Outcome, orig_lb, orig_ub, Mbar, ci) %>%
+  pivot_wider(names_from = Mbar, values_from = ci) %>%
+  mutate(Original = sprintf("[%s, %s]", fmt_num(orig_lb), fmt_num(orig_ub))) %>%
+  select(Outcome, Original, everything(), -orig_lb, -orig_ub)
+
+out2 <- kbl(grid_tab, format = "latex", booktabs = TRUE, escape = FALSE,
+            align = c("l", rep("c", ncol(grid_tab) - 1)),
+            caption = "Robust confidence intervals under relative magnitude restrictions",
+            label = "honest_grid") %>%
+  add_header_above(c(" " = 2,
+                     "$\\\\bar{M}$" = ncol(grid_tab) - 2), escape = FALSE) %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"),
+                font_size = 9, full_width = FALSE) %>%
+  kableExtra::footnote(general = paste(
+    "Robust 95\\% confidence intervals from Rambachan and Roth (2023),",
+    "computed under the restriction that any post-treatment violation of",
+    "parallel trends is at most $\\bar{M}$ times the largest pre-treatment",
+    "violation. The Original column reports the conventional confidence",
+    "interval, which assumes parallel trends holds exactly.",
+    sprintf("The event window is restricted to $e \\\\in [%d, %d]$.", MIN_E, MAX_E)),
+    threeparttable = TRUE, escape = FALSE)
+
+##---- Write ---------------------------------------------------
+writeLines(as.character(out1), file.path("Table Code", "honest_breakdown.tex"))
+writeLines(as.character(out2), file.path("Table Code", "honest_grid.tex"))
+
+
 
 
 # LEE (2009) BOUNDS ------------------------------------------------------------------------------------ #### 
+
+library(leebounds)
 
 # work in office indicator
 group_list <- c(2010, 2011, 2012, 2013, 2014)
 
 office_lee <- lapply(group_list, function(x){
-    leedata <- Physician_Data %>%
+    leedata <- Physician_Data_EHR %>%
       filter(minyr_EHR>=x) %>%
       mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
       mutate(selection = ifelse(ever_retire==1,0,1))
@@ -624,7 +541,7 @@ office_lee <- lapply(group_list, function(x){
 })
 
 office_frac_lee <- lapply(group_list, function(x){
-  leedata <- Physician_Data %>%
+  leedata <- Physician_Data_EHR %>%
     filter(minyr_EHR>=x) %>%
     mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
     mutate(selection = ifelse(ever_retire==1,0,1))
@@ -635,21 +552,21 @@ office_frac_lee <- lapply(group_list, function(x){
 })
 
 pat_count_lee <- lapply(group_list, function(x){
-  leedata <- Physician_Data %>%
+  leedata <- Physician_Data_EHR %>%
     filter(minyr_EHR>=x) %>%
     mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
-    mutate(selection = ifelse(ever_retire==1,0,1))
+    mutate(selection = ifelse(ever_retire==1 & stable_inpat==1,0,1))
   
   leedata <- data.frame(treat=leedata$treat,selection=leedata$selection,outcome=leedata$npi_unq_benes)
   
   return(GetBounds(leebounds(leedata)))
 })
-x <- 2010
+
 claim_lee <- lapply(group_list, function(x){
-  leedata <- Physician_Data %>%
+  leedata <- Physician_Data_EHR %>%
     filter(minyr_EHR>=x) %>%
     mutate(treat = ifelse(minyr_EHR==x,1,0)) %>%
-    mutate(selection = ifelse(ever_retire==1,0,1)) %>%
+    mutate(selection = ifelse(ever_retire==1 & stable_inpat==1,0,1)) %>%
     filter(!is.na(claim_per_patient))
   
   leedata <- data.frame(treat=leedata$treat,selection=leedata$selection,outcome=leedata$claim_per_patient)
@@ -669,14 +586,14 @@ pat_upper <- mean(c(pat_count_lee[[1]][2], pat_count_lee[[2]][2], pat_count_lee[
 claim_lower <- mean(c(claim_lee[[1]][1], claim_lee[[2]][1], claim_lee[[3]][1],claim_lee[[4]][1], claim_lee[[5]][1]))
 claim_upper <- mean(c(claim_lee[[1]][2], claim_lee[[2]][2], claim_lee[[3]][2],claim_lee[[4]][2], claim_lee[[5]][2]))
 
-lower <- as.data.frame(c(office_ind_lower, office_frac_lower, pat_lower, claim_lower))
-upper <- as.data.frame(c(office_ind_upper, office_frac_upper, pat_upper, claim_upper))
+lower <- as.data.frame(c(office_frac_lower, pat_lower, claim_lower))
+upper <- as.data.frame(c(office_frac_upper, pat_upper, claim_upper))
 
 lee_plot <- cbind(lower,upper)
 colnames(lee_plot) <- c("lower", "upper")
 
 lee_table <- lee_plot %>%
-  mutate(variable = c("Work in Office", "Fraction in Office", "Num Patients", "Claims per Patient")) %>%
+  mutate(variable = c("Fraction in Office", "Num Patients", "Claims per Patient")) %>%
   select(variable, lower, upper)
 
 lee_table_code <- knitr::kable(lee_table,
@@ -692,18 +609,6 @@ lee_table_code <- knitr::kable(lee_table,
 write(lee_table_code, "Table Code/leebounds.tex")
 
 
-# EVENT STUDY WITH LEAST WIGGLY CONFOUNDER ####
-wiggly <- lapply(varlist, function(x){
-  es <- EventStudy(estimator = "OLS",
-                   data = dplyr::filter(Physician_Data, minyr_EHR>0 & minyr_EHR!=2009),
-                   outcomevar = x,
-                   policyvar = "anyEHR_exposed",
-                   idvar = "DocNPI",
-                   timevar = "year",
-                   pre = 0, post = 2)
-  plot <- EventStudyPlot(estimates = es)
-  return(plot=plot)
-})
 
 
 
